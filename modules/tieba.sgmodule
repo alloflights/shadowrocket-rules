@@ -1,0 +1,15 @@
+#!name=百度贴吧净化 (Tieba)
+#!desc=屏蔽贴吧开屏、信息流广告、楼层间商业贴与直播推广，阻断HTTPDNS绕行
+#!author=app2smile
+#!system=ios
+#!category=应用净化
+
+[Rule]
+IP-CIDR,180.76.76.200/32,REJECT,no-resolve
+
+[Script]
+贴吧_JSON = type=http-response,pattern=^https?:\/\/tiebac\.baidu\.com\/c\/s\/sync,requires-body=1,max-size=1048576,script-path=https://gitlab.com/app2smile/rules/-/raw/master/js/tieba.js
+贴吧_Proto = type=http-response,pattern=^https?:\/\/tiebac\.baidu\.com\/c\/[fs]\/(frs\/page|pb\/floor),requires-body=1,max-size=1048576,binary-mode=1,script-path=https://gitlab.com/app2smile/rules/-/raw/master/js/tieba-proto.js
+
+[MITM]
+hostname = %APPEND% tiebac.baidu.com

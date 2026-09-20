@@ -1,0 +1,20 @@
+#!name=抖音轻量净化 (Douyin Lite - 零卡顿零延迟版)
+#!desc=阻断抖音穿山甲SDK、开屏广告及广告请求，不拦截主视频数据流，保证刷视频极速零缓冲
+#!system=ios
+#!category=应用净化
+
+[Rule]
+# 穿山甲广告联盟与巨量引擎广告阻断
+DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
+DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
+DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
+DOMAIN-KEYWORD,ad-pattern,REJECT-IMG
+
+[URL Rewrite]
+# 屏蔽通用广告API请求
+^https?:\/\/(api.*\.amemv|aweme\.snssdk)\.com\/api\/ad\/ - reject-200
+^https?:\/\/.*\.snssdk\.com\/v\d\/splash\/ - reject-dict
+
+[MITM]
+hostname = %APPEND% -*

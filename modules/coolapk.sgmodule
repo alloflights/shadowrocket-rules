@@ -1,0 +1,19 @@
+#!name=酷安净化 (Coolapk)
+#!desc=去除酷安App开屏广告、首页推广卡片、信息流广告、评论区推广与搜索热词
+#!author=ddgksf2013
+#!system=ios
+#!category=应用净化
+
+[URL Rewrite]
+^https?:\/\/api\.coolapk\.com\/v6\/search\?.*type=hotSearch - reject-200
+
+[Script]
+酷安_数据流 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/page\/dataList,requires-body=1,max-size=1048576,script-path=https://github.com/ddgksf2013/Scripts/raw/master/coolapk.js
+酷安_详情页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/detail,requires-body=1,max-size=1048576,script-path=https://github.com/ddgksf2013/Scripts/raw/master/coolapk.js
+酷安_评论区 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/replyList,requires-body=1,max-size=1048576,script-path=https://github.com/ddgksf2013/Scripts/raw/master/coolapk.js
+酷安_个人页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/account\/profile,requires-body=1,max-size=1048576,script-path=https://github.com/ddgksf2013/Scripts/raw/master/coolapk.js
+酷安_开屏 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/init,requires-body=1,max-size=1048576,script-path=https://github.com/ddgksf2013/Scripts/raw/master/coolapk.js
+酷安_首页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/indexV8,requires-body=1,max-size=1048576,script-path=https://github.com/ddgksf2013/Scripts/raw/master/coolapk.js
+
+[MITM]
+hostname = %APPEND% api.coolapk.com

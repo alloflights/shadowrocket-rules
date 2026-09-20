@@ -1,0 +1,18 @@
+#!name=虎扑净化 (Hupu)
+#!desc=去除虎扑开屏广告、下拉刷新流推广、帖子详情商业推广卡片及广告图片
+#!author=yjqiang
+#!system=ios
+#!category=应用净化
+
+[Rule]
+# 拦截开屏与下拉刷新广告接口
+URL-REGEX,^https://goblin\.hupu\.com/[^/]+/[^/]+/interfaceAd/,REJECT
+DOMAIN,adx.hupu.com,REJECT
+DOMAIN,adx-action.hupu.com,REJECT
+
+[URL Rewrite]
+# 屏蔽推广图片
+^https?:\/\/.*\.hupucdn\.com\/.*ad.* - reject-img
+
+[MITM]
+hostname = %APPEND% goblin.hupu.com
