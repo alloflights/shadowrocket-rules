@@ -1,20 +1,41 @@
-#!name=抖音轻量净化 (Douyin Lite - 零卡顿零延迟版)
-#!desc=阻断抖音穿山甲SDK、开屏广告及广告请求，不拦截主视频数据流，保证刷视频极速零缓冲
+#!name=抖音极限暴力净化 (Douyin Ultra - 网络层封顶版)
+#!desc=封杀穿山甲SDK、巨量引擎全系广告追踪、开屏落地页、带货小黄车与直播弹窗，阻断行为画像分析
 #!system=ios
 #!category=应用净化
 
 [Rule]
-# 穿山甲广告联盟与巨量引擎广告阻断
+# 穿山甲移动广告联盟与竞价体系 (Pangolin SDK)
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
+DOMAIN-SUFFIX,pangle-ads.com,REJECT
+DOMAIN-SUFFIX,byte-ads.com,REJECT
+
+# 巨量引擎、商业广告与推广打点 (OceanEngine & Ads)
+DOMAIN-SUFFIX,oceanengine.com,REJECT
+DOMAIN-SUFFIX,ad.toutiao.com,REJECT
+DOMAIN-SUFFIX,ad.zijieapi.com,REJECT
+DOMAIN-SUFFIX,analytics.snssdk.com,REJECT
+DOMAIN-SUFFIX,log.snssdk.com,REJECT
+DOMAIN-SUFFIX,applog.snssdk.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
+DOMAIN-SUFFIX,mon.snssdk.com,REJECT
+DOMAIN-SUFFIX,apm.snssdk.com,REJECT
+
+# 广告资源与行为埋点
 DOMAIN-KEYWORD,ad-pattern,REJECT-IMG
+DOMAIN-KEYWORD,toblog,REJECT
 
 [URL Rewrite]
-# 屏蔽通用广告API请求
-^https?:\/\/(api.*\.amemv|aweme\.snssdk)\.com\/api\/ad\/ - reject-200
+# 开屏广告与启动配置全拦截
 ^https?:\/\/.*\.snssdk\.com\/v\d\/splash\/ - reject-dict
+^https?:\/\/(api.*\.amemv|aweme\.snssdk)\.com\/api\/ad\/ - reject-200
+^https?:\/\/.*\.snssdk\.com\/api\/ad\/v\d\/ - reject-200
+
+# 视频内带货小黄车、商品浮窗与商业推广
+^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/yellow_cart\/ - reject-dict
+^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/commerce\/ - reject-dict
+^https?:\/\/.*\.snssdk\.com\/live\/room\/pop_window - reject-dict
 
 [MITM]
 hostname = %APPEND% -*
