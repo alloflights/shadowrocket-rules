@@ -1,18 +1,18 @@
-#!name=小红书净化 (Xiaohongshu)
-#!desc=去除小红书开屏广告、信息流赞助推广卡片、惊喜盒子弹窗与搜索热词
+#!name=小红书极速去广告与去水印 (Xiaohongshu Pro)
+#!desc=去除小红书开屏广告、信息流赞助推广卡片、详情页小部件，解锁无水印图片与LivePhoto视频原画质下载
 #!system=ios
 #!category=应用净化
 
 [URL Rewrite]
-^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/surprisebox\/(get_style|open|submit_action) - reject-dict
-^https:\/\/www\.xiaohongshu\.com\/api\/marketing\/box\/trigger\? - reject-dict
-^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v3\/note\/guide\? - reject-dict
-^https:\/\/www\.xiaohongshu\.com\/api\/sns\/(v1\/ads\/resource|v2\/hey\/\w+\/hey_gallery) - reject-dict
+# 屏蔽惊喜盒子、营销弹窗与推广资源
+^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/surprisebox\/(get_style|open|submit_action) - reject-dict
+^https?:\/\/www\.xiaohongshu\.com\/api\/marketing\/box\/trigger\? - reject-dict
+^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v3\/note\/guide\? - reject-dict
+^https?:\/\/www\.xiaohongshu\.com\/api\/sns\/(v1\/ads\/resource|v2\/hey\/\w+\/hey_gallery) - reject-dict
 
 [Script]
-小红书_信息流 = type=http-response,pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v6\/homefeed\?,requires-body=1,max-size=1048576,script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/xiaohongshu.js
-小红书_开屏 = type=http-response,pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v2\/system_service\/splash_config,requires-body=1,max-size=1048576,script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/xiaohongshu.js
-小红书_热搜 = type=http-response,pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/search\/(banner|hot)_list,requires-body=1,max-size=1048576,script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/xiaohongshu.js
+# 小红书去广告、无水印保存图片与LivePhoto核心脚本
+小红书_净化 = type=http-response,pattern=^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v\d\/(note\/(imagefeed|feed|videofeed|widgets|live_photo\/save)|homefeed|system_service\/(splash_config|config)|search\/(banner|hot)_list|search\/notes|followfeed),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/xiaohongshu.js,script-update-interval=0
 
 [MITM]
 hostname = %APPEND% edith.xiaohongshu.com, www.xiaohongshu.com
