@@ -1,0 +1,61 @@
+#!name=公共广告联盟与摇一摇拦截底座 (General AdBlock)
+#!desc=封杀字节穿山甲(Pangolin)、腾讯优量汇(GDT)、快手联盟、百青藤(MobAds)、西柚(Sigmob)、TopOn、掌驭及HTTPDNS直连绕过，全网App通用
+#!author=allofights
+#!system=ios
+#!category=广告拦截
+
+[Rule]
+# 1. 字节跳动穿山甲广告联盟 (Pangolin SDK & OceanEngine)
+DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
+DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
+DOMAIN-SUFFIX,pangle-ads.com,REJECT
+DOMAIN-SUFFIX,byte-ads.com,REJECT
+DOMAIN-SUFFIX,oceanengine.com,REJECT
+DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
+
+# 2. 腾讯优量汇 / 广点通 (GDT SDK)
+DOMAIN-SUFFIX,gdt.qq.com,REJECT
+DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
+DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
+DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
+DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,e.qq.com,REJECT
+
+# 3. 百度移动广告联盟 (Baidu MobAds / 百青藤)
+DOMAIN-SUFFIX,mobads.baidu.com,REJECT
+DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT
+DOMAIN-SUFFIX,mobads.baidu.cn,REJECT
+DOMAIN-SUFFIX,mobads-pre-config.cdn.bcebos.com,REJECT
+DOMAIN-SUFFIX,afd.baidu.com,REJECT
+DOMAIN-SUFFIX,afd-conf.baidu.com,REJECT
+DOMAIN-SUFFIX,als.baidu.com,REJECT
+DOMAIN-SUFFIX,baichuan.baidu.com,REJECT
+DOMAIN-SUFFIX,pos.baidu.com,REJECT
+DOMAIN-SUFFIX,cpro.baidu.com,REJECT
+DOMAIN-SUFFIX,cbjs.baidu.com,REJECT
+DOMAIN-SUFFIX,cpu.baidu.com,REJECT
+DOMAIN-SUFFIX,caclick.baidu.com,REJECT
+DOMAIN-SUFFIX,eclick.baidu.com,REJECT
+
+# 4. 聚合广告与开屏摇一摇专线 SDK (西柚 / 掌驭 / TopOn / Mintegral / 快手联盟)
+DOMAIN-SUFFIX,sigmob.cn,REJECT
+DOMAIN-SUFFIX,sigmob.com,REJECT
+DOMAIN-SUFFIX,toponad.com,REJECT
+DOMAIN-SUFFIX,appnext.com,REJECT
+DOMAIN-SUFFIX,mintegral.com,REJECT
+DOMAIN-SUFFIX,rayjump.com,REJECT
+DOMAIN-SUFFIX,zhangyuyidong.cn,REJECT
+DOMAIN-SUFFIX,zhangyuyidong.com,REJECT
+DOMAIN-SUFFIX,adukwai.com,REJECT
+DOMAIN-SUFFIX,e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,open.e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,impdsp.meituan.com,REJECT
+
+# 5. HTTPDNS 直连解析阻断 (防止 App 绕过域名分流直接请求广告 IP)
+DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
+DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
+DOMAIN-SUFFIX,httpdns.pro,REJECT
+IP-CIDR,180.76.76.200/32,REJECT,no-resolve
+IP-CIDR,203.107.1.1/24,REJECT,no-resolve
