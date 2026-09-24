@@ -4,11 +4,20 @@
 #!system=ios
 #!category=应用净化
 
+[Rule]
+# 酷安 & 腾讯优量汇广告 SDK 阻断 (解决开屏与第三方赞助卡片)
+DOMAIN-SUFFIX,gdt.qq.com,REJECT
+DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
+DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
+DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
+DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
+DOMAIN,ad.api.coolapk.com,REJECT
+
 [URL Rewrite]
 ^https?:\/\/api\.coolapk\.com\/v6\/search\?.*type=hotSearch - reject-200
 
 [Script]
-酷安_数据流 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/page\/dataList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+酷安_数据流 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/(page\/)?dataList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_详情页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/detail,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_评论区 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/replyList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_个人页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/account\/profile,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
