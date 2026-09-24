@@ -1,17 +1,50 @@
 #!name=百度网盘净化 (Baidu Netdisk)
-#!desc=去除百度网盘开屏广告、横幅推广、福利活动弹窗、会员推广及日志统计上报
+#!desc=去除百度网盘开屏广告、横幅推广、福利活动弹窗、会员推广、首页信息流推广、短剧与日志统计上报
 #!system=ios
 #!category=应用净化
 
 [Rule]
-# 百度网盘静态资源、统计与视频广告阻断
-DOMAIN,issuecdn.baidupcs.com,REJECT
+# 百度移动广告 SDK 与营销联盟 (Baidu MobAds / 百青藤联盟 / 开屏聚合分发)
+DOMAIN-SUFFIX,mobads.baidu.com,REJECT
+DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT
+DOMAIN-SUFFIX,mobads.baidu.cn,REJECT
+DOMAIN-SUFFIX,mobads-pre-config.cdn.bcebos.com,REJECT
+DOMAIN-SUFFIX,afd.baidu.com,REJECT
+DOMAIN-SUFFIX,afd-conf.baidu.com,REJECT
+DOMAIN-SUFFIX,als.baidu.com,REJECT
+DOMAIN-SUFFIX,baichuan.baidu.com,REJECT
+DOMAIN-SUFFIX,pos.baidu.com,REJECT
+DOMAIN-SUFFIX,cpro.baidu.com,REJECT
+DOMAIN-SUFFIX,cbjs.baidu.com,REJECT
+DOMAIN-SUFFIX,cpu.baidu.com,REJECT
+DOMAIN-SUFFIX,caclick.baidu.com,REJECT
+DOMAIN-SUFFIX,eclick.baidu.com,REJECT
 DOMAIN,update.pan.baidu.com,REJECT
 DOMAIN,fc-video.cdn.bcebos.com,REJECT
 DOMAIN,rp.hpplay.cn,REJECT
 
+# 百度 HTTPDNS 域名阻断 (防止应用直连 IP 绕过广告分流与重写)
+DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
+DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
+
+# 百度网盘聚合第三方广告 SDK (穿山甲 / 掌驭移动 / 快手联盟)
+DOMAIN-SUFFIX,zhangyuyidong.cn,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
+DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
+DOMAIN-SUFFIX,adukwai.com,REJECT
+DOMAIN-SUFFIX,e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,open.e.kuaishou.com,REJECT
+
 [URL Rewrite]
-# 核心广告、活动入口与会员营销拦截
+# 百度网盘开屏与核心配置广告拦截 (开屏/启动引导/系统配置)
+^https?:\/\/pan\.baidu\.com\/buy\/ad\/conf - reject-dict
+^https?:\/\/pan\.baidu\.com\/api\/getsyscfg - reject-dict
+^https?:\/\/pan\.baidu\.com\/api\/getconfig - reject-dict
+^https?:\/\/pan\.baidu\.com\/rest\/.*\/membership\/(proxy\/)?guide - reject-200
+
+# 百度网盘核心广告与营销弹窗拦截
 ^https?:\/\/pan\.baidu\.com\/rest\/\d\.\d\/pcs\/adx - reject-dict
 ^https?:\/\/pan\.baidu\.com\/rest\/2\.0\/pcs\/ad - reject-dict
 ^https?:\/\/pan\.baidu\.com\/rest\/.+\/pcs\/adx - reject-dict
@@ -22,10 +55,22 @@ DOMAIN,rp.hpplay.cn,REJECT
 ^https?:\/\/pan\.baidu\.com\/api\/useractivity\/activity - reject-dict
 ^https?:\/\/pan\.baidu\.com\/api\/certuser\/get - reject-dict
 ^https?:\/\/pan\.baidu\.com\/component\/view\/(1510|1130)\?vip - reject-dict
+
+# 百度网盘首页信息流、短剧与活动推广
+^https?:\/\/pan\.baidu\.com\/feed\/cardinfos - reject-dict
+^https?:\/\/pan\.baidu\.com\/feed\/hotlist - reject-200
+^https?:\/\/pan\.baidu\.com\/recommend\/shortseries\/list - reject-dict
+^https?:\/\/pan\.baidu\.com\/coins\/center\/notice - reject-200
+^https?:\/\/pan\.baidu\.com\/queryintent\/queryhint - reject-200
+^https?:\/\/pan\.baidu\.com\/api\/taskscore\/tasklist - reject-dict
+
+# 百度网盘静态资源与打点
 ^https?:\/\/ndstatic\.cdn\.bcebos\.com\/activity\/welfare\/(js\/.+\.js|index\.html) - reject-200
 ^https?:\/\/staticsns\.cdn\.bcebos\.com\/amis\/.+\/banner\.png - reject-img
 ^https?:\/\/issuecdn\.baidupcs\.com\/issue\/netdisk\/guanggao - reject-200
 ^https?:\/\/update\.pan\.baidu\.com\/statistics - reject-200
+^https?:\/\/.*zhangyuyidong\.cn\/api\/zysdk - reject-200
+^https?:\/\/afd\.baidu\.com\/afd\/entry - reject-dict
 
 [MITM]
-hostname = %APPEND% pan.baidu.com, ndstatic.cdn.bcebos.com, staticsns.cdn.bcebos.com
+hostname = %APPEND% pan.baidu.com, afd.baidu.com, ndstatic.cdn.bcebos.com, staticsns.cdn.bcebos.com
