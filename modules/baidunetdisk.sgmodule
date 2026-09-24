@@ -1,10 +1,11 @@
 #!name=百度网盘净化 (Baidu Netdisk)
-#!desc=去除百度网盘开屏广告、横幅推广、福利活动弹窗、会员推广、首页信息流推广、短剧与日志统计上报
+#!desc=彻底去除百度网盘开屏广告、摇一摇跳转美团/第三方、横幅推广、福利活动弹窗、会员推广、首页信息流推广、短剧与日志统计上报
+#!author=allofights
 #!system=ios
 #!category=应用净化
 
 [Rule]
-# 百度移动广告 SDK 与营销联盟 (Baidu MobAds / 百青藤联盟 / 开屏聚合分发)
+# 1. 百度移动广告 SDK (Baidu MobAds / 百青藤 / 百度联盟)
 DOMAIN-SUFFIX,mobads.baidu.com,REJECT
 DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT
 DOMAIN-SUFFIX,mobads.baidu.cn,REJECT
@@ -23,19 +24,34 @@ DOMAIN,update.pan.baidu.com,REJECT
 DOMAIN,fc-video.cdn.bcebos.com,REJECT
 DOMAIN,rp.hpplay.cn,REJECT
 
-# 百度 HTTPDNS 域名阻断 (防止应用直连 IP 绕过广告分流与重写)
+# 2. 百度 HTTPDNS 域名阻断 (防止应用直连 IP 绕过广告分流与重写)
 DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
 DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
+IP-CIDR,180.76.76.200/32,REJECT,no-resolve
 
-# 百度网盘聚合第三方广告 SDK (穿山甲 / 掌驭移动 / 快手联盟)
-DOMAIN-SUFFIX,zhangyuyidong.cn,REJECT
+# 3. 聚合第三方广告联盟 SDK (穿山甲 / 优量汇 / 快手 / 西柚 / 掌驭，拦截开屏摇一摇跳转美团等广告)
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
+DOMAIN-SUFFIX,gdt.qq.com,REJECT
+DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
+DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
+DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
+DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,e.qq.com,REJECT
+DOMAIN-SUFFIX,sigmob.cn,REJECT
+DOMAIN-SUFFIX,sigmob.com,REJECT
+DOMAIN-SUFFIX,toponad.com,REJECT
+DOMAIN-SUFFIX,appnext.com,REJECT
+DOMAIN-SUFFIX,mintegral.com,REJECT
+DOMAIN-SUFFIX,rayjump.com,REJECT
+DOMAIN-SUFFIX,zhangyuyidong.cn,REJECT
+DOMAIN-SUFFIX,zhangyuyidong.com,REJECT
 DOMAIN-SUFFIX,adukwai.com,REJECT
 DOMAIN-SUFFIX,e.kuaishou.com,REJECT
 DOMAIN-SUFFIX,open.e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,impdsp.meituan.com,REJECT
 
 [URL Rewrite]
 # 百度网盘开屏与核心配置广告拦截 (开屏/启动引导/系统配置)
@@ -44,7 +60,7 @@ DOMAIN-SUFFIX,open.e.kuaishou.com,REJECT
 ^https?:\/\/pan\.baidu\.com\/api\/getconfig - reject-dict
 ^https?:\/\/pan\.baidu\.com\/rest\/.*\/membership\/(proxy\/)?guide - reject-200
 
-# 百度网盘核心广告与营销弹窗拦截
+# 百度网盘核心广告与营销弹窗拦截 (拦截福利/美团优惠券/活动弹窗)
 ^https?:\/\/pan\.baidu\.com\/rest\/\d\.\d\/pcs\/adx - reject-dict
 ^https?:\/\/pan\.baidu\.com\/rest\/2\.0\/pcs\/ad - reject-dict
 ^https?:\/\/pan\.baidu\.com\/rest\/.+\/pcs\/adx - reject-dict
