@@ -7,10 +7,19 @@ if (typeof $response !== 'undefined' && $response.body) {
         let obj = JSON.parse($response.body);
         obj.errno = 0;
         obj.error_code = 0;
+        if (Array.isArray(obj.data)) {
+            obj.data = [];
+        } else if (typeof obj.data === 'object' && obj.data !== null) {
+            obj.data.ad_list = [];
+            obj.data.ads = [];
+            obj.data.list = [];
+            obj.data.records = [];
+        }
         obj.ad_list = [];
         obj.ads = [];
-        obj.data = [];
         obj.ad_info = [];
+        obj.splash = {};
+        obj.fuse = false;
         $done({ body: JSON.stringify(obj) });
     } catch (e) {
         $done({});

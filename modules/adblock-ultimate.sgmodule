@@ -138,6 +138,8 @@ DOMAIN-SUFFIX,ubixioe.com,REJECT
 DOMAIN-SUFFIX,kuaishouzt.com,REJECT
 DOMAIN,open.e.kuaishou.cn,REJECT
 DOMAIN,hermes.hupu.com,REJECT
+DOMAIN,themis.hupu.com,REJECT
+DOMAIN,collect.hupu.com,REJECT
 DOMAIN,umestartup.umetrip.com,REJECT
 DOMAIN,bda.umetrip.com,REJECT
 DOMAIN,opactivity.umetrip.com,REJECT
@@ -280,7 +282,7 @@ URL-REGEX,^https?:\/\/.*\.bilivideo\.com\/.*-SPLA,REJECT-IMG
 ^https?:\/\/passport\.ximalaya\.com\/friendship-mobile\/v1\/findFriendsBanner - reject
 
 # --- 百度网盘真机开屏熔断与DSP接口拦截 ---
-^https?:\/\/pan\.baidu\.com\/buy\/ad\/(get|analytics) - reject-dict
+^https?:\/\/pan\.baidu\.com\/buy\/ad\/analytics - reject-200
 ^https?:\/\/pan\.baidu\.com\/rest\/2\.0\/membership\/advertise\/ - reject-dict
 ^https?:\/\/pan\.baidu\.com\/api\/analytics - reject-200
 
@@ -289,7 +291,7 @@ URL-REGEX,^https?:\/\/.*\.bilivideo\.com\/.*-SPLA,REJECT-IMG
 
 [Script]
 # 0. 百度网盘开屏净化 (Mock 无广告数据，杜绝白屏转圈与摇一摇残留)
-baidunetdisk_splash = type=http-response,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/pcs\/adx?|buy\/ad\/conf|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
+baidunetdisk_splash = type=http-response,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/pcs\/adx?|buy\/ad\/(conf|get)|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
 # 1. 百度贴吧去广告 (JSON + Protobuf 双引擎)
 贴吧_JSON = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))$|tiebaads\/commonbatch\?),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,script-update-interval=0
 贴吧_Proto = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?cmd,requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,script-update-interval=0

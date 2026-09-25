@@ -7,6 +7,8 @@
 [Rule]
 DOMAIN,goblin.hupu.com,REJECT
 DOMAIN,hermes.hupu.com,REJECT
+DOMAIN,themis.hupu.com,REJECT
+DOMAIN,collect.hupu.com,REJECT
 DOMAIN,adx.hupu.com,REJECT
 DOMAIN,adx-action.hupu.com,REJECT
 
