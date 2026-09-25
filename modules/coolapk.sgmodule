@@ -1,28 +1,32 @@
-#!name=酷安净化 (Coolapk)
-#!desc=去除酷安App开屏广告、首页推广卡片、信息流广告、评论区推广与搜索热词
-#!author=ddgksf2013
+#!name=酷安净化 (Coolapk Pro)
+#!desc=去除酷安App开屏广告、首页推广卡片、信息流广告、商品推荐、评论区推广与搜索热词
+#!author=allofights
 #!system=ios
 #!category=应用净化
 
 [Rule]
-# 酷安 & 腾讯优量汇广告 SDK 阻断 (解决开屏与第三方赞助卡片)
+# 酷安自建与第三方广告 SDK (腾讯优量汇、阿里 Tanx、数美设备指纹等)
+DOMAIN,ad.api.coolapk.com,REJECT
 DOMAIN-SUFFIX,gdt.qq.com,REJECT
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
 DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
 DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
 DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
-DOMAIN,ad.api.coolapk.com,REJECT
+DOMAIN-SUFFIX,e.qq.com,REJECT
+DOMAIN-SUFFIX,shuzilm.cn,REJECT
+DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
+DOMAIN-SUFFIX,tanx.com,REJECT
 
 [URL Rewrite]
 ^https?:\/\/api\.coolapk\.com\/v6\/search\?.*type=hotSearch - reject-200
 
 [Script]
+酷安_开屏 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/init,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+酷安_首页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/indexV8,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_数据流 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/(page\/)?dataList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_详情页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/detail,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_评论区 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/replyList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_个人页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/account\/profile,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
-酷安_开屏 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/init,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
-酷安_首页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/indexV8,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 
 [MITM]
 hostname = %APPEND% api.coolapk.com

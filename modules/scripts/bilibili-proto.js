@@ -46,18 +46,9 @@ if(url.includes("viewunite.v1.View/View")){
         });
     }
     body = processNewBody(ViewReply.toBinary(viewReplyObj));
-} else if(url.includes("Dynamic/DynAll")){
-    console.log('动态DynAll');
-    const dynAllReplyObj = DynAllReply.fromBinary(unGzipBody,{readUnknownField: true});
-    if(!dynAllReplyObj.upList){
-        console.log('upList为空');
-    } else {
-        dynAllReplyObj.upList = null;
-        console.log('最常访问upList去除');
-    }
-    body = processNewBody(DynAllReply.toBinary(dynAllReplyObj));
 } else {
-    $notification.post('bilibili-proto', "路径匹配错误:", url);
+    $done({});
+    return;
 }
 
 if(isQuanX){

@@ -1,0 +1,13 @@
+#!name=麦当劳净化 (McDonald's)
+#!desc=去除麦当劳App开屏广告、首页弹窗营销(richpop)与热门活动推广横幅
+#!author=allofights
+#!system=ios
+#!category=应用净化
+
+[URL Rewrite]
+^https?:\/\/api(2)?\.mcd\.cn\/bff\/portal\/home\/splash - reject-200
+^https?:\/\/api(2)?\.mcd\.cn\/bff\/portal\/richpop - reject-200
+^https?:\/\/api(2)?\.mcd\.cn\/bff\/portal\/home\/hotActivity - reject-200
+
+[MITM]
+hostname = %APPEND% api.mcd.cn, api2.mcd.cn

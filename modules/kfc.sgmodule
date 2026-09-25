@@ -1,0 +1,16 @@
+#!name=肯德基净化 (KFC)
+#!desc=去除肯德基超级App开屏广告、首页弹窗营销、AI动态弹窗与营销活动预加载
+#!author=allofights
+#!system=ios
+#!category=应用净化
+
+[Rule]
+DOMAIN,dynamicad.kfc.com.cn,REJECT
+
+[URL Rewrite]
+^https?:\/\/res\.kfc\.com\.cn\/advertisement\/ - reject-200
+^https?:\/\/res\.kfc\.com\.cn\/CRM\/kfcad\/ - reject-200
+^https?:\/\/dynamicad\.kfc\.com\.cn\/api\/app5\/homepage\/ai\/popup - reject-200
+
+[MITM]
+hostname = %APPEND% res.kfc.com.cn, dynamicad.kfc.com.cn

@@ -1,8 +1,7 @@
-// 百度网盘净化脚本 (彻底解决开屏白屏转圈与摇一摇跳转残留)
+// 百度网盘急速开屏净化脚本 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
 const url = $request.url;
 
 if (typeof $response !== 'undefined' && $response.body) {
-    // http-response 模式：解析真实服务器返回并将广告数组清空，保留合法协议外壳
     try {
         let obj = JSON.parse($response.body);
         obj.errno = 0;
@@ -18,6 +17,8 @@ if (typeof $response !== 'undefined' && $response.body) {
         obj.ad_list = [];
         obj.ads = [];
         obj.ad_info = [];
+        obj.list = [];
+        obj.records = [];
         obj.splash = {};
         obj.fuse = false;
         $done({ body: JSON.stringify(obj) });
@@ -25,18 +26,25 @@ if (typeof $response !== 'undefined' && $response.body) {
         $done({});
     }
 } else {
-    // http-request 模式：Shadowrocket / Surge 标准 Mock 语法
+    // http-request 模式：本地秒级返回合规空数据，客户端免等待直接进入主页
     $done({
         response: {
             status: 200,
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Access-Control-Allow-Origin': '*'
+            },
             body: JSON.stringify({
                 errno: 0,
                 error_code: 0,
                 request_id: Date.now(),
                 ad_list: [],
                 ads: [],
-                data: []
+                data: [],
+                list: [],
+                records: [],
+                splash: {},
+                fuse: false
             })
         }
     });

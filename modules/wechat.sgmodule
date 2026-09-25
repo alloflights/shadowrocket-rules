@@ -1,0 +1,29 @@
+#!name=微信朋友圈与公众号广告阻断 (WeChat Moments Safe)
+#!desc=屏蔽微信朋友圈广告素材、视频流推流、广告追踪打点与优量汇投放。采用纯网络层域名阻断，严禁对微信主域名实施 MITM，100% 杜绝微信掉线与连接异常
+#!author=allofights
+#!system=ios
+#!category=应用净化
+
+[Rule]
+# 微信朋友圈广告动图与视频流 CDN 拦截
+DOMAIN-SUFFIX,wxsnsdy.wxs.qq.com,REJECT
+DOMAIN-SUFFIX,wxsnsdythumb.wxs.qq.com,REJECT
+# 腾讯优量汇 (GDT) 商业广告投放与素材服务器
+DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
+DOMAIN-SUFFIX,adsmind.ugdtimg.com,REJECT
+DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
+DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
+DOMAIN-SUFFIX,qzs.gdtimg.com,REJECT
+DOMAIN-SUFFIX,splashqzs.gdtimg.com,REJECT
+DOMAIN-SUFFIX,gdt.qq.com,REJECT
+DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,win.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,v2.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,tmead.y.qq.com,REJECT
+DOMAIN-SUFFIX,tangram.e.qq.com,REJECT
+# 微信与腾讯广告打点、转化追踪与数据上报
+DOMAIN-SUFFIX,beacon.qq.com,REJECT
+DOMAIN-SUFFIX,oth.eve.mdt.qq.com,REJECT
+DOMAIN,badjs.weixin.qq.com,REJECT
+DOMAIN,ad.weixin.qq.com,REJECT
+DOMAIN,mpad.weixin.qq.com,REJECT
