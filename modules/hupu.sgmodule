@@ -6,6 +6,7 @@
 
 [Rule]
 DOMAIN,goblin.hupu.com,REJECT
+DOMAIN,hermes.hupu.com,REJECT
 DOMAIN,adx.hupu.com,REJECT
 DOMAIN,adx-action.hupu.com,REJECT
 
@@ -17,4 +18,4 @@ DOMAIN,adx-action.hupu.com,REJECT
 ^https?:\/\/.*\.hupucdn\.com\/.*ad.* - reject-img
 
 [MITM]
-hostname = %APPEND% goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com
+hostname = %APPEND% hermes.hupu.com, goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com

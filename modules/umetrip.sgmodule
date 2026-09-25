@@ -6,6 +6,10 @@
 
 [Rule]
 DOMAIN,startup.umetrip.com,REJECT
+DOMAIN,umestartup.umetrip.com,REJECT
+DOMAIN,bda.umetrip.com,REJECT
+DOMAIN,opactivity.umetrip.com,REJECT
+DOMAIN,sensors.umetrip.com.cn,REJECT
 DOMAIN,discardrp.umetrip.com,REJECT
 DOMAIN,oss.umetrip.com,REJECT
 
@@ -14,4 +18,4 @@ DOMAIN,oss.umetrip.com,REJECT
 ^https?:\/\/oss\.umetrip\.com\/fs\/advert\/polite - reject-dict
 
 [MITM]
-hostname = %APPEND% startup.umetrip.com, discardrp.umetrip.com, oss.umetrip.com, home.umetrip.com, umerp.umetrip.com
+hostname = %APPEND% umestartup.umetrip.com, bda.umetrip.com, startup.umetrip.com, discardrp.umetrip.com, oss.umetrip.com, home.umetrip.com, umerp.umetrip.com
