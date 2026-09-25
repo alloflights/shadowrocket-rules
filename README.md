@@ -44,10 +44,13 @@
 | 增强功能模块 | 模块功能说明 | Shadowrocket 模块安装链接 |
 | :--- | :--- | :--- |
 | **全网外链直接跳转** | 自动绕过知乎/CSDN/简书/掘金/微博/贴吧/QQ/少数派/Gitee/语雀安全跳转确认页，0.05ms 本地直出 302 重定向 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/direct-link.sgmodule` |
-| **抖音无水印原画直存** | 解除创作者下载限制，无水印提取 1080P/4K 原画视频与超清图集直存相册 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/douyin-watermark.sgmodule` |
 | **TikTok 免拔卡原画直存** | 原生免拔卡换区(美区)，解除作者保存限制，视频无水印 1080P 下载与信息流净化 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/tiktok.sgmodule` |
 | **BoxJs 资产签到工作台** | 运行在小火箭内的无感自动化工作台，Safari 访问 `http://boxjs.com` 即可管理会话与每日资产自动签到 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/boxjs.sgmodule` |
 | **Safari 移动纯净浏览** | 屏蔽“打开App/前往客户端”遮罩霸屏、百度搜索热议软文、强制展开全文、App引导横幅 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/safari-clean.sgmodule` |
+
+> [!IMPORTANT]
+> **关于国内抖音（Douyin）无水印与评论区正常的关键说明**：
+> 抖音国内版客户端内置了强效的 SSL Pinning 证书绑定，任何代理工具对其核心接口（`amemv.com`）开启中间人解密（MITM）都会导致评论区、关注流或刷新异常中断。为确保日常使用体验零损伤，抖音去水印推荐使用免解密的 **iOS 原生快捷指令**（在分享菜单中 1 秒提取原画存相册），保证 App 评论区与通信 100% 顺畅。
 
 ---
 

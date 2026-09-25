@@ -1,11 +1,9 @@
-#!name=抖音无水印原视频直存 (Douyin No-Watermark Media)
-#!desc=解除抖音创作者保存限制，提取 1080P/4K 无水印原画视频与超清图集直存相册。注：需启用 HTTPS 解密并信任证书。若特定版本因 SSL Pinning 无法抓包，推荐配合 Safari 分享或免证书快捷指令直存。
+#!name=抖音无水印直存说明与保护 (Douyin Safe Guard)
+#!desc=安全保护模块：已全面撤销对抖音核心域名(*.amemv.com / *.snssdk.com)的 MITM 解密，彻底保障评论区、直播与交互功能正常加载。抖音无水印下载请使用官方原生的免解密快捷指令方案。
 #!author=allofights
 #!system=ios
 #!category=应用增强
 
-[Script]
-抖音_去水印原画 = type=http-response,pattern=^https?:\/\/.*(amemv\.com|snssdk\.com|douyin\.com)\/aweme\/v\d\/(feed|mix\/aweme|aweme\/post|(multi\/)?aweme\/detail|follow\/feed|nearby\/feed|search\/item|general\/search\/single|hot\/search\/video\/list|aweme\/favorite),requires-body=true,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin.js,script-update-interval=0
-
 [MITM]
-hostname = %APPEND% *.amemv.com, *.snssdk.com, *.douyin.com
+# 显式解除中间人解密，避免底层 SSL Pinning 破坏评论区与通信
+hostname = %APPEND% -*.amemv.com, -*.snssdk.com, -*.douyin.com
