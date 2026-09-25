@@ -1,0 +1,19 @@
+#!name=网易云音乐净化 (NetEase Cloud Music Pro)
+#!desc=去除网易云音乐开屏广告、首页Banner广告、发现页/推荐页推广、评论区商业插播与侧栏营销推广
+#!author=ddgksf2013
+#!system=ios
+#!category=应用净化
+
+[URL Rewrite]
+^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/content\/activity\/music\/jar\/template\/list - reject-200
+^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/sp\/flow\/popup\/query - reject-200
+^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/vipmall\/couponcfg\/get - reject-200
+^https?:\/\/interface(\d)?\.music\.163\.com\/w?eapi\/(resource-exposure\/)?activity - reject-200
+^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/comment\/feed\/inserted\/resources - reject-200
+^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/resource-exposure\/config - reject-200
+
+[Script]
+netease_adblock = type=http-response,pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link\/(home\/framework\/tab|page\/(discovery|rcmd)\/resource\/show|position\/show\/resource|scene\/show\/resource)|ios\/upgrade\/get|search\/(default\/keyword\/list|rcmd\/keyword\/get|chart\/(list|detail)|suggest\/keyword\/get|specialkeyword\/get)|ad\/(loading\/(get|current)|get)|vip\/cashier\/tspopup\/get|vipnewcenter\/app\/resource\/newaccountpage|side-bar\/mini-program\/music-service\/account|delivery\/(deliver|batch-deliver)|yunbei\/account\/entrance\/get|creator\/musician\/reminder\/message\/get|batch),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/netease.adblock.js,script-update-interval=0
+
+[MITM]
+hostname = %APPEND% interface*.music.163.com

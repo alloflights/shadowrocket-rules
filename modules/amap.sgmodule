@@ -1,10 +1,10 @@
-#!name=高德地图
-#!desc=缺德地图有治了
-#!author=@RuCu6,@kokoryh
-# 使用声明：此脚本仅供学习与交流，请勿转载与贩卖！
+#!name=高德地图净化 (Amap Pro)
+#!desc=去除高德地图开屏广告、首页营销卡片、搜索框热词、路线规划推广、导航结束打车/福利弹窗
+#!author=RuCu6,kokoryh
+#!system=ios
+#!category=应用净化
 
 [URL Rewrite]
-# 导航详情页,路线规划,地点详情页,搜索详情页,导航结束页
 ^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/card-service-(car-end|route-plan)\? - reject-dict
 ^https:\/\/m5\.amap\.com\/ws\/shield\/search\/new_hotword\? - reject-dict
 ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv\? - reject-dict
@@ -17,37 +17,13 @@
 ^https:\/\/m5-zb\.amap\.com\/ws\/boss\/(order\/car\/king_toolbox_car_bubble|tips\/onscene_visual_optimization)\? - reject-dict
 
 [Script]
-# 其他
-header = type=http-response, pattern=^http:\/\/amdc\.m\.taobao\.com\/amdc\/mobileDispatch$, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/header.js, timeout=60
-
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/perception\/drive\/(routeInfo|routePlan)\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search\/(common\/coupon\/info|poi\/detail)\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/(homepage|mps|search\/sp|sug|tips_operation_location)\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-# 首页,推广卡片,红点角标,右上角动图,搜索框热词,左下角天气,消息横幅
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(card-service-plan-home|main-page)\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable\/1\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-# 我的页面,推广卡片
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/dsp\/profile\/index\/nodefaasv3\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-# 附近页
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search\/nearbyrec_smart\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-# 开屏广告
-amap = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/valueadded\/alimama\/splash_screen\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-# 打车页,红点角标,弹窗,天气图标,推广卡片
-amap = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/boss\/(car\/order\/content_info|order_web\/friendly_information)\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-amap = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/promotion-web\/resource(\/home)?\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
-
-amap = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\?, script-path=https://raw.githubusercontent.com/lalifeier/Shadowrocket/main/QuanX/Scripts/amap.js, requires-body=true, max-size=-1, timeout=60
+amap_header = type=http-response,pattern=^http:\/\/amdc\.m\.taobao\.com\/amdc\/mobileDispatch$,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/header.js,timeout=60,script-update-interval=0
+amap_drive = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/perception\/drive\/(routeInfo|routePlan)\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+amap_poi = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search\/(common\/coupon\/info|poi\/detail)\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+amap_market = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+amap_search = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/(homepage|mps|search\/sp|sug|tips_operation_location)\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+amap_home = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(card-service-plan-home|main-page)\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+amap_frog = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable\/1\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% m5.amap.com, m5-zb.amap.com, oss.amap.com, sns.amap.com
+hostname = %APPEND% m5.amap.com, m5-zb.amap.com, oss.amap.com, amdc.m.taobao.com
