@@ -1,10 +1,25 @@
 #!name=喜马拉雅净化 (Ximalaya Pro)
-#!desc=去除喜马拉雅FM开屏广告、首页轮播广告、播放页直播与动态推广、我的页面营销角标
-#!author=ddgksf2013
+#!desc=去除喜马拉雅FM开屏广告、运营活动/福利中心弹窗、首页轮播广告、播放页直播与动态推广、我的页面营销角标
+#!author=ddgksf2013,allofights
 #!system=ios
 #!category=应用净化
 
+[Rule]
+DOMAIN-SUFFIX,adse.ximalaya.com,REJECT
+DOMAIN-SUFFIX,adse.wsa.ximalaya.com,REJECT
+DOMAIN-SUFFIX,adbehavior.ximalaya.com,REJECT
+DOMAIN-SUFFIX,xdcs-collector.ximalaya.com,REJECT
+DOMAIN-SUFFIX,location.ximalaya.com,REJECT
+DOMAIN-SUFFIX,linkeye.ximalaya.com,REJECT
+DOMAIN-SUFFIX,gslb.ximalaya.com,REJECT
+DOMAIN-SUFFIX,gslbali.ximalaya.com,REJECT
+
 [URL Rewrite]
+^https?:\/\/.*\.ximalaya\.com\/.*(adse|adRealTime|ting\/(loading|feed|home)|outadservice|ting\/preload) - reject
+^https?:\/\/.*\.xima.*\.com\/.*(adse|adRealTime|ting\/(loading|feed|home)|outadservice|ting\/preload) - reject
+^https?:\/\/.*\.ximalaya\.com\/discovery-feed\/(focus\/queryF|isShowUserGiftPendant) - reject
+^https?:\/\/passport\.ximalaya\.com\/friendship-mobile\/v1\/findFriendsBanner - reject
+^https?:\/\/.*\.xmcdn\.com\/.*gif$ - reject
 ^https?:\/\/.*\.xima.*\.com\/discovery-feed\/focus\/queryF - reject
 ^https?:\/\/.*\.xima.*\.com\/mobile-playpage\/view\/ - reject
 ^https?:\/\/.*\.xima.*\.com\/chaos-notice-web\/v1\/message\/preview\/list - reject
@@ -23,10 +38,9 @@
 ^https?:\/\/.*\.xima.*\.com\/(hub\/)?hotWordBillboard - reject
 ^https?:\/\/.*\.xima.*\.com\/(hub)?guideWord - reject
 ^https?:\/\/.*\.xima.*\.com\/api\/v\d\/adRealTime - reject
-^https?:\/\/.*\.xima.*\.com\/ting\/(loading|feed|home)? - reject
 
 [Script]
 喜马拉雅_净化 = type=http-response,pattern=^https?:\/\/.*\.xima.*\.com\/(discovery-category\/(customCategories|v\d\/category)|focus-mobile\/focusPic|discovery-feed\/v\d\/mix|mobile-user\/v\d\/homePage),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% *.xima*.*, *.xmcdn.*
+hostname = %APPEND% *.ximalaya.com, *.xmcdn.com, *.wsa.ximalaya.com, adse.ximalaya.com, adse.wsa.ximalaya.com, mobile.ximalaya.com, passport.ximalaya.com

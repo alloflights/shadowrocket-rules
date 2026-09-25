@@ -1,18 +1,20 @@
-#!name=虎扑净化 (Hupu)
-#!desc=去除虎扑开屏广告、下拉刷新流推广、帖子详情商业推广卡片及广告图片
-#!author=yjqiang
+#!name=虎扑净化 (Hupu Pro)
+#!desc=去除虎扑开屏广告、美团闪购等第三方落地页、下拉刷新推广、帖子详情商业推广卡片及广告图片
+#!author=yjqiang,allofights
 #!system=ios
 #!category=应用净化
 
 [Rule]
-# 拦截开屏与下拉刷新广告接口
-URL-REGEX,^https://goblin\.hupu\.com/[^/]+/[^/]+/interfaceAd/,REJECT
+DOMAIN,goblin.hupu.com,REJECT
 DOMAIN,adx.hupu.com,REJECT
 DOMAIN,adx-action.hupu.com,REJECT
 
 [URL Rewrite]
-# 屏蔽推广图片
+^https?:\/\/goblin\.hupu\.com\/.* - reject
+^https?:\/\/.*\.mobileapi\.hupu\.com\/.+\/(interfaceAd|banners|search\/v2\/(hotkeylist|hintkeylist)) - reject
+^https?:\/\/bbs\.mobileapi\.hupu\.com\/.+\/bbsallapi\/(lego\/data|tag\/v\d\/heatTag) - reject-dict
+^https?:\/\/games\.mobileapi\.hupu\.com\/.+\/bplapi\/user\/v1\/more - reject-dict
 ^https?:\/\/.*\.hupucdn\.com\/.*ad.* - reject-img
 
 [MITM]
-hostname = %APPEND% goblin.hupu.com
+hostname = %APPEND% goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com
