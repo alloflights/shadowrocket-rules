@@ -49,7 +49,7 @@ IP-CIDR,180.76.76.200/32,REJECT,no-resolve
 
 [Script]
 # 百度网盘开屏净化 (Mock 无广告数据，杜绝白屏转圈与摇一摇残留)
-baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/pcs\/adx?|buy\/ad\/conf|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
+baidunetdisk_splash = type=http-response,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/pcs\/adx?|buy\/ad\/conf|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
 
 [MITM]
 hostname = %APPEND% pan.baidu.com, afd.baidu.com, ndstatic.cdn.bcebos.com, staticsns.cdn.bcebos.com

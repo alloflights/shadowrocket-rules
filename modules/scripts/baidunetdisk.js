@@ -1,29 +1,34 @@
 // 百度网盘净化脚本 (彻底解决开屏白屏转圈与摇一摇跳转残留)
 const url = $request.url;
 
-if (url.includes('/pcs/adx') || url.includes('/pcs/ad')) {
-    // 返回标准无广告响应结构，使网盘直接跳过开屏视图并注销加速度计监听，杜绝白屏转圈
-    $done({
-        status: 200,
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({
-            errno: 0,
-            error_code: 0,
-            request_id: Date.now(),
-            ad_list: [],
-            ads: [],
-            data: []
-        })
-    });
-} else if (url.includes('/buy/ad/conf') || url.includes('/activityentry') || url.includes('/bchannel/list') || url.includes('/welfare/list')) {
-    $done({
-        status: 200,
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({
-            errno: 0,
-            data: {}
-        })
-    });
+if (typeof $response !== 'undefined' && $response.body) {
+    // http-response 模式：解析真实服务器返回并将广告数组清空，保留合法协议外壳
+    try {
+        let obj = JSON.parse($response.body);
+        obj.errno = 0;
+        obj.error_code = 0;
+        obj.ad_list = [];
+        obj.ads = [];
+        obj.data = [];
+        obj.ad_info = [];
+        $done({ body: JSON.stringify(obj) });
+    } catch (e) {
+        $done({});
+    }
 } else {
-    $done({});
+    // http-request 模式：Shadowrocket / Surge 标准 Mock 语法
+    $done({
+        response: {
+            status: 200,
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            body: JSON.stringify({
+                errno: 0,
+                error_code: 0,
+                request_id: Date.now(),
+                ad_list: [],
+                ads: [],
+                data: []
+            })
+        }
+    });
 }
