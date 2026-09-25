@@ -37,6 +37,20 @@
 
 ---
 
+### 【方案 C：高阶体验与无感自动化模块（按需即装即用）】
+
+除了系统级广告拦截外，针对全网外链拦截跳转、短视频无水印下载、每日资产自动签到与 Safari 纯净浏览，提供即装即用的独立增强模块：
+
+| 增强功能模块 | 模块功能说明 | Shadowrocket 模块安装链接 |
+| :--- | :--- | :--- |
+| **全网外链直接跳转** | 自动绕过知乎/CSDN/简书/掘金/微博/贴吧/QQ/少数派/Gitee/语雀安全跳转确认页，0.05ms 本地直出 302 重定向 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/direct-link.sgmodule` |
+| **抖音无水印原画直存** | 解除创作者下载限制，无水印提取 1080P/4K 原画视频与超清图集直存相册 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/douyin-watermark.sgmodule` |
+| **TikTok 免拔卡原画直存** | 原生免拔卡换区(美区)，解除作者保存限制，视频无水印 1080P 下载与信息流净化 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/tiktok.sgmodule` |
+| **BoxJs 资产签到工作台** | 运行在小火箭内的无感自动化工作台，Safari 访问 `http://boxjs.com` 即可管理会话与每日资产自动签到 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/boxjs.sgmodule` |
+| **Safari 移动纯净浏览** | 屏蔽“打开App/前往客户端”遮罩霸屏、百度搜索热议软文、强制展开全文、App引导横幅 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/safari-clean.sgmodule` |
+
+---
+
 ## 🎯 适配与净化应用清单
 
 | 应用名称 | 净化范围与效果 | 技术实现方案 |

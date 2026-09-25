@@ -1,0 +1,11 @@
+#!name=全网外链“零等待”直接跳转 (Direct Link Bypass)
+#!desc=自动跳过知乎、CSDN、简书、掘金、微博、贴吧、QQ、少数派、Gitee、语雀等外链安全确认与拦截跳转页，0.05ms 本地直出 302 重定向到真实目标网页。
+#!author=allofights
+#!system=ios
+#!category=浏览增强
+
+[Script]
+全网外链直接跳转 = type=http-request,pattern=^https?:\/\/(link\.(zhihu|csdn|juejin)\.(com|net|cn)|(www\.)?jianshu\.com\/go-wild|weibo\.cn\/sinaurl|jump2?\.bdimg\.com\/safecheck|c\.pc\.qq\.com\/middlem|sspai\.com\/link|gitee\.com\/link|www\.yuque\.com\/r\/goto),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/direct-link.js,requires-body=false,timeout=10
+
+[MITM]
+hostname = %APPEND% link.zhihu.com, link.csdn.net, link.juejin.cn, *.jianshu.com, weibo.cn, jump2.bdimg.com, jump.bdimg.com, c.pc.qq.com, sspai.com, gitee.com, www.yuque.com
