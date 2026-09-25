@@ -1,0 +1,12 @@
+#!name=抖音网页版原画无水印直存 (Douyin Web Media)
+#!desc=【App 零侵入安全方案】仅拦截 Safari 浏览器内访问的 www.douyin.com 页面，自动提取图集全部超清无水印原图与 1080P 视频，绝对不触碰手机抖音 App 内部通信，评论区与通信 100% 顺畅。
+#!author=allofights
+#!system=ios
+#!category=浏览增强
+
+[Script]
+抖音_网页原画 = type=http-response,pattern=^https?:\/\/www\.douyin\.com\/(video|note)\/,requires-body=true,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=0
+
+[MITM]
+# 仅解密 www.douyin.com 网页端，绝对不解密 amemv.com 与 snssdk.com，保证 App 零风险
+hostname = %APPEND% www.douyin.com
