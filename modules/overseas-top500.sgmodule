@@ -8,9 +8,12 @@
 # ==================== Meta AI / Muse 智能体专线全链路 (全量代理) ====================
 DOMAIN-SUFFIX,muse.ai,PROXY
 DOMAIN-SUFFIX,muse-meta.com,PROXY
+DOMAIN-SUFFIX,metaaivm.com,PROXY
+DOMAIN-SUFFIX,meta.ai,PROXY
+DOMAIN,hatch.metaaivm.com,PROXY
+DOMAIN-KEYWORD,metaaivm,PROXY
 DOMAIN-KEYWORD,muse,PROXY
 DOMAIN-KEYWORD,metaclaw,PROXY
-DOMAIN-SUFFIX,meta.ai,PROXY
 DOMAIN,imagine.meta.com,PROXY
 DOMAIN,flow.meta.com,PROXY
 DOMAIN-SUFFIX,meta.com,PROXY

@@ -6,13 +6,15 @@
 
 [Rule]
 # ==================== 1. Meta AI & 个人智能体生态 (Meta Muse / Meta AI / Llama) ====================
-# Meta 2026 最新个人自主智能体 Muse 全链路 (核心域 / 虚拟机 / 后台通信 / 关键字匹配)
+# Meta 2026 最新个人自主智能体 Muse 全链路 (核心域 / 云端沙箱虚拟机 / 后台通信 / 关键字匹配)
 DOMAIN-SUFFIX,muse.ai,PROXY
 DOMAIN-SUFFIX,muse-meta.com,PROXY
+DOMAIN-SUFFIX,metaaivm.com,PROXY
+DOMAIN-SUFFIX,meta.ai,PROXY
+DOMAIN,hatch.metaaivm.com,PROXY
+DOMAIN-KEYWORD,metaaivm,PROXY
 DOMAIN-KEYWORD,muse,PROXY
 DOMAIN-KEYWORD,metaclaw,PROXY
-# Meta 核心 AI 助手与多模态交互
-DOMAIN-SUFFIX,meta.ai,PROXY
 DOMAIN,imagine.meta.com,PROXY
 DOMAIN,flow.meta.com,PROXY
 # Meta 基础架构、账号中心与 API (解决 Muse 登录鉴权失败、虚拟机断开及跨国切线风控)
