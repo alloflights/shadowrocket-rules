@@ -1,0 +1,171 @@
+#!name=全球主流 AI 与个人智能体生态增强分流 (Global AI & Agent Rules)
+#!desc=精准分流 Meta Muse、OpenAI/ChatGPT、Claude、Gemini、Grok、Perplexity、Cursor、Suno、Midjourney 及全网最新主流 AI 智能体生态，国内主流 AI 严格直连免风控。
+#!author=allofights
+#!system=ios
+#!category=分流规则
+
+[Rule]
+# ==================== 1. Meta AI & 个人智能体生态 (Meta Muse / Meta AI / Llama) ====================
+# Meta 2026 最新个人自主智能体 Muse (muse.ai / muse-meta.com)
+DOMAIN-SUFFIX,muse.ai,PROXY
+DOMAIN-SUFFIX,muse-meta.com,PROXY
+DOMAIN,muse.meta.com,PROXY
+# Meta 核心 AI 助手与多模态交互
+DOMAIN-SUFFIX,meta.ai,PROXY
+DOMAIN,imagine.meta.com,PROXY
+DOMAIN,flow.meta.com,PROXY
+# Llama 开源大模型生态与权重分发
+DOMAIN-SUFFIX,llama.com,PROXY
+DOMAIN,llama.meta.com,PROXY
+DOMAIN-SUFFIX,ai.meta.com,PROXY
+
+# ==================== 2. Google Gemini & DeepMind 专线全链路 ====================
+DOMAIN-SUFFIX,gemini.google.com,PROXY
+DOMAIN-SUFFIX,bard.google.com,PROXY
+DOMAIN-SUFFIX,ai.google.dev,PROXY
+DOMAIN-SUFFIX,aistudio.google.com,PROXY
+DOMAIN-SUFFIX,makersuite.google.com,PROXY
+DOMAIN-SUFFIX,deepmind.google,PROXY
+DOMAIN-SUFFIX,deepmind.com,PROXY
+DOMAIN-SUFFIX,generativeai.google,PROXY
+DOMAIN-SUFFIX,notebooklm.google,PROXY
+DOMAIN-SUFFIX,notebooklm.google.com,PROXY
+DOMAIN,generativelanguage.googleapis.com,PROXY
+DOMAIN,proactivebackend-pa.googleapis.com,PROXY
+DOMAIN,alkalimakersuite-pa.googleapis.com,PROXY
+DOMAIN,alkalimakersuite-pa.clients6.google.com,PROXY
+DOMAIN,apis.google.com,PROXY
+DOMAIN-KEYWORD,colab,PROXY
+DOMAIN-KEYWORD,developerprofiles,PROXY
+DOMAIN,clients6.google.com,PROXY
+DOMAIN-SUFFIX,waa-pa.clients6.google.com,PROXY
+DOMAIN,storage.googleapis.com,PROXY
+DOMAIN,content-storage.googleapis.com,PROXY
+DOMAIN,geller-pa.googleapis.com,PROXY
+DOMAIN-SUFFIX,googleusercontent.com,PROXY
+DOMAIN-SUFFIX,lh3.googleusercontent.com,PROXY
+DOMAIN-SUFFIX,photoslibrary.googleapis.com,PROXY
+DOMAIN,oauthaccountmanager.googleapis.com,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Gemini/Gemini.list,PROXY
+
+# ==================== 3. OpenAI / ChatGPT / Sora 全矩阵生态 ====================
+DOMAIN-SUFFIX,chatgpt.com,PROXY
+DOMAIN-SUFFIX,openai.com,PROXY
+DOMAIN-SUFFIX,oaistatic.com,PROXY
+DOMAIN-SUFFIX,oaiusercontent.com,PROXY
+DOMAIN-SUFFIX,sora.com,PROXY
+DOMAIN-SUFFIX,searchgpt.com,PROXY
+DOMAIN,chat.openai.com,PROXY
+DOMAIN,api.openai.com,PROXY
+DOMAIN,auth.openai.com,PROXY
+DOMAIN,platform.openai.com,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/OpenAI/OpenAI.list,PROXY
+
+# ==================== 4. Anthropic Claude 深度生态 ====================
+DOMAIN-SUFFIX,claude.ai,PROXY
+DOMAIN-SUFFIX,anthropic.com,PROXY
+DOMAIN-SUFFIX,claude.usercontent.com,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Claude/Claude.list,PROXY
+
+# ==================== 5. xAI (Grok) 矩阵 ====================
+DOMAIN-SUFFIX,x.ai,PROXY
+DOMAIN-SUFFIX,grok.com,PROXY
+DOMAIN,api.x.ai,PROXY
+
+# ==================== 6. 搜索、自主智能体与 Agent 执行环境 ====================
+# Perplexity AI 全球搜索
+DOMAIN-SUFFIX,perplexity.ai,PROXY
+DOMAIN-SUFFIX,pplx.ai,PROXY
+# 全自主 AI 智能体 (Manus / Devin / Cognition / E2B 沙箱)
+DOMAIN-SUFFIX,manus.im,PROXY
+DOMAIN-SUFFIX,cognition.ai,PROXY
+DOMAIN-SUFFIX,devin.ai,PROXY
+DOMAIN-SUFFIX,e2b.dev,PROXY
+# 新一代 AI 搜索与生产力
+DOMAIN-SUFFIX,genspark.ai,PROXY
+DOMAIN-SUFFIX,phind.com,PROXY
+DOMAIN-SUFFIX,you.com,PROXY
+
+# ==================== 7. 研发、代码与工程智能体 (Cursor / Bolt / v0 / Copilot) ====================
+# Cursor IDE 与后台 API
+DOMAIN-SUFFIX,cursor.com,PROXY
+DOMAIN-SUFFIX,cursor.sh,PROXY
+DOMAIN-SUFFIX,cursorapi.com,PROXY
+# 前端与全栈即时生成智能体
+DOMAIN-SUFFIX,v0.dev,PROXY
+DOMAIN-SUFFIX,bolt.new,PROXY
+DOMAIN-SUFFIX,windsurf.ai,PROXY
+DOMAIN-SUFFIX,codeium.com,PROXY
+DOMAIN-SUFFIX,replit.com,PROXY
+# 微软 Copilot
+DOMAIN-SUFFIX,copilot.microsoft.com,PROXY
+DOMAIN,sydney.bing.com,PROXY
+DOMAIN,designer.microsoft.com,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Copilot/Copilot.list,PROXY
+
+# ==================== 8. 多模态生图、生音、生视频智能体 ====================
+# 音频/音乐生成 (Suno / Udio / ElevenLabs)
+DOMAIN-SUFFIX,suno.com,PROXY
+DOMAIN-SUFFIX,suno.ai,PROXY
+DOMAIN-SUFFIX,udio.com,PROXY
+DOMAIN-SUFFIX,elevenlabs.io,PROXY
+# 图像生成 (Midjourney / Ideogram / Recraft / Flux)
+DOMAIN-SUFFIX,midjourney.com,PROXY
+DOMAIN-SUFFIX,ideogram.ai,PROXY
+DOMAIN-SUFFIX,recraft.ai,PROXY
+DOMAIN-SUFFIX,blackforestlabs.ai,PROXY
+DOMAIN-SUFFIX,krea.ai,PROXY
+# 视频生成 (Runway / Luma / Pika / Haiper)
+DOMAIN-SUFFIX,runwayml.com,PROXY
+DOMAIN-SUFFIX,runway.com,PROXY
+DOMAIN-SUFFIX,luma.ai,PROXY
+DOMAIN-SUFFIX,lumalabs.ai,PROXY
+DOMAIN-SUFFIX,pika.art,PROXY
+DOMAIN-SUFFIX,haiper.ai,PROXY
+
+# ==================== 9. 开源模型托管、推理加速与聚合路由 ====================
+# Hugging Face
+DOMAIN-SUFFIX,huggingface.co,PROXY
+DOMAIN-SUFFIX,hf.co,PROXY
+DOMAIN-SUFFIX,hf.space,PROXY
+# 算力与推理平台 (Replicate / Together / Groq / Fireworks / DeepInfra / OpenRouter / Mistral / Cohere)
+DOMAIN-SUFFIX,replicate.com,PROXY
+DOMAIN-SUFFIX,replicate.delivery,PROXY
+DOMAIN-SUFFIX,together.ai,PROXY
+DOMAIN-SUFFIX,together.xyz,PROXY
+DOMAIN-SUFFIX,groq.com,PROXY
+DOMAIN-SUFFIX,fireworks.ai,PROXY
+DOMAIN-SUFFIX,deepinfra.com,PROXY
+DOMAIN-SUFFIX,openrouter.ai,PROXY
+DOMAIN-SUFFIX,mistral.ai,PROXY
+DOMAIN-SUFFIX,lechat.ai,PROXY
+DOMAIN-SUFFIX,cohere.com,PROXY
+DOMAIN-SUFFIX,cohere.ai,PROXY
+# 交互伴侣与智能体平台 (Poe / Character.ai / Coze / Cici)
+DOMAIN-SUFFIX,poe.com,PROXY
+DOMAIN-SUFFIX,poecdn.net,PROXY
+DOMAIN-SUFFIX,character.ai,PROXY
+DOMAIN-SUFFIX,characterai.com,PROXY
+DOMAIN-SUFFIX,coze.com,PROXY
+DOMAIN-SUFFIX,cici.ai,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/iab0x00/ProxyRules@main/Rule/AI.txt,PROXY
+
+# ==================== 10. 国内主流 AI 助手 (严格 DIRECT 直连免风控) ====================
+DOMAIN-SUFFIX,deepseek.com,DIRECT
+DOMAIN-SUFFIX,moonshot.cn,DIRECT
+DOMAIN-SUFFIX,kimi.ai,DIRECT
+DOMAIN-SUFFIX,doubao.com,DIRECT
+DOMAIN-SUFFIX,volces.com,DIRECT
+DOMAIN-SUFFIX,zhipuai.cn,DIRECT
+DOMAIN-SUFFIX,chatglm.cn,DIRECT
+DOMAIN-SUFFIX,tongyi.com,DIRECT
+DOMAIN-SUFFIX,stepfun.com,DIRECT
+DOMAIN-SUFFIX,yuewen.cn,DIRECT
+DOMAIN-SUFFIX,minimax.io,DIRECT
+DOMAIN-SUFFIX,hailuoai.com,DIRECT
+DOMAIN-SUFFIX,baichuan-ai.com,DIRECT
+DOMAIN-SUFFIX,lingyiwanwu.com,DIRECT
+DOMAIN-SUFFIX,01.ai,DIRECT
+DOMAIN-SUFFIX,sensetime.com,DIRECT
+DOMAIN,yiyan.baidu.com,DIRECT
+DOMAIN,hunyuan.tencent.com,DIRECT
