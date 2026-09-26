@@ -6,18 +6,33 @@
 
 [Rule]
 # ==================== 1. Meta AI & 个人智能体生态 (Meta Muse / Meta AI / Llama) ====================
-# Meta 2026 最新个人自主智能体 Muse (muse.ai / muse-meta.com)
+# Meta 2026 最新个人自主智能体 Muse 全链路 (核心域 / 虚拟机 / 后台通信 / 关键字匹配)
 DOMAIN-SUFFIX,muse.ai,PROXY
 DOMAIN-SUFFIX,muse-meta.com,PROXY
-DOMAIN,muse.meta.com,PROXY
+DOMAIN-KEYWORD,muse,PROXY
 # Meta 核心 AI 助手与多模态交互
 DOMAIN-SUFFIX,meta.ai,PROXY
 DOMAIN,imagine.meta.com,PROXY
 DOMAIN,flow.meta.com,PROXY
-# Llama 开源大模型生态与权重分发
+# Meta 基础架构、账号中心与 API (解决 Muse 登录鉴权失败、虚拟机断开及跨国切线风控)
+DOMAIN-SUFFIX,meta.com,PROXY
+DOMAIN-SUFFIX,facebook.com,PROXY
+DOMAIN-SUFFIX,fbcdn.net,PROXY
+DOMAIN-SUFFIX,fbsbx.com,PROXY
+DOMAIN-SUFFIX,internalfb.com,PROXY
 DOMAIN-SUFFIX,llama.com,PROXY
 DOMAIN,llama.meta.com,PROXY
 DOMAIN-SUFFIX,ai.meta.com,PROXY
+DOMAIN-SUFFIX,oculus.com,PROXY
+DOMAIN-SUFFIX,m.me,PROXY
+# Meta 官方 IP 范围与 ASN (彻底杜绝直连 IP 落入漏网之鱼)
+IP-ASN,32934,PROXY,no-resolve
+IP-CIDR,157.240.0.0/17,PROXY,no-resolve
+IP-CIDR,31.13.64.0/18,PROXY,no-resolve
+IP-CIDR,173.252.64.0/18,PROXY,no-resolve
+IP-CIDR,129.134.0.0/17,PROXY,no-resolve
+IP-CIDR,185.60.216.0/22,PROXY,no-resolve
+IP-CIDR,204.15.20.0/22,PROXY,no-resolve
 
 # ==================== 2. Google Gemini & DeepMind 专线全链路 ====================
 DOMAIN-SUFFIX,gemini.google.com,PROXY
