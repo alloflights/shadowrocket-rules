@@ -44,6 +44,7 @@
 | 增强功能模块 | 模块功能说明 | Shadowrocket 模块安装链接 |
 | :--- | :--- | :--- |
 | **全球主流 AI 与智能体生态分流** | 精准分流 Meta Muse 智能体、OpenAI/ChatGPT、Claude、Gemini、Grok、Perplexity、Cursor、Suno、Midjourney 及全网主流 Agent，国内 AI 严格直连免风控 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/ai-services.sgmodule` |
+| **全球 Top 500 常用海外应用与网站极速分流** | 收录全球 Top 500 核心资讯、科技媒体、跨国差旅、生命科学学术科研 (Rosalind)、开发者原生云生态及海外法定 TLD，彻底杜绝境外未知流量落入直连导致的白屏与打不开 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/overseas-top500.sgmodule` |
 | **全网外链直接跳转** | 自动绕过知乎/CSDN/简书/掘金/微博/贴吧/QQ/少数派/Gitee/语雀安全跳转确认页，0.05ms 本地直出 302 重定向 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/direct-link.sgmodule` |
 | **TikTok 免拔卡原画直存** | 原生免拔卡换区(美区)，解除作者保存限制，视频无水印 1080P 下载与信息流净化 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/tiktok.sgmodule` |
 | **BoxJs 资产签到工作台** | 运行在小火箭内的无感自动化工作台，Safari 访问 `http://boxjs.com` 即可管理会话与每日资产自动签到 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/boxjs.sgmodule` |
