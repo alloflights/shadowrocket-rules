@@ -1,91 +1,130 @@
-// 酷安净化脚本 (Coolapk Pro)
-// 去除酷安App开屏广告、首页推广卡片、信息流广告、商品推荐与评论区推广
+/**
+ * 酷安 (Coolapk) 深度净化脚本
+ * 
+ * 核心特性：
+ * 1. 拦截开屏广告配置、Tab推广与营销热搜 (/main/init)
+ * 2. 深度过滤首页全系列版本信息流 (/main/index*) 中的推广卡片、数码好物带货与红包广告
+ * 3. 过滤动态列表与频道数据流 (/page/dataList*, /main/dataList*) 中的 sponsorCard 与广告位
+ * 4. 清除动态详情页带货商品卡片 (detailSponsorCard / include_goods)
+ * 5. 过滤评论区插播商业广告与推广回复
+ * 6. 移除个人中心推广横幅
+ * 
+ * 遵循: Ponytail 极简原则
+ * 作者: allofights
+ */
 
-const url = $request.url;
-
-if (!$response || !$response.body) {
-    $done({});
-}
-
-try {
-    let obj = JSON.parse($response.body);
-
-    if (url.includes("/main/init")) {
-        // 核心初始化接口：开屏广告配置、Tab与热搜
-        if (Array.isArray(obj.data)) {
-            let filtered = [];
-            for (let item of obj.data) {
-                // 过滤开屏广告、推广Tab与营销项目
-                // 944: 热门搜索, 945: 开屏广告, 6390: 首页营销Tab, 8639/24455/36839: 商业推广
-                if ([944, 945, 6390, 8639, 24455, 36839].includes(item?.entityId) ||
-                    item?.entityType === "splash" ||
-                    item?.entityTemplate === "splash" ||
-                    item?.entityType === "ad" ||
-                    item?.title?.includes("广告") ||
-                    item?.extraData?.ad) {
-                    continue;
-                }
-                if (item?.entityId === 20131 && Array.isArray(item.entities)) {
-                    // 发现页顶部推广过滤
-                    item.entities = item.entities.filter(i => i?.title !== "酷品");
-                }
-                filtered.push(item);
-            }
-            obj.data = filtered;
-        }
-        // 清除根级可能存在的开屏与广告字段
-        delete obj.splash;
-        delete obj.splashList;
-        delete obj.ad;
-        delete obj.ads;
-    } else if (url.includes("/main/indexV8")) {
-        // 首页推荐流
-        if (Array.isArray(obj.data)) {
-            obj.data = obj.data.filter(item => {
-                if (item?.entityTemplate === "sponsorCard") return false;
-                if ([8639, 29349, 33006, 32557].includes(item?.entityId)) return false;
-                if (item?.title?.includes("值得买") || item?.title?.includes("红包") || item?.title?.includes("精选配件")) return false;
-                if (item?.extraData?.ad || item?.entityType === "ad") return false;
-                return true;
-            });
-        }
-    } else if (url.includes("/page/dataList") || url.includes("/main/dataList")) {
-        // 数据流与信息流广告
-        if (Array.isArray(obj.data)) {
-            obj.data = obj.data.filter(item => {
-                if (item?.entityTemplate === "sponsorCard" || item?.entityTemplate === "imageScaleCard") return false;
-                if (item?.title === "酷安热搜" || item?.title === "精选配件") return false;
-                if (item?.extraData?.ad || item?.entityType === "ad") return false;
-                return true;
-            });
-        }
-    } else if (url.includes("/feed/detail")) {
-        // 动态/帖子详情页
-        if (obj.data) {
-            if (Array.isArray(obj.data.hotReplyRows)) {
-                obj.data.hotReplyRows = obj.data.hotReplyRows.filter(item => item?.id);
-            }
-            if (Array.isArray(obj.data.topReplyRows)) {
-                obj.data.topReplyRows = obj.data.topReplyRows.filter(item => item?.id);
-            }
-            const sponsorFields = ["detailSponsorCard", "include_goods", "include_goods_ids"];
-            for (let f of sponsorFields) {
-                if (obj.data[f]) obj.data[f] = [];
-            }
-        }
-    } else if (url.includes("/feed/replyList")) {
-        // 评论区
-        if (Array.isArray(obj.data)) {
-            obj.data = obj.data.filter(item => item?.id);
-        }
-    } else if (url.includes("/account/profile")) {
-        // 个人中心推广横幅
-        if (obj.data && Array.isArray(obj.data.entities)) {
-            obj.data.entities = obj.data.entities.filter(item => !item?.title?.includes("好物"));
-        }
+(function coolapkPro() {
+    const url = $request.url;
+    if (typeof $response === "undefined" || !$response.body) {
+        $done({});
+        return;
     }
 
-    $done({ body: JSON.stringify(obj) });
-} catch (e) {
-    $done({});
-}
+    try {
+        let obj = JSON.parse($response.body);
+
+        // 1. 初始化接口（开屏、热搜、营销配置）
+        if (url.includes("/main/init")) {
+            if (Array.isArray(obj.data)) {
+                obj.data = obj.data.filter(item => {
+                    if ([944, 945, 6390, 8639, 24455, 36839].includes(item?.entityId)) return false;
+                    if (item?.entityType === "splash" || item?.entityTemplate === "splash" || item?.entityType === "ad") return false;
+                    if (item?.title?.includes("广告") || item?.extraData?.ad) return false;
+                    if (item?.entityId === 20131 && Array.isArray(item.entities)) {
+                        item.entities = item.entities.filter(i => i?.title !== "酷品" && i?.title !== "好物");
+                    }
+                    return true;
+                });
+            }
+            delete obj.splash;
+            delete obj.splashList;
+            delete obj.ad;
+            delete obj.ads;
+        }
+        // 2. 首页各版本推荐流 (index / indexV8 / indexV11 / indexV12)
+        else if (url.includes("/main/index")) {
+            if (Array.isArray(obj.data)) {
+                obj.data = obj.data.filter(item => !isCoolapkAd(item));
+            }
+        }
+        // 3. 通用数据流 (dataList / dataListV8 / dataListV11)
+        else if (url.includes("dataList")) {
+            if (Array.isArray(obj.data)) {
+                obj.data = obj.data.filter(item => !isCoolapkAd(item));
+            }
+        }
+        // 4. 动态/图文详情页
+        else if (url.includes("/feed/detail")) {
+            if (obj.data) {
+                if (Array.isArray(obj.data.hotReplyRows)) {
+                    obj.data.hotReplyRows = obj.data.hotReplyRows.filter(item => !isCoolapkReplyAd(item));
+                }
+                if (Array.isArray(obj.data.topReplyRows)) {
+                    obj.data.topReplyRows = obj.data.topReplyRows.filter(item => !isCoolapkReplyAd(item));
+                }
+                const sponsorFields = ["detailSponsorCard", "include_goods", "include_goods_ids", "goodsList", "goodsRows"];
+                for (let f of sponsorFields) {
+                    if (obj.data[f]) obj.data[f] = [];
+                }
+            }
+        }
+        // 5. 评论区列表
+        else if (url.includes("/feed/replyList")) {
+            if (Array.isArray(obj.data)) {
+                obj.data = obj.data.filter(item => !isCoolapkReplyAd(item));
+            }
+        }
+        // 6. 个人中心
+        else if (url.includes("/account/profile")) {
+            if (obj.data && Array.isArray(obj.data.entities)) {
+                obj.data.entities = obj.data.entities.filter(item => !item?.title?.includes("好物") && !item?.title?.includes("推广"));
+            }
+        }
+
+        $done({ body: JSON.stringify(obj) });
+    } catch (e) {
+        $done({});
+    }
+
+    /**
+     * 判断是否为酷安信息流广告卡片
+     */
+    function isCoolapkAd(item) {
+        if (!item) return false;
+
+        // 赞助模板与大图营销
+        if (item.entityTemplate === "sponsorCard" || item.entityTemplate === "imageScaleCard" || item.entityTemplate === "goodsCard" || item.entityTemplate === "goodsGridCard") {
+            return true;
+        }
+
+        // 商业实体类型
+        if (item.entityType === "ad" || item.entityType === "card" && item.title?.includes("推广")) {
+            return true;
+        }
+
+        // 命中已知商业推广 ID
+        if ([8639, 29349, 33006, 32557, 43906].includes(item.entityId)) {
+            return true;
+        }
+
+        // 商业带货与广告元数据
+        if (item.extraData?.ad || item.extraData?.is_ad || item.extraData?.is_feed_ad) {
+            return true;
+        }
+
+        if (item.title?.includes("值得买") || item.title?.includes("红包") || item.title?.includes("精选配件") || item.title === "酷安热搜") {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 判断是否为评论区推广
+     */
+    function isCoolapkReplyAd(item) {
+        if (!item || !item.id) return true;
+        if (item.entityType === "ad" || item.extraData?.ad) return true;
+        return false;
+    }
+})();

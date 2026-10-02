@@ -1,5 +1,6 @@
-#!name=抖音极限暴力净化 (Douyin Ultra - 网络层封顶版)
-#!desc=封杀穿山甲SDK、巨量引擎全系广告追踪、开屏落地页、带货小黄车与直播弹窗，阻断行为画像分析
+#!name=抖音深度纯净版 (Douyin Pro)
+#!desc=过滤推荐流与搜索流广告视频/电商带货视频，剥离小黄车与营销浮窗，解除下载限制并支持无水印原画直存，屏蔽穿山甲SDK与巨量引擎行为画像分析。
+#!author=allofights
 #!system=ios
 #!category=应用净化
 
@@ -37,5 +38,10 @@ DOMAIN-KEYWORD,toblog,REJECT
 ^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/commerce\/ - reject-dict
 ^https?:\/\/.*\.snssdk\.com\/live\/room\/pop_window - reject-dict
 
+[Script]
+# 抖音推荐流、搜索流与详情页广告过滤、带货移除与无水印直存
+douyin_feed = type=http-response,pattern=^https?:\/\/.*(amemv\.com|snssdk\.com)\/aweme\/v\d\/(feed|nearby\/feed|follow\/feed|general\/search\/single|tab\/feed),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin.js,script-update-interval=0
+douyin_detail = type=http-response,pattern=^https?:\/\/.*(amemv\.com|snssdk\.com)\/aweme\/v\d\/(detail|aweme\/post),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin.js,script-update-interval=0
+
 [MITM]
-hostname = %APPEND% -*
+hostname = %APPEND% api*.amemv.com, aweme*.snssdk.com

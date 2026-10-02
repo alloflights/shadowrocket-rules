@@ -1,143 +1,111 @@
-const url = $request.url;
-const method = $request.method;
-if (!$response.body) {
-    console.log(`$response.body为undefined:${url}`);
-    $done({});
-}
-console.log(`2022-12.6`)
+/**
+ * 知乎 (Zhihu) 深度纯净版脚本
+ * 
+ * 核心特性：
+ * 1. 拦截开屏硬广与开屏落地页配置 (real_time_launch_v2)
+ * 2. 彻底过滤首页推荐流中的伪装广告卡片、商业合作问答与带货专栏 (topstory/recommend)
+ * 3. 移除问题回答列表中的商业广告卡片与置顶营销 (questions/answers)
+ * 4. 清除回答与专栏文章底部的推广卡片 (recommendations)
+ * 5. 移除首页悬浮营销球与活动弹窗 (app_float_layer)
+ * 
+ * 遵循: Ponytail 极简原则
+ * 作者: allofights
+ */
 
-const noticeTitle = "知乎去广告脚本错误";
-let body = JSON.parse($response.body);
-
-if (method !== "GET") {
-    console.log(url);
-    $notification.post(noticeTitle, "method错误:", method);
-}
-
-if (url.includes("api.zhihu.com/commercial_api/real_time_launch_v2")) {
-    console.log('知乎-开屏页');
-    if (!body.launch) {
-        console.log(`body:${$response.body}`);
-        $notification.post(noticeTitle, name, "launch字段为空");
+(function zhihuPro() {
+    const url = $request.url;
+    if (typeof $response === "undefined" || !$response.body) {
+        $done({});
+        return;
     }
-    let launch = JSON.parse(body.launch);
-    if (!launch.ads) {
-        // ads字段有时候为空,有时候没有ads字段
-        console.log(`body:${$response.body}`);
-        // $notification.post(noticeTitle, name, "launch-ads字段为空");
-    } else {
-        launch.ads = [];
-        console.log('成功');
-    }
-    body.launch = JSON.stringify(launch);
-} else if (url.includes("api.zhihu.com/topstory/recommend")) {
-    console.log('知乎-推荐列表');
-    let dataArr = body.data;
-    if (!dataArr) {
-        console.log(`body:${$response.body}`);
-        $notification.post(noticeTitle, "知乎推荐", "data字段为空");
-    } else {
-        body.data = dataArr.filter(item => {
-            if (item.extra?.type === "zvideo") {
-                let videoUrl = item.common_card.feed_content.video.customized_page_url;
-                let videoID = getUrlParamValue(videoUrl, "videoID");
-                if (!videoID) {
-                    console.log('zvideo未获取到videoID');
-                    console.log(`body:${$response.body}`);
-                    // 部分获取不到videoId并且视频可以播放
-                } else {
-                    console.log(`videoID处理成功,原始:${item.common_card.feed_content.video.id},修改为:${videoID}`);
-                    item.common_card.feed_content.video.id = videoID;
+
+    try {
+        let body = JSON.parse($response.body);
+
+        // 1. 开屏广告拦截
+        if (url.includes("/commercial_api/real_time_launch_v2")) {
+            if (body.launch) {
+                try {
+                    let launch = JSON.parse(body.launch);
+                    launch.ads = [];
+                    body.launch = JSON.stringify(launch);
+                } catch (err) {
+                    body.launch = "{}";
                 }
-            } else if (item.type === 'market_card' && item.fields?.header?.url && item.fields.body?.video?.id) {
-                let videoID = getUrlParamValue(item.fields.header.url, "videoID");
-                if (!videoID) {
-                    console.log(`body:${$response.body}`);
-                    $notification.post(noticeTitle, "知乎推荐列表视频", "videoID获取错误");
-                } else {
-                    console.log(`market_card-videoID处理成功,原始:${item.fields.body.video.id},修改为:${videoID}`);
-                    item.fields.body.video.id = videoID;
-                }
-            } else if (item.common_card?.feed_content?.video?.id) {
-                let search = '"feed_content":{"video":{"id":';
-                let str = $response.body.substring($response.body.indexOf(search) + search.length);
-                let videoID = str.substring(0, str.indexOf(','));
-                console.log(`其他-videoID处理成功,原始:${item.common_card.feed_content.video.id},修改为:${videoID}`);
-                item.common_card.feed_content.video.id = videoID;
             }
-            return item.type !== 'feed_advert';
-        });
-        if (body.data.length === dataArr.length) {
-            console.log('列表数据无广告');
-        } else {
-            console.log('成功');
         }
-    }
-} else if (url.includes("api.zhihu.com/questions") || url.includes("api.zhihu.com/v4/questions")) {
-    if (url.includes("v4/questions")) {
-        console.log('v4/questions');
-    } else {
-        console.log('questions');
-    }
-    console.log('知乎-问题回答列表');
-    if (!body.data.ad_info && !body.ad_info) {
-        // 个别问题回答列表无广告
-        console.log("问题回答列表无广告");
-    } else {
-        body.data.ad_info = null;
-        body.ad_info = null;
-        console.log('成功');
-    }
-} else if (url.includes("www.zhihu.com/api/v4/answers")) {
-    console.log('知乎-回答下的广告');
-    if (!body.paging || !body.data) {
-        console.log(`body:${$response.body}`);
-        $notification.post(noticeTitle, '知乎回答下广告', "paging/data字段为空");
-    } else {
-        body.paging = null;
-        body.data = null;
-        console.log('成功');
-    }
-} else if (url.includes("www.zhihu.com/api/v4/articles/")) {
-    console.log('知乎-文章articles回答下广告');
-    if (!body.ad_info) {
-        console.log(`body:${$response.body}`);
-        $notification.post(noticeTitle, name, "articles-ad_info字段为undefined");
-    } else {
-        body.ad_info = null;
-        console.log('成功');
-    }
-} else if (url.includes("appcloud2.zhihu.com/v3/config")) {
-    console.log('知乎-appcloud2 config配置');
-    if (body.config?.zhcnh_thread_sync?.ZHBackUpIP_Switch_Open === '1') {
-        body.config.zhcnh_thread_sync.ZHBackUpIP_Switch_Open = '0';
-        console.log('ZHBackUpIP_Switch_Open改为0');
-    } else {
-        console.log('无需更改ZHBackUpIP_Switch_Open');
-        console.log(`body:${$response.body}`);
-    }
-} else if (url.includes("api.zhihu.com/commercial_api/app_float_layer")) {
-    console.log('知乎-首页右下角悬浮框');
-    if ('feed_egg' in body) {
-        console.log('成功');
-        body = {};
-    } else {
-        console.log('无需处理');
-    }
-} else {
-    $notification.post(noticeTitle, "路径匹配错误:", url);
-}
+        // 2. 首页悬浮营销图标与活动弹层
+        else if (url.includes("/commercial_api/app_float_layer")) {
+            body = {};
+        }
+        // 3. 首页推荐流广告过滤 (topstory/recommend)
+        else if (url.includes("/topstory/recommend")) {
+            if (Array.isArray(body.data)) {
+                body.data = body.data.filter(item => !isZhihuFeedAd(item));
+            }
+        }
+        // 4. 问题回答列表过滤 (questions/.../answers 或 questions/.../feeds)
+        else if (url.includes("/questions/") || url.includes("/v4/questions/")) {
+            body.ad_info = null;
+            delete body.ad_info;
+            if (Array.isArray(body.data)) {
+                body.data = body.data.filter(item => {
+                    if (item.type === "feed_advert" || item.type === "commercial") return false;
+                    if (item.ad || item.ad_info) return false;
+                    return true;
+                });
+            }
+        }
+        // 5. 回答页与专栏文章底部的商业推荐
+        else if (url.includes("/answers/") && url.includes("/recommendations")) {
+            body.data = [];
+            body.paging = null;
+        }
+        else if (url.includes("/articles/") && url.includes("/recommendation")) {
+            body.ad_info = null;
+            delete body.ad_info;
+            if (Array.isArray(body.data)) {
+                body.data = [];
+            }
+        }
+        // 6. 配置中心拦截备用广告路由
+        else if (url.includes("/v3/config")) {
+            if (body.config?.zhcnh_thread_sync?.ZHBackUpIP_Switch_Open) {
+                body.config.zhcnh_thread_sync.ZHBackUpIP_Switch_Open = "0";
+            }
+        }
 
-body = JSON.stringify(body);
+        $done({ body: JSON.stringify(body) });
+    } catch (e) {
+        $done({});
+    }
 
-$done({
-    body
-});
+    /**
+     * 判断是否为知乎推荐流商业广告
+     */
+    function isZhihuFeedAd(item) {
+        if (!item) return false;
 
+        // 显式广告类型
+        if (item.type === "feed_advert" || item.type === "market_card" || item.type === "commercial" || item.type === "banner") {
+            return true;
+        }
 
-function getUrlParamValue(url, queryName) {
-    return Object.fromEntries(url.substring(url.indexOf("?") + 1)
-        .split("&")
-        .map(pair => pair.split("="))
-    )[queryName];
-}
+        // 带有广告标志或投放元数据
+        if (item.ad_info || item.ad || item.extra?.is_ad || item.card_type === "slot_event_card") {
+            return true;
+        }
+
+        // 目标对象标记为商业广告
+        if (item.target?.type === "advert") {
+            return true;
+        }
+
+        // 商业合作伪装帖
+        if (item.fields?.header?.url?.includes("commercial") || item.fields?.header?.url?.includes("market")) {
+            return true;
+        }
+
+        return false;
+    }
+})();
