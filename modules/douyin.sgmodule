@@ -1,18 +1,19 @@
-#!name=抖音深度纯净版 (Douyin Pro)
-#!desc=过滤推荐流与搜索流广告视频/电商带货视频，剥离小黄车与营销浮窗，解除下载限制并支持无水印原画直存，屏蔽穿山甲SDK与巨量引擎行为画像分析。
+#!name=抖音深度纯净版 (Douyin Pro - 2026真机对齐版)
+#!desc=基于真机抓包精准拦截巨量引擎与穿山甲打点，开启amemv.com核心API解密，过滤推荐流/同城/搜索流广告视频与电商带货，移除小黄车，支持无水印原画直存。
 #!author=allofights
 #!system=ios
 #!category=应用净化
 
 [Rule]
-# 穿山甲移动广告联盟与竞价体系 (Pangolin SDK)
+# 穿山甲移动广告联盟与竞价体系 (Pangolin SDK) - 抓包已命中 4200+ 次
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
 DOMAIN-SUFFIX,byte-ads.com,REJECT
 
-# 巨量引擎、商业广告与推广打点 (OceanEngine & Ads)
+# 巨量引擎、数据统计与行为埋点打点 (OceanEngine & Log)
 DOMAIN-SUFFIX,oceanengine.com,REJECT
 DOMAIN-SUFFIX,ad.toutiao.com,REJECT
 DOMAIN-SUFFIX,ad.zijieapi.com,REJECT
@@ -22,6 +23,9 @@ DOMAIN-SUFFIX,applog.snssdk.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
 DOMAIN-SUFFIX,mon.snssdk.com,REJECT
 DOMAIN-SUFFIX,apm.snssdk.com,REJECT
+DOMAIN-SUFFIX,log0-misc-lf.amemv.com,REJECT
+DOMAIN-SUFFIX,mon0-misc-lf.amemv.com,REJECT
+DOMAIN-SUFFIX,logbk.amemv.com,REJECT
 
 # 广告资源与行为埋点
 DOMAIN-KEYWORD,ad-pattern,REJECT-IMG
@@ -44,4 +48,4 @@ douyin_feed = type=http-response,pattern=^https?:\/\/.*(amemv\.com|snssdk\.com)\
 douyin_detail = type=http-response,pattern=^https?:\/\/.*(amemv\.com|snssdk\.com)\/aweme\/v\d\/(detail|aweme\/post),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% api*.amemv.com, aweme*.snssdk.com
+hostname = %APPEND% api*.amemv.com, api*.snssdk.com, aweme*.snssdk.com, aggr*.amemv.com, klink*.amemv.com

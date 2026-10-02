@@ -1,12 +1,13 @@
 /**
- * 知乎 (Zhihu) 深度纯净版脚本
+ * 知乎 (Zhihu) 深度纯净版脚本 (2026 真机抓包对齐版)
  * 
- * 核心特性：
- * 1. 拦截开屏硬广与开屏落地页配置 (real_time_launch_v2)
- * 2. 彻底过滤首页推荐流中的伪装广告卡片、商业合作问答与带货专栏 (topstory/recommend)
- * 3. 移除问题回答列表中的商业广告卡片与置顶营销 (questions/answers)
- * 4. 清除回答与专栏文章底部的推广卡片 (recommendations)
- * 5. 移除首页悬浮营销球与活动弹窗 (app_float_layer)
+ * 核心特性 (基于 2026-10-02 真实抓包对齐)：
+ * 1. 拦截新版开屏与广告样式服务 (ad-style-service/launch_animation & ad-style-service/request)
+ * 2. 拦截并过滤新版信息流聚合根接口 (feed-root/sections/query/v2 & feed-root/block)
+ * 3. 彻底过滤推荐流伪装广告与营销专栏 (topstory/recommend & v4/topstory/recommend)
+ * 4. 移除问题回答列表中的商业卡片 (questions/answers)
+ * 5. 拦截商业资源下发 (appcloud2/v3/resource?group_name=commerce)
+ * 6. 移除首页悬浮球 (commercial_api/app_float_layer)
  * 
  * 遵循: Ponytail 极简原则
  * 作者: allofights
@@ -22,8 +23,12 @@
     try {
         let body = JSON.parse($response.body);
 
-        // 1. 开屏广告拦截
-        if (url.includes("/commercial_api/real_time_launch_v2")) {
+        // 1. 新版广告样式与开屏动画服务 (2026 抓包捕获)
+        if (url.includes("/ad-style-service/")) {
+            body = { code: 0, message: "success", data: [] };
+        }
+        // 2. 旧版开屏广告兜底
+        else if (url.includes("/commercial_api/real_time_launch")) {
             if (body.launch) {
                 try {
                     let launch = JSON.parse(body.launch);
@@ -34,29 +39,43 @@
                 }
             }
         }
-        // 2. 首页悬浮营销图标与活动弹层
+        // 3. 首页悬浮营销球与活动弹窗
         else if (url.includes("/commercial_api/app_float_layer")) {
             body = {};
         }
-        // 3. 首页推荐流广告过滤 (topstory/recommend)
+        // 4. 新版信息流聚合根接口 (2026 抓包捕获：feed-root/sections/query/v2)
+        else if (url.includes("/feed-root/")) {
+            if (Array.isArray(body.data)) {
+                body.data = body.data.filter(item => !isZhihuFeedAd(item));
+            }
+            if (Array.isArray(body.sections)) {
+                body.sections = body.sections.filter(sec => {
+                    if (sec.type === "commercial" || sec.section_type === "ad") return false;
+                    if (Array.isArray(sec.items)) sec.items = sec.items.filter(item => !isZhihuFeedAd(item));
+                    if (Array.isArray(sec.elements)) sec.elements = sec.elements.filter(item => !isZhihuFeedAd(item));
+                    return true;
+                });
+            }
+        }
+        // 5. 经典首页推荐流过滤 (topstory/recommend)
         else if (url.includes("/topstory/recommend")) {
             if (Array.isArray(body.data)) {
                 body.data = body.data.filter(item => !isZhihuFeedAd(item));
             }
         }
-        // 4. 问题回答列表过滤 (questions/.../answers 或 questions/.../feeds)
+        // 6. 问题回答列表过滤 (questions/.../answers 或 questions/.../feeds)
         else if (url.includes("/questions/") || url.includes("/v4/questions/")) {
             body.ad_info = null;
             delete body.ad_info;
             if (Array.isArray(body.data)) {
                 body.data = body.data.filter(item => {
-                    if (item.type === "feed_advert" || item.type === "commercial") return false;
-                    if (item.ad || item.ad_info) return false;
+                    if (item.type === "feed_advert" || item.type === "commercial" || item.type === "ad") return false;
+                    if (item.ad || item.ad_info || item.ad_style) return false;
                     return true;
                 });
             }
         }
-        // 5. 回答页与专栏文章底部的商业推荐
+        // 7. 回答页与专栏文章底部的商业推荐
         else if (url.includes("/answers/") && url.includes("/recommendations")) {
             body.data = [];
             body.paging = null;
@@ -68,7 +87,11 @@
                 body.data = [];
             }
         }
-        // 6. 配置中心拦截备用广告路由
+        // 8. 商业资源包下发过滤 (2026 抓包捕获)
+        else if (url.includes("/v3/resource") && (url.includes("commerce") || url.includes("group_name=commerce2"))) {
+            body = { code: 0, data: {} };
+        }
+        // 9. 配置中心拦截备用广告路由
         else if (url.includes("/v3/config")) {
             if (body.config?.zhcnh_thread_sync?.ZHBackUpIP_Switch_Open) {
                 body.config.zhcnh_thread_sync.ZHBackUpIP_Switch_Open = "0";
@@ -87,12 +110,12 @@
         if (!item) return false;
 
         // 显式广告类型
-        if (item.type === "feed_advert" || item.type === "market_card" || item.type === "commercial" || item.type === "banner") {
+        if (item.type === "feed_advert" || item.type === "market_card" || item.type === "commercial" || item.type === "banner" || item.type === "ad") {
             return true;
         }
 
-        // 带有广告标志或投放元数据
-        if (item.ad_info || item.ad || item.extra?.is_ad || item.card_type === "slot_event_card") {
+        // 广告样式与投放元数据
+        if (item.ad_info || item.ad || item.extra?.is_ad || item.card_type === "slot_event_card" || item.ad_style) {
             return true;
         }
 

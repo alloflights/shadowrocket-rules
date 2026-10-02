@@ -1,5 +1,5 @@
-#!name=知乎深度净化 (Zhihu Pro)
-#!desc=全面去除知乎开屏广告、首页推荐流伪装广告、问题回答列表商业卡片、文章底部广告及悬浮营销球。
+#!name=知乎深度净化 (Zhihu Pro - 2026真机对齐版)
+#!desc=基于真机抓包精准拦截知乎新版 ad-style-service 广告下发、feed-root 聚合推荐流广告、回答列表商业卡片与数据埋点。
 #!author=allofights
 #!system=ios
 #!category=应用净化
@@ -7,17 +7,18 @@
 [Rule]
 DOMAIN,sugar.zhihu.com,REJECT
 DOMAIN,zhihu-web-analytics.zhihu.com,REJECT
+DOMAIN,datahub.zhihu.com,REJECT
 DOMAIN,appcloud.zhihu.com,REJECT
 DOMAIN,crash2.zhihu.com,REJECT
 
 [URL Rewrite]
-# 开屏与商业广告直拒
-^https?:\/\/api\.zhihu\.com\/commercial_api\/real_time_launch - reject-200
-^https?:\/\/api\.zhihu\.com\/commercial_api\/app_float_layer - reject-200
+# 开屏、广告样式服务与商业浮层秒杀直拒 (2026 抓包对齐)
+^https?:\/\/api\.zhihu\.com\/ad-style-service\/ - reject-200
+^https?:\/\/api\.zhihu\.com\/commercial_api\/ - reject-200
 
 [Script]
-# 知乎全量推荐流、回答页与详情页广告深度净化
-zhihu_clean = type=http-response,pattern=^https?:\/\/(api|www|appcloud2)\.zhihu\.com\/(topstory\/recommend|v4\/topstory\/recommend|commercial_api\/(real_time_launch_v2|app_float_layer)|v4\/questions\/\d+\/answers|questions\/\d+\/feeds|api\/v4\/answers\/\d+\/recommendations|api\/v4\/articles\/\d+\/recommendation|v3\/config),requires-body=1,max-size=3145728,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/zhihu.js,script-update-interval=0
+# 知乎全量推荐流、回答页与新版聚合根接口深度净化
+zhihu_clean = type=http-response,pattern=^https?:\/\/(api|www|appcloud2|appcloud2\.in)\.zhihu\.com\/(feed-root\/|topstory\/recommend|v4\/topstory\/recommend|v4\/questions\/\d+\/answers|questions\/\d+\/feeds|api\/v4\/answers\/\d+\/recommendations|api\/v4\/articles\/\d+\/recommendation|v3\/resource|v3\/config),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/zhihu.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com
+hostname = %APPEND% api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com, appcloud2.in.zhihu.com
