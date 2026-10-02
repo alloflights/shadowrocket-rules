@@ -27,6 +27,27 @@ DOMAIN-SUFFIX,log0-misc-lf.amemv.com,REJECT
 DOMAIN-SUFFIX,mon0-misc-lf.amemv.com,REJECT
 DOMAIN-SUFFIX,logbk.amemv.com,REJECT
 
+# 抖音电商小黄车、商品详情、SKU与规格弹窗深度绞杀 (彻底解决图1规格详情与小黄车)
+DOMAIN-SUFFIX,ecombdapi.com,REJECT
+DOMAIN-SUFFIX,ecombdpage.com,REJECT
+DOMAIN-SUFFIX,ecombdimg.com,REJECT
+DOMAIN-SUFFIX,ecombdstatic.com,REJECT
+DOMAIN,ecomuser.snssdk.com,REJECT
+DOMAIN-SUFFIX,render.ecombdpage.com,REJECT
+
+# 字节端侧智能投放大脑、广告转化归因与动态分流 (Pitaya & Polaris & MSSDK)
+DOMAIN,pitaya.bytedance.com,REJECT
+DOMAIN-SUFFIX,polaris5-normal-zb.zijieapi.com,REJECT
+DOMAIN-SUFFIX,polaris.zijieapi.com,REJECT
+DOMAIN-SUFFIX,abtest3-misc-lf.zijieapi.com,REJECT
+DOMAIN-SUFFIX,mssdk3-normal-lf.zijieapi.com,REJECT
+DOMAIN-SUFFIX,neptune-api.volces.com,REJECT
+DOMAIN-SUFFIX,wmzfylgdsz.com,REJECT
+
+# 直播间推流、直播带货卡片与同城直播强插 (Webcast - 杀错不放过)
+DOMAIN-KEYWORD,webcast,REJECT
+DOMAIN-SUFFIX,bytegecko.com,REJECT
+
 # 广告资源与行为埋点
 DOMAIN-KEYWORD,ad-pattern,REJECT-IMG
 DOMAIN-KEYWORD,toblog,REJECT
@@ -41,6 +62,8 @@ DOMAIN-KEYWORD,toblog,REJECT
 ^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/yellow_cart\/ - reject-dict
 ^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/commerce\/ - reject-dict
 ^https?:\/\/.*\.snssdk\.com\/live\/room\/pop_window - reject-dict
+^https?:\/\/.*\.ecombdapi\.com\/.* - reject-200
+^https?:\/\/.*\.ecombdpage\.com\/.* - reject-200
 
 [MITM]
 # 抖音客户端采用 Chromium Cronet 强证书校验 (SSL Pinning)，严禁对 amemv API 域名强开解密，避免触发字节安全降级机制导致底模商业广告轰炸
