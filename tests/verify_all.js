@@ -60,15 +60,29 @@ console.log('================================================================');
 console.log('\n--- Testing baidunetdisk.js ---');
 const baiduScriptPath = path.join(__dirname, '../modules/scripts/baidunetdisk.js');
 
-runTest('Baidu Netdisk http-request mock (/pcs/adx): returns errno 0 and empty ads', () => {
+runTest('Baidu Netdisk http-request mock (/pcs/adx): returns errno 0, empty ads, and null splash', () => {
     const res = executeScript(baiduScriptPath, { url: 'https://pan.baidu.com/rest/2.0/pcs/adx?version=12.5.0' }, undefined);
     assert(res && res.response, 'Expected response object');
     assert.strictEqual(res.response.status, 200);
     const body = JSON.parse(res.response.body);
     assert.strictEqual(body.errno, 0);
     assert.strictEqual(body.error_code, 0);
+    assert(body.data && typeof body.data === 'object', 'data dictionary must exist to prevent client fallback to disk cache');
+    assert.strictEqual(body.data.splash, null, 'data.splash must be null (not empty dict) to avoid blank splash container');
+    assert(Array.isArray(body.data.ad_list) && body.data.ad_list.length === 0);
+    assert.strictEqual(body.splash, null);
     assert(Array.isArray(body.ad_list) && body.ad_list.length === 0);
     assert(Array.isArray(body.ads) && body.ads.length === 0);
+});
+
+runTest('Baidu Netdisk http-request mock (/pcs/ad): returns data object with empty lists', () => {
+    const res = executeScript(baiduScriptPath, { url: 'https://pan.baidu.com/rest/2.0/pcs/ad' }, undefined);
+    assert(res && res.response);
+    const body = JSON.parse(res.response.body);
+    assert.strictEqual(body.errno, 0);
+    assert(body.data && typeof body.data === 'object');
+    assert.strictEqual(body.data.splash, null);
+    assert(Array.isArray(body.data.ad_list) && body.data.ad_list.length === 0);
 });
 
 runTest('Baidu Netdisk http-request mock (/act/api/activityentry): returns errno 0', () => {
@@ -92,7 +106,8 @@ runTest('Baidu Netdisk http-response filtering: strips splash and cleans ad list
         errno: 0,
         data: {
             ad_list: [{ id: 1, img: "https://issuecdn.baidupcs.com/ad1.jpg" }],
-            splash: { duration: 5, img: "https://issuecdn.baidupcs.com/splash.jpg" }
+            splash: { duration: 5, img: "https://issuecdn.baidupcs.com/splash.jpg" },
+            splash_list: [{ id: 1 }]
         },
         ad_list: [{ id: 2 }],
         card_list: [{ title: "短剧推广" }]
@@ -103,6 +118,7 @@ runTest('Baidu Netdisk http-response filtering: strips splash and cleans ad list
     assert.strictEqual(parsed.errno, 0);
     assert.strictEqual(parsed.data.ad_list.length, 0);
     assert.strictEqual(parsed.data.splash, undefined);
+    assert.strictEqual(parsed.splash, null);
     assert.strictEqual(parsed.card_list.length, 0);
 });
 
@@ -124,7 +140,7 @@ runTest('Baidu Netdisk edge case: handles null data payload gracefully', () => {
 console.log('\n--- Testing coolapk.js ---');
 const coolapkScriptPath = path.join(__dirname, '../modules/scripts/coolapk.js');
 
-runTest('Coolapk /main/init: purges nested entities ads and scrubs SDK tracking keys', () => {
+runTest('Coolapk /main/init: purges imageScaleCard, titled splash entities, and scrubs SDK tracking keys', () => {
     const mockInitPayload = {
         data: [
             {
@@ -138,13 +154,21 @@ runTest('Coolapk /main/init: purges nested entities ads and scrubs SDK tracking 
                     gromore: "sdk_token_123",
                     pangle: "pangle_cfg",
                     launch_time: 5000,
-                    splash: true,
                     normalKey: "keep_me"
                 }
             },
             {
                 entityId: 945,
                 title: "开屏穿透投放卡片"
+            },
+            {
+                entityId: 5000,
+                entityTemplate: "imageScaleCard",
+                title: "全屏大图开屏投放"
+            },
+            {
+                entityId: 20131,
+                title: "酷品好物"
             }
         ],
         config: {
@@ -156,16 +180,23 @@ runTest('Coolapk /main/init: purges nested entities ads and scrubs SDK tracking 
     const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/init' }, { status: 200, body: JSON.stringify(mockInitPayload) });
     assert(res && res.body);
     const parsed = JSON.parse(res.body);
-    assert.strictEqual(parsed.data.length, 1, 'Top level ad entity 945 must be removed');
+    assert.strictEqual(parsed.data.length, 1, 'All ad/splash entities including imageScaleCard and entity 20131 must be purged');
     assert.strictEqual(parsed.data[0].entities.length, 1, 'Nested ad entity 944 must be removed');
     assert.strictEqual(parsed.data[0].entities[0].entityId, 2002);
     assert.strictEqual(parsed.data[0].extraData.gromore, undefined, 'gromore must be stripped');
     assert.strictEqual(parsed.data[0].extraData.pangle, undefined, 'pangle must be stripped');
     assert.strictEqual(parsed.data[0].extraData.launch_time, undefined, 'launch_time must be stripped');
-    assert.strictEqual(parsed.data[0].extraData.splash, undefined, 'splash must be stripped');
     assert.strictEqual(parsed.data[0].extraData.normalKey, "keep_me", 'normalKey must be preserved');
     assert.strictEqual(parsed.config.gromore_config, undefined);
     assert.strictEqual(parsed.config.splash_config, undefined);
+});
+
+runTest('Coolapk http-request mock (/splash): returns empty data immediately', () => {
+    const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/splash' }, undefined);
+    assert(res && res.response);
+    assert.strictEqual(res.response.status, 200);
+    const body = JSON.parse(res.response.body);
+    assert(Array.isArray(body.data) && body.data.length === 0);
 });
 
 runTest('Coolapk /main/index: filters sponsorCard, goodsCard, and promotion items', () => {
@@ -224,25 +255,28 @@ runTest('Coolapk edge case: handles malformed or empty response body gracefully'
 console.log('\n--- Testing pwesports.js ---');
 const pwesportsScriptPath = path.join(__dirname, '../modules/scripts/pwesports.js');
 
-runTest('Pwesports http-request mock (/app/v1/splash): returns status 200 and code 0', () => {
+runTest('Pwesports http-request mock (/app/v1/splash): returns status 200, code 0, and non-null data object to prevent NSNull crash', () => {
     const res = executeScript(pwesportsScriptPath, { url: 'https://api.pwesports.cn/app/v1/splash' }, undefined);
     assert(res && res.response, 'Expected response object for http-request');
     assert.strictEqual(res.response.status, 200);
     const body = JSON.parse(res.response.body);
     assert.strictEqual(body.code, 0);
     assert.strictEqual(body.status, 0);
-    assert.strictEqual(body.data, null);
+    assert(body.data && typeof body.data === 'object', 'data must be a non-null object to prevent NSNull iOS crash');
+    assert.strictEqual(body.data.splash, null, 'data.splash must be null');
+    assert(Array.isArray(body.data.list) && body.data.list.length === 0);
 });
 
-runTest('Pwesports http-request mock (/api/launch): returns status 200 and code 0', () => {
+runTest('Pwesports http-request mock (/api/launch): returns status 200 and code 0 with valid data object', () => {
     const res = executeScript(pwesportsScriptPath, { url: 'https://app.pwesports.cn/api/launch' }, undefined);
     assert(res && res.response);
     assert.strictEqual(res.response.status, 200);
     const body = JSON.parse(res.response.body);
     assert.strictEqual(body.code, 0);
+    assert(body.data && typeof body.data === 'object');
 });
 
-runTest('Pwesports http-response filtering (feed & banners): strips ads and commercial jump URLs', () => {
+runTest('Pwesports http-response filtering (feed, match, articles & banners): strips ads and commercial jump URLs', () => {
     const mockFeedPayload = {
         code: 0,
         data: {
@@ -255,14 +289,20 @@ runTest('Pwesports http-response filtering (feed & banners): strips ads and comm
                 { id: 10, title: "CS2 职业战队最新战绩", type: "news" },
                 { id: 11, title: "外星人电竞椅特惠直降", type: "banner_ad" },
                 { id: 12, title: "Major 晋级名单出炉", tag: "赛事速报" },
-                { id: 13, title: "某品牌键鼠评测体验", tag: "推广" }
+                { id: 13, title: "某品牌键鼠评测体验", tag: "推广" },
+                { id: 14, title: "赛事下注推荐", ad_type: "commercial" }
+            ],
+            articles: [
+                { id: 20, title: "官方战报", is_ad: false },
+                { id: 21, title: "联名外设首发优惠", advertisement: true }
             ],
             popup: { id: 99, img: "popup.png" },
-            pop_window: { id: 100 }
+            pop_window: { id: 100 },
+            dialog: { id: 101 }
         }
     };
 
-    const res = executeScript(pwesportsScriptPath, { url: 'https://api.pwesports.cn/app/v1/feed' }, { status: 200, body: JSON.stringify(mockFeedPayload) });
+    const res = executeScript(pwesportsScriptPath, { url: 'https://api.pwesports.cn/app/v1/match/list' }, { status: 200, body: JSON.stringify(mockFeedPayload) });
     assert(res && res.body);
     const parsed = JSON.parse(res.body);
     assert.strictEqual(parsed.data.banners.length, 1, 'Only genuine match banner should remain');
@@ -270,8 +310,11 @@ runTest('Pwesports http-response filtering (feed & banners): strips ads and comm
     assert.strictEqual(parsed.data.list.length, 2, 'Only genuine news items should remain');
     assert.strictEqual(parsed.data.list[0].id, 10);
     assert.strictEqual(parsed.data.list[1].id, 12);
+    assert.strictEqual(parsed.data.articles.length, 1, 'Only genuine article should remain');
+    assert.strictEqual(parsed.data.articles[0].id, 20);
     assert.strictEqual(parsed.data.popup, undefined, 'popup must be removed');
     assert.strictEqual(parsed.data.pop_window, undefined, 'pop_window must be removed');
+    assert.strictEqual(parsed.data.dialog, undefined, 'dialog must be removed');
 });
 
 runTest('Pwesports edge case: handles unexpected/non-matching URL gracefully', () => {
@@ -356,6 +399,51 @@ for (const relPath of allTargetFiles) {
         }
     });
 }
+
+console.log('\n================================================================');
+console.log('3. DEEP VERIFICATION: Architecture Hygiene, Rule Conflict & MITM Consistency');
+console.log('================================================================\n');
+
+runTest('Check that DOMAIN,issuecdn.baidupcs.com,REJECT does NOT exist to prevent image loader timeouts', () => {
+    for (const relPath of allTargetFiles) {
+        const fullPath = path.join(repoRoot, relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert(!content.includes('DOMAIN,issuecdn.baidupcs.com,REJECT'), `Found forbidden DOMAIN,issuecdn.baidupcs.com,REJECT in ${relPath}`);
+    }
+});
+
+runTest('Check that issuecdn.baidupcs.com is included in MITM hostnames for instant 1x1 reject-img', () => {
+    const requiredFiles = [
+        'modules/baidunetdisk.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of requiredFiles) {
+        const fullPath = path.join(repoRoot, relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert(content.includes('issuecdn.baidupcs.com'), `Missing issuecdn.baidupcs.com in MITM hostname in ${relPath}`);
+    }
+});
+
+runTest('Check that getsyscfg/getconfig are NOT rejected with reject-dict in LazyGroup config', () => {
+    const lazyConf = fs.readFileSync(path.join(repoRoot, 'Shadowrocket_LazyGroup_Merged.conf'), 'utf8');
+    assert(!lazyConf.includes('/api/getsyscfg - reject-dict'), 'Found /api/getsyscfg reject-dict in LazyGroup');
+    assert(!lazyConf.includes('/api/getconfig - reject-dict'), 'Found /api/getconfig reject-dict in LazyGroup');
+});
+
+runTest('Check that pwesports_clean pattern includes all feed, match, article, and square endpoints across configs', () => {
+    const targetConfigs = [
+        'modules/pwesports.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(content.includes('feed|news|community|home|banner|match|article|square|post|index'), `Pattern incomplete in ${relPath}`);
+    }
+});
 
 console.log(`\n================================================================`);
 console.log(`FINAL RESULTS: ${passedTests} / ${totalTests} tests passed.`);

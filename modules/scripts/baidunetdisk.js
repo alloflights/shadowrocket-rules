@@ -25,6 +25,7 @@ if (typeof $response !== "undefined" && $response.body) {
             obj.data.list = [];
             obj.data.records = [];
             delete obj.data.splash;
+            delete obj.data.splash_list;
         }
         obj.ad_list = [];
         obj.ads = [];
@@ -32,7 +33,8 @@ if (typeof $response !== "undefined" && $response.body) {
         obj.list = [];
         obj.card_list = [];
         obj.records = [];
-        obj.splash = {};
+        obj.splash = null;
+        obj.splash_list = [];
         obj.fuse = false;
         $done({ body: JSON.stringify(obj) });
     } catch (e) {
@@ -40,29 +42,37 @@ if (typeof $response !== "undefined" && $response.body) {
     }
 } else {
     // http-request 模式：本地秒级返回合规空数据，客户端免等待直接进入主页
-    let mockData;
-    if (url.includes("/act/") || url.includes("activityentry")) {
-        mockData = { errno: 0, error_code: 0, data: [], list: [] };
-    } else if (url.includes("/pcs/ad")) {
-        mockData = { errno: 0, error_code: 0, request_id: Date.now(), ad_list: [], ads: [] };
-    } else if (url.includes("/buy/ad/") || url.includes("/membership/")) {
-        mockData = { errno: 0, error_code: 0, request_id: Date.now(), data: { ad_list: [], ads: [], list: [] } };
-    } else if (url.includes("/feed/cardinfos") || url.includes("/recommend/shortseries/")) {
-        mockData = { errno: 0, error_code: 0, list: [], card_list: [], data: [] };
-    } else {
-        mockData = {
-            errno: 0,
-            error_code: 0,
-            request_id: Date.now(),
+    let mockData = {
+        errno: 0,
+        error_code: 0,
+        request_id: String(Date.now()),
+        data: {
             ad_list: [],
             ads: [],
-            data: [],
             list: [],
-            card_list: [],
             records: [],
-            splash: {},
-            fuse: false
-        };
+            splash: null,
+            splash_list: [],
+            card_list: [],
+            entry_list: []
+        },
+        ad_list: [],
+        ads: [],
+        list: [],
+        card_list: [],
+        records: [],
+        splash: null,
+        splash_list: [],
+        fuse: false
+    };
+
+    if (url.includes("/act/") || url.includes("activityentry")) {
+        mockData.data = [];
+        mockData.list = [];
+    } else if (url.includes("/feed/cardinfos") || url.includes("/recommend/shortseries/")) {
+        mockData.data = [];
+        mockData.list = [];
+        mockData.card_list = [];
     }
 
     $done({

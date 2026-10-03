@@ -20,7 +20,20 @@
                 response: {
                     status: 200,
                     headers: { "Content-Type": "application/json; charset=utf-8" },
-                    body: JSON.stringify({ code: 0, status: 0, msg: "ok", message: "ok", data: null })
+                    body: JSON.stringify({
+                        code: 0,
+                        status: 0,
+                        msg: "ok",
+                        message: "ok",
+                        data: {
+                            splash: null,
+                            splash_list: [],
+                            list: [],
+                            banners: [],
+                            ad: null,
+                            ads: []
+                        }
+                    })
                 }
             });
             return;
@@ -50,6 +63,7 @@
                     obj.data.ads = [];
                     obj.data.ad_list = [];
                     obj.data.list = [];
+                    obj.data.banners = [];
                 }
             }
             delete obj.splash;
@@ -61,7 +75,7 @@
             if (Array.isArray(obj.data)) {
                 obj.data = obj.data.filter(item => !isPwesportsAd(item));
             } else if (obj.data && typeof obj.data === "object") {
-                const listFields = ["list", "feeds", "articles", "banners", "recommend", "rows", "items", "posts"];
+                const listFields = ["list", "feeds", "articles", "banners", "recommend", "rows", "items", "posts", "cards", "data_list", "activities"];
                 for (let f of listFields) {
                     if (Array.isArray(obj.data[f])) {
                         obj.data[f] = obj.data[f].filter(item => !isPwesportsAd(item));
@@ -73,6 +87,9 @@
                 delete obj.data.banner_ad;
                 delete obj.data.popup;
                 delete obj.data.pop_window;
+                delete obj.data.dialog;
+                delete obj.data.floating_layer;
+                delete obj.data.notice;
             }
         }
 
@@ -87,7 +104,7 @@
     function isPwesportsAd(item) {
         if (!item) return false;
 
-        if (item.is_ad || item.is_advert || item.is_sponsor || item.is_commercial || item.is_promote) {
+        if (item.is_ad || item.is_advert || item.is_sponsor || item.is_commercial || item.is_promote || item.ad_type || item.ad_id || item.advert_id || item.advertisement) {
             return true;
         }
 
@@ -96,8 +113,8 @@
             return true;
         }
 
-        const tag = String(item.tag || item.label || item.corner_mark || item.badge || "").toLowerCase();
-        if (tag.includes("广告") || tag.includes("推广") || tag.includes("商单") || tag.includes("赞助") || tag.includes("特惠")) {
+        const tag = String(item.tag || item.label || item.corner_mark || item.badge || item.sub_title || "").toLowerCase();
+        if (tag.includes("广告") || tag.includes("推广") || tag.includes("商单") || tag.includes("赞助") || tag.includes("特惠") || tag.includes("福利") || tag.includes("抽奖")) {
             return true;
         }
 
@@ -113,9 +130,9 @@
         }
 
         // 外链商业推广与非官方商城跳转
-        if (item.jump_url || item.target_url || item.url) {
-            const u = String(item.jump_url || item.target_url || item.url).toLowerCase();
-            if (u.includes("union") || u.includes("ad_id") || u.includes("cps=") || u.includes("channel=ad")) {
+        if (item.jump_url || item.target_url || item.url || item.link) {
+            const u = String(item.jump_url || item.target_url || item.url || item.link).toLowerCase();
+            if (u.includes("union") || u.includes("ad_id") || u.includes("cps=") || u.includes("channel=ad") || u.includes("commercial")) {
                 return true;
             }
         }

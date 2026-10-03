@@ -16,7 +16,22 @@
 
 (function coolapkPro() {
     const url = $request.url;
-    if (typeof $response === "undefined" || !$response.body) {
+    if (typeof $response === "undefined") {
+        if (url.includes("splash") || url.includes("launch") || url.includes("openScreen") || url.includes("ad")) {
+            $done({
+                response: {
+                    status: 200,
+                    headers: { "Content-Type": "application/json; charset=utf-8" },
+                    body: JSON.stringify({ data: [] })
+                }
+            });
+            return;
+        }
+        $done({});
+        return;
+    }
+
+    if (!$response.body) {
         $done({});
         return;
     }
@@ -38,10 +53,7 @@
 
                     // 擦除 extraData 中的各类广告 SDK 标记与开屏计时
                     if (item.extraData && typeof item.extraData === "object") {
-                        const adKeys = ["splash", "ad", "is_ad", "gromore", "pangle", "gdt", "mobads", "open_screen", "launch_time", "ad_params", "third_party_ad", "sdk_ad"];
-                        for (let k of adKeys) {
-                            delete item.extraData[k];
-                        }
+                        cleanObjectAdKeys(item.extraData);
                     }
                     return true;
                 });
@@ -122,9 +134,11 @@
         if (!o || typeof o !== "object") return;
         const adKeys = [
             "splash", "splashList", "splash_config", "launch_ad", "launchAd",
-            "open_screen", "ad", "ads", "adList", "ad_config", "gromore",
-            "gromore_config", "pangle", "pangle_config", "gdt", "gdt_config",
-            "mobads", "mobads_config", "third_party_ad", "sdk_ad", "sdk_config"
+            "launch_time", "launchTime", "open_screen", "openScreen", "ad",
+            "ads", "adList", "ad_config", "gromore", "gromore_config",
+            "pangle", "pangle_config", "gdt", "gdt_config", "mobads",
+            "mobads_config", "third_party_ad", "sdk_ad", "sdk_config",
+            "startup", "startup_ad", "ad_params", "splash_video", "splash_image"
         ];
         for (let k of adKeys) {
             delete o[k];
@@ -136,21 +150,29 @@
      */
     function isCoolapkInitAd(item) {
         if (!item) return false;
-        if ([944, 945, 1373, 6390, 8639, 24455, 36839, 39396, 43906].includes(item.entityId)) return true;
+        const adEntityIds = [
+            944, 945, 1373, 6390, 8639, 20099, 20131, 21703,
+            24455, 28212, 29349, 31114, 32557, 33006, 36839, 39396, 43906
+        ];
+        if (adEntityIds.includes(item.entityId)) return true;
 
         const type = String(item.entityType || "").toLowerCase();
         const template = String(item.entityTemplate || "").toLowerCase();
         if (type.includes("splash") || template.includes("splash")) return true;
         if (type.includes("ad") || template.includes("ad") || type.includes("sponsor")) return true;
+        if (template === "imagescalecard" || type === "imagescalecard") return true;
 
         const title = String(item.title || "");
-        if (title.includes("广告") || title.includes("推广") || title === "酷品" || title === "好物") return true;
+        const subTitle = String(item.subTitle || item.description || "");
+        if (title.includes("广告") || title.includes("推广") || title.includes("开屏") || title === "酷品" || title === "好物") return true;
+        if (subTitle.includes("广告") || subTitle.includes("推广")) return true;
+
+        const urlStr = String(item.url || item.pic || item.image || item.splashUrl || "").toLowerCase();
+        if (urlStr.includes("splash") || urlStr.includes("advert") || urlStr.includes("open_screen")) return true;
 
         if (item.extraData && typeof item.extraData === "object") {
-            if (item.extraData.ad || item.extraData.is_ad) {
-                return true;
-            }
-            if (item.extraData.splash && (!item.title || type.includes("splash"))) {
+            const ex = item.extraData;
+            if (ex.splash || ex.open_screen || ex.ad || ex.is_ad || ex.is_feed_ad || ex.third_party_ad || ex.sdk_ad) {
                 return true;
             }
         }
@@ -163,10 +185,11 @@
     function isCoolapkAd(item) {
         if (!item) return false;
 
-        // 命中已知商业推广 ID
-        if ([944, 945, 1373, 6390, 8639, 20131, 24455, 29349, 32557, 33006, 36839, 39396, 43906].includes(item.entityId)) {
-            return true;
-        }
+        const adEntityIds = [
+            944, 945, 1373, 6390, 8639, 20099, 20131, 21703,
+            24455, 28212, 29349, 31114, 32557, 33006, 36839, 39396, 43906
+        ];
+        if (adEntityIds.includes(item.entityId)) return true;
 
         // 赞助模板与商业推广模板
         const template = String(item.entityTemplate || "").toLowerCase();
@@ -180,14 +203,15 @@
 
         // 商业带货与广告元数据
         if (item.extraData && typeof item.extraData === "object") {
-            if (item.extraData.ad || item.extraData.is_ad || item.extraData.is_feed_ad || item.extraData.sponsor) {
+            const ex = item.extraData;
+            if (ex.ad || ex.is_ad || ex.is_feed_ad || ex.sponsor || ex.splash || ex.gromore || ex.pangle || ex.gdt) {
                 return true;
             }
         }
 
         const title = String(item.title || "");
         const subTitle = String(item.subTitle || item.description || "");
-        if (title.includes("值得买") || title.includes("红包") || title.includes("精选配件") || title === "酷安热搜" || title.includes("推广") || title.includes("广告") || subTitle.includes("广告") || subTitle.includes("推广")) {
+        if (title.includes("值得买") || title.includes("红包") || title.includes("精选配件") || title === "酷安热搜" || title.includes("推广") || title.includes("广告") || subTitle.includes("广告") || subTitle.includes("推广") || title.includes("福利")) {
             return true;
         }
 

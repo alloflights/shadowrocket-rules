@@ -22,7 +22,7 @@ DOMAIN-SUFFIX,wanmei.com,DIRECT
 # 完美世界电竞开屏急速秒开 (本地 0.1ms Mock 响应，彻底阻止开屏广告渲染与 5 秒倒计时等待)
 pwesports_splash = type=http-request,pattern=^https?:\/\/.*\.(pwesports\.cn|wanmei\.com)\/(app|api)\/.*(splash|startup|launch),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
 # 完美世界电竞信息流与社区净化 (内置推广、轮播Banner、弹窗过滤)
-pwesports_clean = type=http-response,pattern=^https?:\/\/.*\.pwesports\.cn\/(app|api)\/v\d\/(feed|news|community|home|banner),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
+pwesports_clean = type=http-response,pattern=^https?:\/\/.*\.pwesports\.cn\/(app|api)\/v\d\/(feed|news|community|home|banner|match|article|square|post|index),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
 
 [MITM]
 hostname = %APPEND% api.pwesports.cn, app.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, *.pwesports.cn
