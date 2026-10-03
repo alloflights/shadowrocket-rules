@@ -23,23 +23,38 @@
     try {
         let obj = JSON.parse($response.body);
 
-        // 1. 初始化接口（开屏、热搜、营销配置）
+        // 1. 初始化接口（开屏、热搜、营销配置与第三方SDK分发）
         if (url.includes("/main/init")) {
             if (Array.isArray(obj.data)) {
                 obj.data = obj.data.filter(item => {
+                    if (!item) return false;
                     if ([944, 945, 6390, 8639, 24455, 36839].includes(item?.entityId)) return false;
-                    if (item?.entityType === "splash" || item?.entityTemplate === "splash" || item?.entityType === "ad") return false;
-                    if (item?.title?.includes("广告") || item?.extraData?.ad) return false;
-                    if (item?.entityId === 20131 && Array.isArray(item.entities)) {
+                    const type = (item.entityType || "").toLowerCase();
+                    const template = (item.entityTemplate || "").toLowerCase();
+                    if (type.includes("splash") || template.includes("splash")) return false;
+                    if (type.includes("ad") || template.includes("ad") || type.includes("sponsor")) return false;
+                    if (item.title && (item.title.includes("广告") || item.title.includes("推广"))) return false;
+                    if (item.extraData && (item.extraData.ad || item.extraData.splash)) return false;
+                    if (item.entityId === 20131 && Array.isArray(item.entities)) {
                         item.entities = item.entities.filter(i => i?.title !== "酷品" && i?.title !== "好物");
                     }
                     return true;
                 });
+            } else if (obj.data && typeof obj.data === "object") {
+                delete obj.data.splash;
+                delete obj.data.splashList;
+                delete obj.data.ad;
+                delete obj.data.ads;
+                delete obj.data.adList;
             }
             delete obj.splash;
             delete obj.splashList;
             delete obj.ad;
             delete obj.ads;
+            delete obj.adList;
+            if (obj.config) {
+                delete obj.config.splash;
+            }
         }
         // 2. 首页各版本推荐流 (index / indexV8 / indexV11 / indexV12)
         else if (url.includes("/main/index")) {
