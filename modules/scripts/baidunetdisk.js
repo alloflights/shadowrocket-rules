@@ -26,6 +26,18 @@ if (typeof $response !== "undefined" && $response.body) {
             obj.data.records = [];
             delete obj.data.splash;
             delete obj.data.splash_list;
+            delete obj.data.splash_info;
+            delete obj.data.gromore_config;
+            delete obj.data.pangle_config;
+            delete obj.data.mobads_config;
+            delete obj.data.config;
+        }
+        if (obj.config && typeof obj.config === "object") {
+            delete obj.config.splash_config;
+            delete obj.config.gromore_config;
+            delete obj.config.pangle_config;
+            delete obj.config.mobads_config;
+            delete obj.config.ad_config;
         }
         obj.ad_list = [];
         obj.ads = [];
@@ -53,16 +65,20 @@ if (typeof $response !== "undefined" && $response.body) {
             records: [],
             splash: null,
             splash_list: [],
+            splash_info: null,
             card_list: [],
-            entry_list: []
+            entry_list: [],
+            config: {}
         },
         ad_list: [],
         ads: [],
+        ad_info: [],
         list: [],
         card_list: [],
         records: [],
         splash: null,
         splash_list: [],
+        config: {},
         fuse: false
     };
 

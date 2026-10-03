@@ -8,12 +8,16 @@
 # 1. 字节跳动穿山甲广告联盟 (Pangolin SDK & OceanEngine)
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao2.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
+DOMAIN-SUFFIX,pangle.io,REJECT
+DOMAIN-SUFFIX,csjplatform.com,REJECT
 DOMAIN-SUFFIX,byte-ads.com,REJECT
 DOMAIN-SUFFIX,oceanengine.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
+DOMAIN-SUFFIX,toblog.snssdk.com,REJECT
 
 # 2. 腾讯优量汇 / 广点通 (GDT SDK)
 DOMAIN-SUFFIX,gdt.qq.com,REJECT
@@ -22,6 +26,8 @@ DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
 DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
 DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
 DOMAIN-SUFFIX,e.qq.com,REJECT
+DOMAIN-SUFFIX,tmead.y.qq.com,REJECT
+DOMAIN-SUFFIX,tmeadquic.y.qq.com,REJECT
 
 # 3. 百度移动广告联盟 (Baidu MobAds / 百青藤)
 DOMAIN-SUFFIX,mobads.baidu.com,REJECT
@@ -39,18 +45,31 @@ DOMAIN-SUFFIX,cpu.baidu.com,REJECT
 DOMAIN-SUFFIX,caclick.baidu.com,REJECT
 DOMAIN-SUFFIX,eclick.baidu.com,REJECT
 
-# 4. 聚合广告与开屏摇一摇专线 SDK (西柚 / 掌驭 / TopOn / Mintegral / 快手联盟)
+# 4. 聚合广告与开屏摇一摇专线 SDK (西柚 / 掌驭 / TopOn / Mintegral / 快手联盟 / 倍孜 / UBIX)
 DOMAIN-SUFFIX,sigmob.cn,REJECT
 DOMAIN-SUFFIX,sigmob.com,REJECT
+DOMAIN-SUFFIX,ads.sigmob.com,REJECT
 DOMAIN-SUFFIX,toponad.com,REJECT
+DOMAIN-SUFFIX,tradplusad.com,REJECT
+DOMAIN-SUFFIX,beizi.biz,REJECT
 DOMAIN-SUFFIX,appnext.com,REJECT
 DOMAIN-SUFFIX,mintegral.com,REJECT
 DOMAIN-SUFFIX,rayjump.com,REJECT
 DOMAIN-SUFFIX,zhangyuyidong.cn,REJECT
 DOMAIN-SUFFIX,zhangyuyidong.com,REJECT
 DOMAIN-SUFFIX,adukwai.com,REJECT
+DOMAIN-SUFFIX,adkwai.com,REJECT
+DOMAIN-SUFFIX,kuaishouzt.com,REJECT
 DOMAIN-SUFFIX,e.kuaishou.com,REJECT
 DOMAIN-SUFFIX,open.e.kuaishou.com,REJECT
+DOMAIN,open.e.kuaishou.cn,REJECT
+DOMAIN-SUFFIX,ubixioe.com,REJECT
+DOMAIN-SUFFIX,vlion.cn,REJECT
+DOMAIN-SUFFIX,advlion.com,REJECT
+DOMAIN-SUFFIX,fancyapi.com,REJECT
+DOMAIN-SUFFIX,shuzilm.cn,REJECT
+DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
+DOMAIN-SUFFIX,adx.adintl.cn,REJECT
 DOMAIN-SUFFIX,impdsp.meituan.com,REJECT
 
 # 5. HTTPDNS 直连解析阻断 (防止 App 绕过域名分流直接请求广告 IP)

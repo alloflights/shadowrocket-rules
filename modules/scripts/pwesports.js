@@ -15,7 +15,7 @@
 
     // 1. 若为 http-request 拦截模式 (开屏广告与广告拉取接口本地 0.1ms 秒级 Mock)
     if (typeof $response === "undefined") {
-        if (url.includes("splash") || url.includes("startup") || url.includes("launch") || url.includes("/ad/") || url.includes("/advert/")) {
+        if (url.includes("splash") || url.includes("startup") || url.includes("launch") || url.includes("/ad/") || url.includes("/advert/") || url.includes("open_screen") || url.includes("boot_ad")) {
             $done({
                 response: {
                     status: 200,
@@ -23,15 +23,22 @@
                     body: JSON.stringify({
                         code: 0,
                         status: 0,
+                        errno: 0,
+                        error_code: 0,
                         msg: "ok",
                         message: "ok",
                         data: {
                             splash: null,
                             splash_list: [],
+                            splash_info: null,
                             list: [],
                             banners: [],
+                            items: [],
                             ad: null,
-                            ads: []
+                            ads: [],
+                            ad_list: [],
+                            ad_info: [],
+                            config: {}
                         }
                     })
                 }
@@ -52,23 +59,31 @@
         let obj = JSON.parse($response.body);
 
         // 开屏与启动页接口
-        if (url.includes("splash") || url.includes("startup") || url.includes("launch")) {
+        if (url.includes("splash") || url.includes("startup") || url.includes("launch") || url.includes("open_screen") || url.includes("boot_ad") || url.includes("/advert/")) {
             if (obj.data) {
                 if (Array.isArray(obj.data)) {
                     obj.data = [];
                 } else if (typeof obj.data === "object") {
                     obj.data.splash = null;
                     obj.data.splash_list = [];
+                    obj.data.splash_info = null;
                     obj.data.ad = null;
                     obj.data.ads = [];
                     obj.data.ad_list = [];
+                    obj.data.ad_info = [];
                     obj.data.list = [];
                     obj.data.banners = [];
+                    obj.data.items = [];
+                    delete obj.data.gromore_config;
+                    delete obj.data.pangle_config;
+                    delete obj.data.mobads_config;
                 }
             }
             delete obj.splash;
             delete obj.ad;
             delete obj.ads;
+            delete obj.gromore_config;
+            delete obj.pangle_config;
         }
         // 首页、信息流、资讯、社区与轮播 Banner 接口
         else {

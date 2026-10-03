@@ -8,13 +8,17 @@
 # 1. 字节跳动穿山甲广告联盟 (Pangolin SDK & OceanEngine & GroMore)
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao2.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
+DOMAIN-SUFFIX,pangle.io,REJECT
+DOMAIN-SUFFIX,csjplatform.com,REJECT
 DOMAIN-SUFFIX,byte-ads.com,REJECT
 DOMAIN-SUFFIX,gromore.com,REJECT
 DOMAIN-SUFFIX,oceanengine.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
+DOMAIN-SUFFIX,toblog.snssdk.com,REJECT
 DOMAIN-SUFFIX,ad.toutiao.com,REJECT
 DOMAIN-SUFFIX,ad.zijieapi.com,REJECT
 DOMAIN-SUFFIX,analytics.snssdk.com,REJECT
@@ -80,14 +84,17 @@ DOMAIN-SUFFIX,ads.sigmob.cn,REJECT
 DOMAIN-SUFFIX,ct.sigmob.cn,REJECT
 DOMAIN-SUFFIX,adservice.sigmob.cn,REJECT
 
-# 6. 聚合广告与变现平台 (TopOn / Mintegral / 掌驭 / 变现猫 / 阿里Tanx / 数美)
+# 6. 聚合广告与变现平台 (TopOn / Mintegral / 掌驭 / 变现猫 / 阿里Tanx / 数美 / 倍孜)
 DOMAIN-SUFFIX,toponad.com,REJECT
 DOMAIN-SUFFIX,alps.toponad.com,REJECT
+DOMAIN-SUFFIX,tradplusad.com,REJECT
+DOMAIN-SUFFIX,beizi.biz,REJECT
 DOMAIN-SUFFIX,mintegral.com,REJECT
 DOMAIN-SUFFIX,rayjump.com,REJECT
 DOMAIN-SUFFIX,zhangyuyidong.cn,REJECT
 DOMAIN-SUFFIX,bianxianmao.com,REJECT
 DOMAIN-SUFFIX,tanx.com,REJECT
+DOMAIN-SUFFIX,adx.adintl.cn,REJECT
 DOMAIN-SUFFIX,shuzilm.cn,REJECT
 DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
 
@@ -129,6 +136,13 @@ DOMAIN,analytics.wanmei.com,REJECT
 DOMAIN,log.pwesports.cn,REJECT
 DOMAIN,tracker.pwesports.cn,REJECT
 DOMAIN,stat.esports.wanmei.com,REJECT
+DOMAIN,log-sdk.wanmei.com,REJECT
+DOMAIN,tracking.pwesports.cn,REJECT
+DOMAIN,ad.pwesports.cn,REJECT
+DOMAIN,advert.pwesports.cn,REJECT
+DOMAIN,sdk.pwesports.cn,REJECT
+DOMAIN,sdk.wanmei.com,REJECT
+DOMAIN-SUFFIX,telemetry.wanmei.com,REJECT
 # 酷安 & 百度网盘
 DOMAIN,ad.api.coolapk.com,REJECT
 DOMAIN,sofire.baidu.com,REJECT
@@ -286,7 +300,7 @@ DOMAIN-SUFFIX,cmpassport.com,DIRECT
 
 [URL Rewrite]
 # --- 完美世界电竞广告接口拦截 ---
-^https?:\/\/.*\.pwesports\.cn\/(app|api)\/.*(advert|feed\/ad|promote|popup) - reject-dict
+^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/.*(advert|feed\/ad|promote|popup|banner_ad) - reject-dict
 
 # --- 百度网盘营销推广与静态素材拦截 (保证图片加载秒返透明图，杜绝倒计时等待) ---
 ^https?:\/\/pan\.baidu\.com\/rest\/.*\/membership\/(proxy\/)?guide - reject-200
@@ -300,7 +314,7 @@ DOMAIN-SUFFIX,cmpassport.com,DIRECT
 ^https?:\/\/pan\.baidu\.com\/api\/taskscore\/tasklist - reject-dict
 ^https?:\/\/ndstatic\.cdn\.bcebos\.com\/activity\/welfare\/(js\/.+\.js|index\.html) - reject-200
 ^https?:\/\/staticsns\.cdn\.bcebos\.com\/amis\/.+\/banner\.png - reject-img
-^https?:\/\/issuecdn\.baidupcs\.com\/issue\/netdisk\/guanggao.* - reject-img
+^https?:\/\/issuecdn\.baidupcs\.com\/issue\/netdisk\/.*(guanggao|ad|splash|advert).* - reject-img
 ^https?:\/\/update\.pan\.baidu\.com\/statistics - reject-200
 ^https?:\/\/.*zhangyuyidong\.cn\/api\/zysdk - reject-200
 ^https?:\/\/afd\.baidu\.com\/afd\/entry - reject-dict
@@ -476,11 +490,11 @@ DOMAIN-SUFFIX,cmpassport.com,DIRECT
 
 [Script]
 # 0. 百度网盘急速开屏净化 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
-baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/(pcs\/adx?|membership\/advertise)|buy\/ad\/(conf|get)|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)|feed\/cardinfos|recommend\/shortseries\/list),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
+baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/(pcs\/adx?|membership\/advertise|splash)|buy\/ad\/(conf|get)|api\/ad\/|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)|feed\/cardinfos|recommend\/shortseries\/list),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
 
 # 1. 完美世界电竞净化 (开屏秒开、社区与资讯内置信息流广告剥离、轮播Banner净化)
-pwesports_splash = type=http-request,pattern=^https?:\/\/.*\.(pwesports\.cn|wanmei\.com)\/(app|api)\/.*(splash|startup|launch),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
-pwesports_clean = type=http-response,pattern=^https?:\/\/.*\.pwesports\.cn\/(app|api)\/v\d\/(feed|news|community|home|banner|match|article|square|post|index),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
+pwesports_splash = type=http-request,pattern=^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/.*(splash|startup|launch|advert|open_screen|boot_ad),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
+pwesports_clean = type=http-response,pattern=^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/(app|api)\/v\d\/(feed|news|community|home|banner|match|article|square|post|index),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
 
 # 2. 百度贴吧去广告 (JSON + Protobuf 双引擎)
 贴吧_JSON = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))$|tiebaads\/commonbatch\?),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,script-update-interval=0
@@ -530,4 +544,4 @@ netease_adblock = type=http-response,pattern=^https?:\/\/interface(\d)?\.music\.
 youtube_proto = type=http-response,pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next),requires-body=1,binary-body-mode=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% hermes.hupu.com, umestartup.umetrip.com, bda.umetrip.com, app.bilibili.com, grpc.biliapi.net, api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com, api.weibo.cn, *.uve.weibo.com, m5.amap.com, m5-zb.amap.com, oss.amap.com, amdc.m.taobao.com, interface*.music.163.com, magev6.if.qidian.com, *.ximalaya.com, *.xmcdn.com, *.wsa.ximalaya.com, adse.ximalaya.com, adse.wsa.ximalaya.com, mobile.ximalaya.com, passport.ximalaya.com, acs.m.goofish.com, g-acs.m.goofish.com, edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, pan.baidu.com, afd.baidu.com, issuecdn.baidupcs.com, api.coolapk.com, api2.coolapk.com, *.coolapk.com, goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com, startup.umetrip.com, discardrp.umetrip.com, oss.umetrip.com, home.umetrip.com, umerp.umetrip.com, img.meituan.net, s3plus.meituan.net, flowplus.meituan.net, youtubei.googleapis.com, api.mcd.cn, api2.mcd.cn, res.kfc.com.cn, dynamicad.kfc.com.cn, api.pwesports.cn, app.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, *.pwesports.cn, api.xiaoheihe.cn, bbs.nga.cn, nga.178.com, api.dongqiudi.com, god.game.163.com, capi.douyucdn.cn, apiv2.douyucdn.cn, hdads.huya.com, business.msorpack.huya.com, api.zhuanzhuan.com, mobile.12306.cn, app.qunar.com, m.ctrip.com, api.500px.com.cn, api.tuchong.com, www.icourse163.org, *.zhihuishu.com, *.10086.cn, app.10086.cn, content.95516.com, *.leigod.com, *.biubiu001.com, api.m.jd.com, m.api.dianping.com, *.zhangyuyidong.cn
+hostname = %APPEND% hermes.hupu.com, umestartup.umetrip.com, bda.umetrip.com, app.bilibili.com, grpc.biliapi.net, api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com, api.weibo.cn, *.uve.weibo.com, m5.amap.com, m5-zb.amap.com, oss.amap.com, amdc.m.taobao.com, interface*.music.163.com, magev6.if.qidian.com, *.ximalaya.com, *.xmcdn.com, *.wsa.ximalaya.com, adse.ximalaya.com, adse.wsa.ximalaya.com, mobile.ximalaya.com, passport.ximalaya.com, acs.m.goofish.com, g-acs.m.goofish.com, edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, pan.baidu.com, afd.baidu.com, issuecdn.baidupcs.com, api.coolapk.com, api2.coolapk.com, *.coolapk.com, goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com, startup.umetrip.com, discardrp.umetrip.com, oss.umetrip.com, home.umetrip.com, umerp.umetrip.com, img.meituan.net, s3plus.meituan.net, flowplus.meituan.net, youtubei.googleapis.com, api.mcd.cn, api2.mcd.cn, res.kfc.com.cn, dynamicad.kfc.com.cn, api.pwesports.cn, app.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, client.pwesports.cn, *.pwesports.cn, *.wanmei.com, api.xiaoheihe.cn, bbs.nga.cn, nga.178.com, api.dongqiudi.com, god.game.163.com, capi.douyucdn.cn, apiv2.douyucdn.cn, hdads.huya.com, business.msorpack.huya.com, api.zhuanzhuan.com, mobile.12306.cn, app.qunar.com, m.ctrip.com, api.500px.com.cn, api.tuchong.com, www.icourse163.org, *.zhihuishu.com, *.10086.cn, app.10086.cn, content.95516.com, *.leigod.com, *.biubiu001.com, api.m.jd.com, m.api.dianping.com, *.zhangyuyidong.cn

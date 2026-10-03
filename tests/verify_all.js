@@ -101,13 +101,20 @@ runTest('Baidu Netdisk http-request mock (/feed/cardinfos): returns empty cards'
     assert(Array.isArray(body.card_list) && body.card_list.length === 0);
 });
 
-runTest('Baidu Netdisk http-response filtering: strips splash and cleans ad lists', () => {
+runTest('Baidu Netdisk http-response filtering: strips splash, mediation configs and cleans ad lists', () => {
     const mockPayload = {
         errno: 0,
         data: {
             ad_list: [{ id: 1, img: "https://issuecdn.baidupcs.com/ad1.jpg" }],
             splash: { duration: 5, img: "https://issuecdn.baidupcs.com/splash.jpg" },
-            splash_list: [{ id: 1 }]
+            splash_list: [{ id: 1 }],
+            gromore_config: { appId: "123" },
+            pangle_config: { slotId: "456" },
+            config: { ad: 1 }
+        },
+        config: {
+            splash_config: { show: 1 },
+            gromore_config: { enable: true }
         },
         ad_list: [{ id: 2 }],
         card_list: [{ title: "短剧推广" }]
@@ -118,6 +125,10 @@ runTest('Baidu Netdisk http-response filtering: strips splash and cleans ad list
     assert.strictEqual(parsed.errno, 0);
     assert.strictEqual(parsed.data.ad_list.length, 0);
     assert.strictEqual(parsed.data.splash, undefined);
+    assert.strictEqual(parsed.data.gromore_config, undefined);
+    assert.strictEqual(parsed.data.pangle_config, undefined);
+    assert.strictEqual(parsed.config.splash_config, undefined);
+    assert.strictEqual(parsed.config.gromore_config, undefined);
     assert.strictEqual(parsed.splash, null);
     assert.strictEqual(parsed.card_list.length, 0);
 });
@@ -317,6 +328,39 @@ runTest('Pwesports http-response filtering (feed, match, articles & banners): st
     assert.strictEqual(parsed.data.dialog, undefined, 'dialog must be removed');
 });
 
+runTest('Pwesports http-request mock (/app/v1/open_screen & /boot_ad): returns status 200, code 0, and non-null data object', () => {
+    const res1 = executeScript(pwesportsScriptPath, { url: 'https://api.pwesports.cn/app/v1/open_screen' }, undefined);
+    assert(res1 && res1.response);
+    const body1 = JSON.parse(res1.response.body);
+    assert.strictEqual(body1.code, 0);
+    assert.strictEqual(body1.data.splash, null);
+
+    const res2 = executeScript(pwesportsScriptPath, { url: 'https://api.pwesports.cn/app/v1/boot_ad' }, undefined);
+    assert(res2 && res2.response);
+    const body2 = JSON.parse(res2.response.body);
+    assert.strictEqual(body2.code, 0);
+    assert.strictEqual(body2.data.splash, null);
+});
+
+runTest('Pwesports http-response filtering (/splash): strips gromore and pangle configs', () => {
+    const mockSplashPayload = {
+        code: 0,
+        data: {
+            splash: { img: "ad.jpg" },
+            gromore_config: { sdk: 1 },
+            pangle_config: { pos: "splash" }
+        },
+        gromore_config: { enabled: true }
+    };
+    const res = executeScript(pwesportsScriptPath, { url: 'https://api.pwesports.cn/app/v1/splash' }, { status: 200, body: JSON.stringify(mockSplashPayload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.splash, null);
+    assert.strictEqual(parsed.data.gromore_config, undefined);
+    assert.strictEqual(parsed.data.pangle_config, undefined);
+    assert.strictEqual(parsed.gromore_config, undefined);
+});
+
 runTest('Pwesports edge case: handles unexpected/non-matching URL gracefully', () => {
     const res = executeScript(pwesportsScriptPath, { url: 'https://api.pwesports.cn/other/data' }, undefined);
     assert(res && typeof res === 'object');
@@ -442,6 +486,65 @@ runTest('Check that pwesports_clean pattern includes all feed, match, article, a
     for (const relPath of targetConfigs) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
         assert(content.includes('feed|news|community|home|banner|match|article|square|post|index'), `Pattern incomplete in ${relPath}`);
+    }
+});
+
+runTest('Check that Pangle / CSJ domains are present across all modules and core configs', () => {
+    const requiredFiles = [
+        'modules/baidunetdisk.sgmodule',
+        'modules/pwesports.sgmodule',
+        'modules/adblock.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of requiredFiles) {
+        const fullPath = path.join(repoRoot, relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert(content.includes('pangolin-sdk-toutiao.com'), `Missing pangolin-sdk-toutiao.com in ${relPath}`);
+        assert(content.includes('pangle-ads.com'), `Missing pangle-ads.com in ${relPath}`);
+        assert(content.includes('pangle.io'), `Missing pangle.io in ${relPath}`);
+        assert(content.includes('csjplatform.com'), `Missing csjplatform.com in ${relPath}`);
+    }
+});
+
+runTest('Check that pwesports_splash pattern covers open_screen and boot_ad across configs', () => {
+    const targetConfigs = [
+        'modules/pwesports.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(content.includes('splash|startup|launch|advert|open_screen|boot_ad'), `pwesports_splash pattern incomplete in ${relPath}`);
+    }
+});
+
+runTest('Check that baidunetdisk_splash pattern covers splash subpath across configs', () => {
+    const targetConfigs = [
+        'modules/baidunetdisk.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(content.includes('pcs/adx?|membership/advertise|splash') || content.includes('pcs\\/adx?|membership\\/advertise|splash'), `baidunetdisk_splash pattern incomplete in ${relPath}`);
+    }
+});
+
+runTest('Check that client.pwesports.cn and *.wanmei.com are in MITM hostnames across configs', () => {
+    const targetConfigs = [
+        'modules/pwesports.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(content.includes('client.pwesports.cn'), `Missing client.pwesports.cn in MITM hostname in ${relPath}`);
+        assert(content.includes('*.wanmei.com'), `Missing *.wanmei.com in MITM hostname in ${relPath}`);
     }
 });
 
