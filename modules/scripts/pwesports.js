@@ -15,7 +15,7 @@
 
     // 1. 若为 http-request 拦截模式 (开屏广告与广告拉取接口本地 0.1ms 秒级 Mock)
     if (typeof $response === "undefined") {
-        if (url.includes("splash") || url.includes("startup") || url.includes("launch") || url.includes("/ad/") || url.includes("/advert/") || url.includes("open_screen") || url.includes("boot_ad")) {
+        if (url.includes("splash") || url.includes("startup") || url.includes("launch") || url.includes("advert") || url.includes("open_screen") || url.includes("boot_ad") || url.includes("/ad/") || url.includes("ad.pwesports.cn") || url.includes("advert.pwesports.cn")) {
             $done({
                 response: {
                     status: 200,
@@ -59,7 +59,7 @@
         let obj = JSON.parse($response.body);
 
         // 开屏与启动页接口
-        if (url.includes("splash") || url.includes("startup") || url.includes("launch") || url.includes("open_screen") || url.includes("boot_ad") || url.includes("/advert/")) {
+        if (url.includes("splash") || url.includes("startup") || url.includes("launch") || url.includes("open_screen") || url.includes("boot_ad") || url.includes("advert") || url.includes("/ad/")) {
             if (obj.data) {
                 if (Array.isArray(obj.data)) {
                     obj.data = [];

@@ -17,21 +17,39 @@ if (typeof $response !== "undefined" && $response.body) {
         let obj = JSON.parse($response.body);
         obj.errno = 0;
         obj.error_code = 0;
-        if (Array.isArray(obj.data)) {
-            obj.data = [];
-        } else if (typeof obj.data === "object" && obj.data !== null) {
-            obj.data.ad_list = [];
-            obj.data.ads = [];
-            obj.data.list = [];
-            obj.data.records = [];
-            delete obj.data.splash;
-            delete obj.data.splash_list;
-            delete obj.data.splash_info;
-            delete obj.data.gromore_config;
-            delete obj.data.pangle_config;
-            delete obj.data.mobads_config;
-            delete obj.data.config;
+
+        const isAdUrl = url.includes("splash") || url.includes("pcs/ad") || url.includes("activityentry") || url.includes("shortseries");
+        if (isAdUrl) {
+            if (Array.isArray(obj.data)) {
+                obj.data = [];
+            } else if (typeof obj.data === "object" && obj.data !== null) {
+                obj.data.ad_list = [];
+                obj.data.ads = [];
+                obj.data.list = [];
+                obj.data.records = [];
+                delete obj.data.splash;
+                delete obj.data.splash_list;
+                delete obj.data.splash_info;
+                delete obj.data.gromore_config;
+                delete obj.data.pangle_config;
+                delete obj.data.mobads_config;
+                delete obj.data.config;
+            }
+        } else {
+            // 通用接口只清洗广告和聚合瀑布流配置，绝不抹除正常用户数据与网盘文件列表
+            if (obj.data && typeof obj.data === "object" && !Array.isArray(obj.data)) {
+                delete obj.data.splash;
+                delete obj.data.splash_list;
+                delete obj.data.splash_info;
+                delete obj.data.gromore_config;
+                delete obj.data.pangle_config;
+                delete obj.data.mobads_config;
+                if (Array.isArray(obj.data.ad_list)) obj.data.ad_list = [];
+                if (Array.isArray(obj.data.ads)) obj.data.ads = [];
+                if (Array.isArray(obj.data.card_list)) obj.data.card_list = [];
+            }
         }
+
         if (obj.config && typeof obj.config === "object") {
             delete obj.config.splash_config;
             delete obj.config.gromore_config;
@@ -39,12 +57,13 @@ if (typeof $response !== "undefined" && $response.body) {
             delete obj.config.mobads_config;
             delete obj.config.ad_config;
         }
+        delete obj.gromore_config;
+        delete obj.pangle_config;
+        delete obj.mobads_config;
         obj.ad_list = [];
         obj.ads = [];
         obj.ad_info = [];
-        obj.list = [];
         obj.card_list = [];
-        obj.records = [];
         obj.splash = null;
         obj.splash_list = [];
         obj.fuse = false;

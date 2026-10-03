@@ -28,6 +28,7 @@ DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
 DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
 IP-CIDR,180.76.76.200/32,REJECT,no-resolve
 # 穿山甲 / 巨量引擎 (Pangle / CSJ SDK - 彻底封杀摇一摇开屏广告)
+DOMAIN,pangolin.snssdk.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao2.com,REJECT
@@ -36,6 +37,16 @@ DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
 DOMAIN-SUFFIX,pangle.io,REJECT
 DOMAIN-SUFFIX,csjplatform.com,REJECT
+DOMAIN-SUFFIX,csjbi.com,REJECT
+DOMAIN-SUFFIX,isplusurl.com,REJECT
+DOMAIN-SUFFIX,bytead.net,REJECT
+DOMAIN-SUFFIX,byte-ads.com,REJECT
+DOMAIN,ads3-normal-lf.zijieapi.com,REJECT
+DOMAIN,ads5-normal-lf.zijieapi.com,REJECT
+DOMAIN,ad.zijieapi.com,REJECT
+DOMAIN,v3-ad.pstatp.com,REJECT
+DOMAIN,sf6-ttcdn-tos.pstatp.com,REJECT
+DOMAIN,ad.oceanengine.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
 DOMAIN-SUFFIX,toblog.snssdk.com,REJECT
 
@@ -85,7 +96,9 @@ DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
 
 [Script]
 # 百度网盘急速开屏净化 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
-baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/(pcs\/adx?|membership\/advertise|splash)|buy\/ad\/(conf|get)|api\/ad\/|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)|feed\/cardinfos|recommend\/shortseries\/list),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
+baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/.*(pcs\/adx?|membership\/advertise|splash|buy\/ad\/(conf|get)|api\/ad\/|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)|feed\/cardinfos|recommend\/shortseries\/list),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
+# 百度网盘响应流数据净化 (剥离 GroMore/穿山甲瀑布流配置、横幅、推广与信息流卡片)
+baidunetdisk_clean = type=http-response,pattern=^https?:\/\/pan\.baidu\.com\/.*(feed|card|membership|activity|config|user|welfare),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
 
 [MITM]
 hostname = %APPEND% pan.baidu.com, afd.baidu.com, ndstatic.cdn.bcebos.com, staticsns.cdn.bcebos.com, issuecdn.baidupcs.com

@@ -12,13 +12,12 @@ DOMAIN,tracker.pwesports.cn,REJECT
 DOMAIN,stat.esports.wanmei.com,REJECT
 DOMAIN,log-sdk.wanmei.com,REJECT
 DOMAIN,tracking.pwesports.cn,REJECT
-DOMAIN,ad.pwesports.cn,REJECT
-DOMAIN,advert.pwesports.cn,REJECT
 DOMAIN,sdk.pwesports.cn,REJECT
 DOMAIN,sdk.wanmei.com,REJECT
 DOMAIN-SUFFIX,telemetry.wanmei.com,REJECT
 
 # 第三方聚合广告联盟 (彻底封杀穿山甲/优量汇/百青藤等开屏穿透)
+DOMAIN,pangolin.snssdk.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao2.com,REJECT
@@ -27,6 +26,16 @@ DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
 DOMAIN-SUFFIX,pangle.io,REJECT
 DOMAIN-SUFFIX,csjplatform.com,REJECT
+DOMAIN-SUFFIX,csjbi.com,REJECT
+DOMAIN-SUFFIX,isplusurl.com,REJECT
+DOMAIN-SUFFIX,bytead.net,REJECT
+DOMAIN-SUFFIX,byte-ads.com,REJECT
+DOMAIN,ads3-normal-lf.zijieapi.com,REJECT
+DOMAIN,ads5-normal-lf.zijieapi.com,REJECT
+DOMAIN,ad.zijieapi.com,REJECT
+DOMAIN,v3-ad.pstatp.com,REJECT
+DOMAIN,sf6-ttcdn-tos.pstatp.com,REJECT
+DOMAIN,ad.oceanengine.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
 DOMAIN-SUFFIX,toblog.snssdk.com,REJECT
 DOMAIN-SUFFIX,gdt.qq.com,REJECT
@@ -55,13 +64,13 @@ DOMAIN-SUFFIX,pwesports.cn,DIRECT
 DOMAIN-SUFFIX,wanmei.com,DIRECT
 
 [URL Rewrite]
-^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/.*(advert|feed\/ad|promote|popup|banner_ad) - reject-dict
+^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/.*(feed\/ad|promote|popup|banner_ad) - reject-dict
 
 [Script]
 # 完美世界电竞开屏急速秒开 (本地 0.1ms Mock 响应，彻底阻止开屏广告渲染与 5 秒倒计时等待)
 pwesports_splash = type=http-request,pattern=^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/.*(splash|startup|launch|advert|open_screen|boot_ad),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
 # 完美世界电竞信息流与社区净化 (内置推广、轮播Banner、弹窗过滤)
-pwesports_clean = type=http-response,pattern=^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/(app|api)\/v\d\/(feed|news|community|home|banner|match|article|square|post|index),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
+pwesports_clean = type=http-response,pattern=^https?:\/\/.*(pwesports\.cn|wanmei\.com)\/(app|api)\/(v\d\/)?(feed|news|community|home|banner|match|article|square|post|index),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% api.pwesports.cn, app.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, client.pwesports.cn, *.pwesports.cn, *.wanmei.com
+hostname = %APPEND% api.pwesports.cn, app.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, client.pwesports.cn, ad.pwesports.cn, advert.pwesports.cn, *.pwesports.cn, *.wanmei.com

@@ -145,6 +145,21 @@ runTest('Baidu Netdisk edge case: handles null data payload gracefully', () => {
     assert.strictEqual(parsed.errno, 0);
 });
 
+runTest('Baidu Netdisk http-response filtering preserves normal array data for non-ad endpoints', () => {
+    const normalPayload = {
+        errno: 0,
+        data: [{ server_filename: "my_document.pdf", size: 1024 }],
+        gromore_config: { dummy: 1 }
+    };
+    const res = executeScript(baiduScriptPath, { url: 'https://pan.baidu.com/rest/2.0/xpan/file?method=list' }, { status: 200, body: JSON.stringify(normalPayload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.errno, 0);
+    assert(Array.isArray(parsed.data) && parsed.data.length === 1, 'Legitimate file lists must NOT be erased');
+    assert.strictEqual(parsed.data[0].server_filename, "my_document.pdf");
+    assert.strictEqual(parsed.gromore_config, undefined);
+});
+
 // ---------------------------------------------------------
 // Coolapk Tests
 // ---------------------------------------------------------
@@ -340,6 +355,12 @@ runTest('Pwesports http-request mock (/app/v1/open_screen & /boot_ad): returns s
     const body2 = JSON.parse(res2.response.body);
     assert.strictEqual(body2.code, 0);
     assert.strictEqual(body2.data.splash, null);
+
+    const res3 = executeScript(pwesportsScriptPath, { url: 'https://advert.pwesports.cn/app/v1/advert' }, undefined);
+    assert(res3 && res3.response);
+    const body3 = JSON.parse(res3.response.body);
+    assert.strictEqual(body3.code, 0);
+    assert.strictEqual(body3.data.splash, null);
 });
 
 runTest('Pwesports http-response filtering (/splash): strips gromore and pangle configs', () => {
@@ -505,6 +526,10 @@ runTest('Check that Pangle / CSJ domains are present across all modules and core
         assert(content.includes('pangle-ads.com'), `Missing pangle-ads.com in ${relPath}`);
         assert(content.includes('pangle.io'), `Missing pangle.io in ${relPath}`);
         assert(content.includes('csjplatform.com'), `Missing csjplatform.com in ${relPath}`);
+        assert(content.includes('pangolin.snssdk.com'), `Missing pangolin.snssdk.com in ${relPath}`);
+        assert(content.includes('csjbi.com'), `Missing csjbi.com in ${relPath}`);
+        assert(content.includes('isplusurl.com'), `Missing isplusurl.com in ${relPath}`);
+        assert(content.includes('bytead.net'), `Missing bytead.net in ${relPath}`);
     }
 });
 
@@ -521,7 +546,7 @@ runTest('Check that pwesports_splash pattern covers open_screen and boot_ad acro
     }
 });
 
-runTest('Check that baidunetdisk_splash pattern covers splash subpath across configs', () => {
+runTest('Check that baidunetdisk_splash pattern accurately matches all real splash URLs across configs', () => {
     const targetConfigs = [
         'modules/baidunetdisk.sgmodule',
         'modules/adblock-ultimate.sgmodule',
@@ -530,11 +555,61 @@ runTest('Check that baidunetdisk_splash pattern covers splash subpath across con
     ];
     for (const relPath of targetConfigs) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
-        assert(content.includes('pcs/adx?|membership/advertise|splash') || content.includes('pcs\\/adx?|membership\\/advertise|splash'), `baidunetdisk_splash pattern incomplete in ${relPath}`);
+        const match = content.match(/baidunetdisk_splash\s*=\s*type=http-request[^,\n]*,.*pattern=([^,\n]+)/);
+        assert(match, `Could not find baidunetdisk_splash pattern in ${relPath}`);
+        const regexStr = match[1];
+        const regex = new RegExp(regexStr.replace(/\\\\/g, '\\'));
+
+        assert(regex.test('https://pan.baidu.com/splash/load'), `Must match pan.baidu.com/splash/load in ${relPath}`);
+        assert(regex.test('https://pan.baidu.com/splash/list'), `Must match pan.baidu.com/splash/list in ${relPath}`);
+        assert(regex.test('https://pan.baidu.com/api/splash'), `Must match pan.baidu.com/api/splash in ${relPath}`);
+        assert(regex.test('https://pan.baidu.com/rest/2.0/splash'), `Must match pan.baidu.com/rest/2.0/splash in ${relPath}`);
+        assert(regex.test('https://pan.baidu.com/rest/2.0/pcs/adx'), `Must match pan.baidu.com/rest/2.0/pcs/adx in ${relPath}`);
+        assert(regex.test('https://pan.baidu.com/act/api/activityentry'), `Must match pan.baidu.com/act/api/activityentry in ${relPath}`);
     }
 });
 
-runTest('Check that client.pwesports.cn and *.wanmei.com are in MITM hostnames across configs', () => {
+runTest('Check that baidunetdisk_clean response script exists across configs', () => {
+    const targetConfigs = [
+        'modules/baidunetdisk.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(content.includes('baidunetdisk_clean = type=http-response'), `Missing baidunetdisk_clean in ${relPath}`);
+    }
+});
+
+runTest('Check that advert is NOT rejected with reject-dict for pwesports across configs to prevent offline splash cache fallback', () => {
+    const targetConfigs = [
+        'modules/pwesports.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(!content.includes('(advert|feed/ad') && !content.includes('(advert|feed\\/ad'), `advert must not be in reject-dict in ${relPath}`);
+    }
+});
+
+runTest('Check that ad.pwesports.cn and advert.pwesports.cn are NOT in [Rule] with REJECT across configs', () => {
+    const targetConfigs = [
+        'modules/pwesports.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(!content.includes('DOMAIN,ad.pwesports.cn,REJECT'), `ad.pwesports.cn must not be socket-rejected in ${relPath}`);
+        assert(!content.includes('DOMAIN,advert.pwesports.cn,REJECT'), `advert.pwesports.cn must not be socket-rejected in ${relPath}`);
+    }
+});
+
+runTest('Check that client.pwesports.cn, ad.pwesports.cn, advert.pwesports.cn and *.wanmei.com are in MITM hostnames across configs', () => {
     const targetConfigs = [
         'modules/pwesports.sgmodule',
         'modules/adblock-ultimate.sgmodule',
@@ -544,6 +619,8 @@ runTest('Check that client.pwesports.cn and *.wanmei.com are in MITM hostnames a
     for (const relPath of targetConfigs) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
         assert(content.includes('client.pwesports.cn'), `Missing client.pwesports.cn in MITM hostname in ${relPath}`);
+        assert(content.includes('ad.pwesports.cn'), `Missing ad.pwesports.cn in MITM hostname in ${relPath}`);
+        assert(content.includes('advert.pwesports.cn'), `Missing advert.pwesports.cn in MITM hostname in ${relPath}`);
         assert(content.includes('*.wanmei.com'), `Missing *.wanmei.com in MITM hostname in ${relPath}`);
     }
 });
