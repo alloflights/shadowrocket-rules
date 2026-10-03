@@ -2,12 +2,13 @@
  * 酷安 (Coolapk) 深度净化脚本
  * 
  * 核心特性：
- * 1. 拦截开屏广告配置、Tab推广与营销热搜 (/main/init)
- * 2. 深度过滤首页全系列版本信息流 (/main/index*) 中的推广卡片、数码好物带货与红包广告
- * 3. 过滤动态列表与频道数据流 (/page/dataList*, /main/dataList*) 中的 sponsorCard 与广告位
- * 4. 清除动态详情页带货商品卡片 (detailSponsorCard / include_goods)
- * 5. 过滤评论区插播商业广告与推广回复
- * 6. 移除个人中心推广横幅
+ * 1. 拦截开屏广告配置、Tab推广、营销热搜与第三方SDK初始化 (/main/init)
+ * 2. 递归剥离嵌套 entities 中的广告卡片与开屏投放对象，杜绝开屏倒计时留存
+ * 3. 深度过滤首页全系列版本信息流 (/main/index*) 中的推广卡片、数码好物带货与红包广告
+ * 4. 过滤动态列表与频道数据流 (/page/dataList*, /main/dataList*) 中的 sponsorCard 与广告位
+ * 5. 清除动态详情页带货商品卡片 (detailSponsorCard / include_goods)
+ * 6. 过滤评论区插播商业广告与推广回复
+ * 7. 移除个人中心推广横幅
  * 
  * 遵循: Ponytail 极简原则
  * 作者: allofights
@@ -28,44 +29,40 @@
             if (Array.isArray(obj.data)) {
                 obj.data = obj.data.filter(item => {
                     if (!item) return false;
-                    if ([944, 945, 6390, 8639, 24455, 36839].includes(item?.entityId)) return false;
-                    const type = (item.entityType || "").toLowerCase();
-                    const template = (item.entityTemplate || "").toLowerCase();
-                    if (type.includes("splash") || template.includes("splash")) return false;
-                    if (type.includes("ad") || template.includes("ad") || type.includes("sponsor")) return false;
-                    if (item.title && (item.title.includes("广告") || item.title.includes("推广"))) return false;
-                    if (item.extraData && (item.extraData.ad || item.extraData.splash)) return false;
-                    if (item.entityId === 20131 && Array.isArray(item.entities)) {
-                        item.entities = item.entities.filter(i => i?.title !== "酷品" && i?.title !== "好物");
+                    if (isCoolapkInitAd(item)) return false;
+
+                    // 递归清理子实体中的广告推广位
+                    if (Array.isArray(item.entities)) {
+                        item.entities = item.entities.filter(sub => !isCoolapkInitAd(sub));
+                    }
+
+                    // 擦除 extraData 中的各类广告 SDK 标记与开屏计时
+                    if (item.extraData && typeof item.extraData === "object") {
+                        const adKeys = ["splash", "ad", "is_ad", "gromore", "pangle", "gdt", "mobads", "open_screen", "launch_time", "ad_params", "third_party_ad", "sdk_ad"];
+                        for (let k of adKeys) {
+                            delete item.extraData[k];
+                        }
                     }
                     return true;
                 });
             } else if (obj.data && typeof obj.data === "object") {
-                delete obj.data.splash;
-                delete obj.data.splashList;
-                delete obj.data.ad;
-                delete obj.data.ads;
-                delete obj.data.adList;
+                cleanObjectAdKeys(obj.data);
             }
-            delete obj.splash;
-            delete obj.splashList;
-            delete obj.ad;
-            delete obj.ads;
-            delete obj.adList;
-            if (obj.config) {
-                delete obj.config.splash;
+            cleanObjectAdKeys(obj);
+            if (obj.config && typeof obj.config === "object") {
+                cleanObjectAdKeys(obj.config);
             }
         }
         // 2. 首页各版本推荐流 (index / indexV8 / indexV11 / indexV12)
         else if (url.includes("/main/index")) {
             if (Array.isArray(obj.data)) {
-                obj.data = obj.data.filter(item => !isCoolapkAd(item));
+                obj.data = filterCoolapkList(obj.data);
             }
         }
         // 3. 通用数据流 (dataList / dataListV8 / dataListV11)
         else if (url.includes("dataList")) {
             if (Array.isArray(obj.data)) {
-                obj.data = obj.data.filter(item => !isCoolapkAd(item));
+                obj.data = filterCoolapkList(obj.data);
             }
         }
         // 4. 动态/图文详情页
@@ -102,32 +99,95 @@
     }
 
     /**
+     * 深度过滤数据列表，兼顾子实体
+     */
+    function filterCoolapkList(list) {
+        return list.filter(item => {
+            if (!item) return false;
+            if (isCoolapkAd(item)) return false;
+            if (Array.isArray(item.entities)) {
+                item.entities = item.entities.filter(sub => !isCoolapkAd(sub));
+                if (item.entities.length === 0 && (item.entityType === "card" || item.entityTemplate === "card")) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    /**
+     * 移除对象中包含的全部广告/开屏/SDK键值
+     */
+    function cleanObjectAdKeys(o) {
+        if (!o || typeof o !== "object") return;
+        const adKeys = [
+            "splash", "splashList", "splash_config", "launch_ad", "launchAd",
+            "open_screen", "ad", "ads", "adList", "ad_config", "gromore",
+            "gromore_config", "pangle", "pangle_config", "gdt", "gdt_config",
+            "mobads", "mobads_config", "third_party_ad", "sdk_ad", "sdk_config"
+        ];
+        for (let k of adKeys) {
+            delete o[k];
+        }
+    }
+
+    /**
+     * 判断是否为初始化阶段的开屏与推广实体
+     */
+    function isCoolapkInitAd(item) {
+        if (!item) return false;
+        if ([944, 945, 1373, 6390, 8639, 24455, 36839, 39396, 43906].includes(item.entityId)) return true;
+
+        const type = String(item.entityType || "").toLowerCase();
+        const template = String(item.entityTemplate || "").toLowerCase();
+        if (type.includes("splash") || template.includes("splash")) return true;
+        if (type.includes("ad") || template.includes("ad") || type.includes("sponsor")) return true;
+
+        const title = String(item.title || "");
+        if (title.includes("广告") || title.includes("推广") || title === "酷品" || title === "好物") return true;
+
+        if (item.extraData && typeof item.extraData === "object") {
+            if (item.extraData.ad || item.extraData.is_ad) {
+                return true;
+            }
+            if (item.extraData.splash && (!item.title || type.includes("splash"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 判断是否为酷安信息流广告卡片
      */
     function isCoolapkAd(item) {
         if (!item) return false;
 
-        // 赞助模板与大图营销
-        if (item.entityTemplate === "sponsorCard" || item.entityTemplate === "imageScaleCard" || item.entityTemplate === "goodsCard" || item.entityTemplate === "goodsGridCard") {
+        // 命中已知商业推广 ID
+        if ([944, 945, 1373, 6390, 8639, 20131, 24455, 29349, 32557, 33006, 36839, 39396, 43906].includes(item.entityId)) {
             return true;
         }
+
+        // 赞助模板与商业推广模板
+        const template = String(item.entityTemplate || "").toLowerCase();
+        const adTemplates = ["sponsorcard", "imagescalecard", "goodscard", "goodsgridcard", "feed_ad", "adcard", "sponsor", "textlinkcard"];
+        if (adTemplates.includes(template)) return true;
 
         // 商业实体类型
-        if (item.entityType === "ad" || item.entityType === "card" && item.title?.includes("推广")) {
-            return true;
-        }
-
-        // 命中已知商业推广 ID
-        if ([8639, 29349, 33006, 32557, 43906].includes(item.entityId)) {
-            return true;
-        }
+        const type = String(item.entityType || "").toLowerCase();
+        if (type === "ad" || type === "sponsor") return true;
+        if (type === "card" && item.title && (item.title.includes("推广") || item.title.includes("广告"))) return true;
 
         // 商业带货与广告元数据
-        if (item.extraData?.ad || item.extraData?.is_ad || item.extraData?.is_feed_ad) {
-            return true;
+        if (item.extraData && typeof item.extraData === "object") {
+            if (item.extraData.ad || item.extraData.is_ad || item.extraData.is_feed_ad || item.extraData.sponsor) {
+                return true;
+            }
         }
 
-        if (item.title?.includes("值得买") || item.title?.includes("红包") || item.title?.includes("精选配件") || item.title === "酷安热搜") {
+        const title = String(item.title || "");
+        const subTitle = String(item.subTitle || item.description || "");
+        if (title.includes("值得买") || title.includes("红包") || title.includes("精选配件") || title === "酷安热搜" || title.includes("推广") || title.includes("广告") || subTitle.includes("广告") || subTitle.includes("推广")) {
             return true;
         }
 

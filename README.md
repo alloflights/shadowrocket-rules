@@ -47,6 +47,9 @@
 | **全球 Top 500 常用海外应用与网站极速分流** | 收录全球 Top 500 核心资讯、科技媒体、跨国差旅、生命科学学术科研 (Rosalind)、开发者原生云生态及海外法定 TLD，彻底杜绝境外未知流量落入直连导致的白屏与打不开 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/overseas-top500.sgmodule` |
 | **全网外链直接跳转** | 自动绕过知乎/CSDN/简书/掘金/微博/贴吧/QQ/少数派/Gitee/语雀安全跳转确认页，0.05ms 本地直出 302 重定向 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/direct-link.sgmodule` |
 | **TikTok 免拔卡原画直存** | 原生免拔卡换区(美区)，解除作者保存限制，视频无水印 1080P 下载与信息流净化 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/tiktok.sgmodule` |
+| **完美世界电竞净化** | 彻底去除开屏广告、社区与资讯内置信息流推广、商业轮播横幅与弹窗，保留纯净赛事与战绩查询 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/pwesports.sgmodule` |
+| **百度网盘极速净化** | 0.1ms Mock 秒开，彻底根治 5s 白屏倒计时与本地缓存回退，清空短剧与信息流广告卡片 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/baidunetdisk.sgmodule` |
+| **酷安深度净化** | 拦截开屏广告配置与第三方SDK初始化，递归剥离嵌套 entities 广告卡片，清空首页及详情页带货流 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/coolapk.sgmodule` |
 | **BoxJs 资产签到工作台** | 运行在小火箭内的无感自动化工作台，Safari 访问 `http://boxjs.com` 即可管理会话与每日资产自动签到 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/boxjs.sgmodule` |
 | **Safari 移动纯净浏览** | 屏蔽“打开App/前往客户端”遮罩霸屏、百度搜索热议软文、强制展开全文、App引导横幅 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/safari-clean.sgmodule` |
 
@@ -60,6 +63,22 @@
 
 | 应用名称 | 净化范围与效果 | 技术实现方案 |
 | :--- | :--- | :--- |
+| **完美世界电竞** | 开屏广告秒开、社区与资讯内置信息流推广、赛事商业横幅、商城导流弹窗 | 本地 Mock + 数据流过滤脚本 (pwesports.js) |
+| **百度网盘** | 开屏广告秒开（彻底解决只去图片残留5s倒计时白屏问题）、横幅推广、福利弹窗、短剧与信息流卡片 | 协议对齐精准 Mock (baidunetdisk.js) + reject-img |
+| **酷安** | 开屏广告秒开、首页推荐流推广卡片、数码好物带货、动态详情赞助、评论区插播商业回复 | 深度递归剥离 + SDK配置阻断 (coolapk.js) |
+| **小黑盒** | 开屏广告、社区信息流广告卡片、商城推广横幅、游戏导流弹窗 | URL Rewrite (reject-dict) + 域名封杀 |
+| **NGA玩家社区 / 恩基爱** | 论坛开屏广告、板块置顶与流内商业推广贴、电商导流 | API 重写 (reject-dict) |
+| **懂球帝** | 开屏广告、比赛资讯信息流广告、Tab推广位、数据埋点 | URL Rewrite (reject-dict) + 域名封杀 |
+| **网易大神** | 开屏广告、圈子与动态内置信息流推广卡片、活动弹窗 | URL Rewrite (reject-dict) |
+| **斗鱼直播 / 虎牙直播** | 开屏广告、直播间活动弹窗、商业轮播横幅、礼物推广 | API 重写 (reject-dict) + 域名封杀 |
+| **转转** | 开屏广告、二手商品信息流广告卡片、营销弹窗 | URL Rewrite (reject-dict) |
+| **铁路12306** | 开屏广告、商业订房/出行推广浮窗 | API 重写 (reject-dict) |
+| **去哪儿旅行 / 携程旅行** | 开屏广告、酒店与机票推广广告、活动浮层 | API 重写 (reject-dict) |
+| **500px中国版 / 图虫** | 摄影社区开屏广告、瀑布流赞助商卡片 | API 重写 (reject-dict) |
+| **中国大学慕课 / 知到** | 在线网课开屏广告、课程推荐弹窗 | API 重写 (reject-dict) |
+| **中国移动 / 云闪付** | 开屏广告、金融活动弹窗、横幅推广 | API 重写 (reject-dict) |
+| **雷神 / biubiu加速器** | 游戏加速器开屏广告、充值营销弹窗 | API 重写 (reject-dict) |
+| **京东 / 大众点评** | 首页启动弹窗、悬浮红包广告、开屏推广 | API 重写 (reject-dict) |
 | **百度贴吧** | 开屏广告、首页推荐流伪装广告贴、吧内商业推广、直播推荐 | JSON + Protobuf 双引擎二进制解包 |
 | **小红书** | 开屏广告、瀑布流商业卡片、去水印原画质图片与LivePhoto保存 | JSON 解包 + 水印配置拦截 |
 | **哔哩哔哩** | 开屏秒开、首页推荐流广告、动态列表商业卡片、播放页UP主带货广告 | JSON + gRPC Protobuf 双引擎 |
@@ -69,8 +88,6 @@
 | **网易云音乐** | 开屏广告、发现页/推荐页商业推广、评论区插入广告、侧栏VIP推广 | 墨鱼核心脚本 + 推广 API 拦截 |
 | **起点读书** | 开屏广告、每日导读强制弹窗、活动Tab、书架右下角浮窗及福利推广 | Argus API 劫持过滤 |
 | **喜马拉雅** | 开屏广告、首页轮播广告、播放页直播与动态推广、我的页面营销角标 | 动态流过滤 + 直播流拦截 |
-| **酷安** | 开屏广告、首页与信息流推广、详情页赞助卡片、评论区广告、搜索热词 | 数据流解析过滤 + 商业热词拦截 |
-| **百度网盘** | 开屏广告、摇一摇跳转第三方、横幅推广、福利弹窗、首页短剧与信息流推广 | URL Rewrite (reject-dict / reject-200) |
 | **闲鱼** | 开屏广告、首页 Banner 推广流、营销浮窗与弹窗 | mtop 接口定向重写 (reject-dict) |
 | **抖音** | 开屏广告、穿山甲追踪打点、视频内小黄车与带货橱窗、直播弹窗 | snssdk 广告接口重写与域名阻断 |
 | **虎扑** | 开屏广告、下拉刷新广告流、帖子详情商业推广卡片及广告图片 | 接口阻断 + 推广图片屏蔽 |

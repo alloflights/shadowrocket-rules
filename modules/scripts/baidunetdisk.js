@@ -1,23 +1,36 @@
-// 百度网盘急速开屏净化脚本 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
+/**
+ * 百度网盘 (Baidu Netdisk) 深度净化与极速启动脚本
+ * 
+ * 核心机制：
+ * 1. 本地 0.1ms Mock 响应，彻底阻止开屏广告渲染与 5 秒倒计时等待
+ * 2. 严格按不同接口协议返回 errno=0 与合法空数组，杜绝客户端因异常报错回退到本地沙盒广告缓存
+ * 3. 清理短剧、信息流推广卡片、横幅及活动弹窗
+ * 
+ * 遵循: Ponytail 极简原则
+ * 作者: allofights
+ */
+
 const url = $request.url;
 
-if (typeof $response !== 'undefined' && $response.body) {
+if (typeof $response !== "undefined" && $response.body) {
     try {
         let obj = JSON.parse($response.body);
         obj.errno = 0;
         obj.error_code = 0;
         if (Array.isArray(obj.data)) {
             obj.data = [];
-        } else if (typeof obj.data === 'object' && obj.data !== null) {
+        } else if (typeof obj.data === "object" && obj.data !== null) {
             obj.data.ad_list = [];
             obj.data.ads = [];
             obj.data.list = [];
             obj.data.records = [];
+            delete obj.data.splash;
         }
         obj.ad_list = [];
         obj.ads = [];
         obj.ad_info = [];
         obj.list = [];
+        obj.card_list = [];
         obj.records = [];
         obj.splash = {};
         obj.fuse = false;
@@ -27,25 +40,39 @@ if (typeof $response !== 'undefined' && $response.body) {
     }
 } else {
     // http-request 模式：本地秒级返回合规空数据，客户端免等待直接进入主页
+    let mockData;
+    if (url.includes("/act/") || url.includes("activityentry")) {
+        mockData = { errno: 0, error_code: 0, data: [], list: [] };
+    } else if (url.includes("/pcs/ad")) {
+        mockData = { errno: 0, error_code: 0, request_id: Date.now(), ad_list: [], ads: [] };
+    } else if (url.includes("/buy/ad/") || url.includes("/membership/")) {
+        mockData = { errno: 0, error_code: 0, request_id: Date.now(), data: { ad_list: [], ads: [], list: [] } };
+    } else if (url.includes("/feed/cardinfos") || url.includes("/recommend/shortseries/")) {
+        mockData = { errno: 0, error_code: 0, list: [], card_list: [], data: [] };
+    } else {
+        mockData = {
+            errno: 0,
+            error_code: 0,
+            request_id: Date.now(),
+            ad_list: [],
+            ads: [],
+            data: [],
+            list: [],
+            card_list: [],
+            records: [],
+            splash: {},
+            fuse: false
+        };
+    }
+
     $done({
         response: {
             status: 200,
             headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                'Access-Control-Allow-Origin': '*'
+                "Content-Type": "application/json; charset=utf-8",
+                "Access-Control-Allow-Origin": "*"
             },
-            body: JSON.stringify({
-                errno: 0,
-                error_code: 0,
-                request_id: Date.now(),
-                ad_list: [],
-                ads: [],
-                data: [],
-                list: [],
-                records: [],
-                splash: {},
-                fuse: false
-            })
+            body: JSON.stringify(mockData)
         }
     });
 }

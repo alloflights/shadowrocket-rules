@@ -1,0 +1,10 @@
+{
+  "name": "shadowrocket-rules",
+  "version": "1.0.0",
+  "description": "Shadowrocket Ultimate Rules & Purification Modules",
+  "scripts": {
+    "test": "node tests/verify_all.js"
+  },
+  "author": "allofights",
+  "license": "MIT"
+}

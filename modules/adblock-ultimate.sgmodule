@@ -1,17 +1,18 @@
 #!name=终极去广告全能模块 (Ultimate AdBlock Pro)
-#!desc=iPhone全量App开屏广告、信息流广告、摇一摇跳转拦截，整合AWAvenue广告联盟封杀与各大头部App核心去广告脚本(B站/贴吧/小红书/微博/知乎/高德/网易云/起点/喜马拉雅/百度网盘/闲鱼/酷安/YouTube)
+#!desc=iPhone全量App开屏广告、信息流广告、摇一摇跳转拦截，整合AWAvenue广告联盟封杀与各大应用去广告(酷安/百度网盘/完美世界电竞/小黑盒/NGA/懂球帝/网易大神/斗鱼/虎牙/转转/12306/B站/贴吧/小红书/微博/知乎/高德/网易云/起点/喜马拉雅/闲鱼/YouTube)
 #!author=allofights
 #!system=ios
 #!category=广告拦截
 
 [Rule]
-# 1. 字节跳动穿山甲广告联盟 (Pangolin SDK & OceanEngine)
+# 1. 字节跳动穿山甲广告联盟 (Pangolin SDK & OceanEngine & GroMore)
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
 DOMAIN-SUFFIX,byte-ads.com,REJECT
+DOMAIN-SUFFIX,gromore.com,REJECT
 DOMAIN-SUFFIX,oceanengine.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
 DOMAIN-SUFFIX,ad.toutiao.com,REJECT
@@ -28,9 +29,15 @@ DOMAIN-SUFFIX,gdt.qq.com,REJECT
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
 DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
 DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
+DOMAIN-SUFFIX,adsmind.ugdtimg.com,REJECT
+DOMAIN-SUFFIX,splashqzs.gdtimg.com,REJECT
+DOMAIN-SUFFIX,qzs.gdtimg.com,REJECT
 DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,win.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,v2.gdt.qq.com,REJECT
 DOMAIN-SUFFIX,e.qq.com,REJECT
 DOMAIN-SUFFIX,tmead.y.qq.com,REJECT
+DOMAIN-SUFFIX,tangram.e.qq.com,REJECT
 DOMAIN-SUFFIX,ad.tencentmusic.com,REJECT
 DOMAIN-SUFFIX,adstats.tencentmusic.com,REJECT
 
@@ -57,38 +64,58 @@ DOMAIN,rp.hpplay.cn,REJECT
 # 4. 快手移动广告联盟 (Kwai Ads)
 DOMAIN-SUFFIX,ad.e.kuaishou.com,REJECT
 DOMAIN-SUFFIX,open.e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,open.e.kuaishou.cn,REJECT
 DOMAIN-SUFFIX,ad-action.e.kuaishou.com,REJECT
 DOMAIN-SUFFIX,ad.kwai.com,REJECT
 DOMAIN-SUFFIX,adapi.e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,adukwai.com,REJECT
+DOMAIN-SUFFIX,kuaishouzt.com,REJECT
+DOMAIN-SUFFIX,open.kuaishouzt.com,REJECT
 DOMAIN-SUFFIX,ks-ad-trace.e.kuaishou.com,REJECT
 
 # 5. 西柚广告联盟 (Sigmob SDK)
 DOMAIN-SUFFIX,sigmob.cn,REJECT
+DOMAIN-SUFFIX,sigmob.com,REJECT
 DOMAIN-SUFFIX,ads.sigmob.cn,REJECT
 DOMAIN-SUFFIX,ct.sigmob.cn,REJECT
 DOMAIN-SUFFIX,adservice.sigmob.cn,REJECT
 
-# 6. 聚合广告与变现平台 (TopOn / Mintegral / 掌驭 / 变现猫)
+# 6. 聚合广告与变现平台 (TopOn / Mintegral / 掌驭 / 变现猫 / 阿里Tanx / 数美)
 DOMAIN-SUFFIX,toponad.com,REJECT
+DOMAIN-SUFFIX,alps.toponad.com,REJECT
 DOMAIN-SUFFIX,mintegral.com,REJECT
 DOMAIN-SUFFIX,rayjump.com,REJECT
-DOMAIN-SUFFIX,alps.toponad.com,REJECT
 DOMAIN-SUFFIX,zhangyuyidong.cn,REJECT
 DOMAIN-SUFFIX,bianxianmao.com,REJECT
 DOMAIN-SUFFIX,tanx.com,REJECT
+DOMAIN-SUFFIX,shuzilm.cn,REJECT
+DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
 
-# 7. 互动式与推广 SDK (推啊 / 兑吧 / 乐播)
+# 7. 互动式与推广 SDK (推啊 / 兑吧 / 乐播 / 瑞狮Vlion / UBIX)
 DOMAIN-SUFFIX,tuia.cn,REJECT
 DOMAIN-SUFFIX,activity.tuia.cn,REJECT
 DOMAIN-SUFFIX,duiba.com.cn,REJECT
+DOMAIN-SUFFIX,vlion.cn,REJECT
+DOMAIN-SUFFIX,advlion.com,REJECT
+DOMAIN-SUFFIX,ubixioe.com,REJECT
+DOMAIN-SUFFIX,fancyapi.com,REJECT
 
 # 8. 友盟设备画像追踪与极光推送广告
+DOMAIN-SUFFIX,umeng.com,REJECT
+DOMAIN-SUFFIX,umengcloud.com,REJECT
 DOMAIN-SUFFIX,aaid.umeng.com,REJECT
 DOMAIN-SUFFIX,ulogs.umeng.com,REJECT
 DOMAIN-SUFFIX,ad.jpush.cn,REJECT
 DOMAIN-SUFFIX,stats.jpush.cn,REJECT
 
-# 9. HTTPDNS 域名阻断 (防止应用直连 IP 绕过广告分流与重写)
+# 9. HTTPDNS 移动解析阻断 (防止应用直连 IP 绕过广告分流与重写)
+IP-CIDR,119.29.29.98/32,REJECT,no-resolve
+IP-CIDR,119.29.29.90/32,REJECT,no-resolve
+IP-CIDR,119.29.29.88/32,REJECT,no-resolve
+IP-CIDR,119.28.28.98/32,REJECT,no-resolve
+IP-CIDR,119.28.28.90/32,REJECT,no-resolve
+IP-CIDR,182.254.116.0/24,REJECT,no-resolve
+IP-CIDR,182.254.118.0/24,REJECT,no-resolve
 DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
 DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
 DOMAIN-SUFFIX,httpdns.pro,REJECT
@@ -96,29 +123,54 @@ DOMAIN-SUFFIX,httpdns.push.qq.com,REJECT
 DOMAIN-SUFFIX,httpdns.music.163.com,REJECT
 IP-CIDR,180.76.76.200/32,REJECT,no-resolve
 
-# 10. 头部应用内置广告域名拦截
-DOMAIN,ad.12306.cn,REJECT
-DOMAIN,ad-sdk-config.youdao.com,REJECT
-DOMAIN,ad.bn.netease.com,REJECT
-DOMAIN,iad.g.163.com,REJECT
-DOMAIN,ad.api.3g.youku.com,REJECT
-DOMAIN,agn.ad.youku.com,REJECT
-DOMAIN,sugar.zhihu.com,REJECT
-DOMAIN,adx.hupu.com,REJECT
-DOMAIN,adx-action.hupu.com,REJECT
+# 10. 本机各应用内置广告与追踪域名精准封杀
+# 完美世界电竞
+DOMAIN,analytics.wanmei.com,REJECT
+DOMAIN,log.pwesports.cn,REJECT
+DOMAIN,tracker.pwesports.cn,REJECT
+DOMAIN,stat.esports.wanmei.com,REJECT
+# 酷安 & 百度网盘
 DOMAIN,ad.api.coolapk.com,REJECT
+DOMAIN,sofire.baidu.com,REJECT
 DOMAIN,issuecdn.baidupcs.com,REJECT
-DOMAIN-SUFFIX,adse.wsa.ximalaya.com,REJECT
-DOMAIN-SUFFIX,adse.ximalaya.com,REJECT
-DOMAIN-SUFFIX,adbehavior.ximalaya.com,REJECT
-DOMAIN-SUFFIX,xdcs-collector.ximalaya.com,REJECT
-# 11. 航旅纵横、虎扑、喜马拉雅与美团广告拦截
-DOMAIN,startup.umetrip.com,REJECT
-DOMAIN,discardrp.umetrip.com,REJECT
-DOMAIN,oss.umetrip.com,REJECT
+# 小黑盒 & 懂球帝 & 虎扑
+DOMAIN,ad.xiaoheihe.cn,REJECT
+DOMAIN,tracking.xiaoheihe.cn,REJECT
+DOMAIN,ad.dongqiudi.com,REJECT
+DOMAIN,sensor.dongqiudi.com,REJECT
 DOMAIN,goblin.hupu.com,REJECT
 DOMAIN,adx.hupu.com,REJECT
 DOMAIN,adx-action.hupu.com,REJECT
+DOMAIN,hermes.hupu.com,REJECT
+DOMAIN,themis.hupu.com,REJECT
+DOMAIN,collect.hupu.com,REJECT
+# 斗鱼直播 & 虎牙直播
+DOMAIN,ad.douyu.com,REJECT
+DOMAIN,ads.douyu.com,REJECT
+DOMAIN,hdads.huya.com,REJECT
+DOMAIN,ad.huya.com,REJECT
+# 转转 & 铁路12306 & 安兔兔 & 京东 & 创高体育
+DOMAIN,ad.zhuanzhuan.com,REJECT
+DOMAIN,ad.12306.cn,REJECT
+DOMAIN,ad.antutu.com,REJECT
+DOMAIN,analytics.antutu.com,REJECT
+DOMAIN-SUFFIX,advert.jd.com,REJECT
+DOMAIN,ad.huakesport.com,REJECT
+# 航旅纵横 & 携程 & 美团 & 喜马拉雅 & 微信
+DOMAIN,startup.umetrip.com,REJECT
+DOMAIN,discardrp.umetrip.com,REJECT
+DOMAIN,oss.umetrip.com,REJECT
+DOMAIN,umestartup.umetrip.com,REJECT
+DOMAIN,bda.umetrip.com,REJECT
+DOMAIN,opactivity.umetrip.com,REJECT
+DOMAIN,sensors.umetrip.com.cn,REJECT
+DOMAIN,ma-adx.ctrip.com,REJECT
+DOMAIN-SUFFIX,flowplus.meituan.net,REJECT
+DOMAIN-SUFFIX,s3plus.meituan.net,REJECT
+DOMAIN-SUFFIX,d.meituan.net,REJECT
+DOMAIN-SUFFIX,impdsp.meituan.com,REJECT
+DOMAIN,httpdnsmultiapivip.meituan.com,REJECT
+DOMAIN,api-unionid.meituan.com,REJECT
 DOMAIN-SUFFIX,adse.ximalaya.com,REJECT
 DOMAIN-SUFFIX,adse.wsa.ximalaya.com,REJECT
 DOMAIN-SUFFIX,adbehavior.ximalaya.com,REJECT
@@ -127,62 +179,35 @@ DOMAIN-SUFFIX,location.ximalaya.com,REJECT
 DOMAIN-SUFFIX,linkeye.ximalaya.com,REJECT
 DOMAIN-SUFFIX,gslb.ximalaya.com,REJECT
 DOMAIN-SUFFIX,gslbali.ximalaya.com,REJECT
-DOMAIN-SUFFIX,flowplus.meituan.net,REJECT
-DOMAIN-SUFFIX,s3plus.meituan.net,REJECT
-DOMAIN-SUFFIX,impdsp.meituan.com,REJECT
-
-# 12. 真实真机流量抓包精准封杀 (瑞狮Vlion + UBIX + 快手新域 + 虎扑Hermes + 航旅纵横真机域 + 携程ADX + 美团d.meituan)
-DOMAIN-SUFFIX,vlion.cn,REJECT
-DOMAIN-SUFFIX,advlion.com,REJECT
-DOMAIN-SUFFIX,ubixioe.com,REJECT
-DOMAIN-SUFFIX,kuaishouzt.com,REJECT
-DOMAIN,open.e.kuaishou.cn,REJECT
-DOMAIN,hermes.hupu.com,REJECT
-DOMAIN,themis.hupu.com,REJECT
-DOMAIN,collect.hupu.com,REJECT
-DOMAIN,umestartup.umetrip.com,REJECT
-DOMAIN,bda.umetrip.com,REJECT
-DOMAIN,opactivity.umetrip.com,REJECT
-DOMAIN,sensors.umetrip.com.cn,REJECT
-DOMAIN,ma-adx.ctrip.com,REJECT
-DOMAIN-SUFFIX,d.meituan.net,REJECT
-DOMAIN,httpdnsmultiapivip.meituan.com,REJECT
-DOMAIN,api-unionid.meituan.com,REJECT
-URL-REGEX,^https?:\/\/.*\.bilivideo\.com\/.*-SPLA,REJECT-IMG
-
-# 12.1 百度网盘开屏与动态下发阻断 (阻断Sofire与第三方ADX聚合，防止白屏与摇动残留)
-DOMAIN,sofire.baidu.com,REJECT
-DOMAIN-SUFFIX,fancyapi.com,REJECT
-DOMAIN-SUFFIX,shuzilm.cn,REJECT
-DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
-DOMAIN-SUFFIX,tanx.com,REJECT
-
-# 12.2 肯德基与麦当劳开屏及弹窗阻断
 DOMAIN,dynamicad.kfc.com.cn,REJECT
-
-# 12.3 微信朋友圈广告与腾讯优量汇广告阻断 (纯网络层安全阻断，严禁 MITM 确保通讯绝对安全)
 DOMAIN-SUFFIX,wxsnsdy.wxs.qq.com,REJECT
 DOMAIN-SUFFIX,wxsnsdythumb.wxs.qq.com,REJECT
-DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
-DOMAIN-SUFFIX,adsmind.ugdtimg.com,REJECT
-DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
-DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
-DOMAIN-SUFFIX,qzs.gdtimg.com,REJECT
-DOMAIN-SUFFIX,splashqzs.gdtimg.com,REJECT
-DOMAIN-SUFFIX,win.gdt.qq.com,REJECT
-DOMAIN-SUFFIX,v2.gdt.qq.com,REJECT
-DOMAIN-SUFFIX,tmead.y.qq.com,REJECT
-DOMAIN-SUFFIX,tangram.e.qq.com,REJECT
-DOMAIN-SUFFIX,beacon.qq.com,REJECT
-DOMAIN-SUFFIX,oth.eve.mdt.qq.com,REJECT
 DOMAIN,badjs.weixin.qq.com,REJECT
 DOMAIN,ad.weixin.qq.com,REJECT
 DOMAIN,mpad.weixin.qq.com,REJECT
+URL-REGEX,^https?:\/\/.*\.bilivideo\.com\/.*-SPLA,REJECT-IMG
 
-# 13. 本土核心互联网应用全量直连 (防底模规则误判走代理，保障秒开与免风控)
+# 11. 本土核心互联网应用全量直连 (防底模规则误判走代理，保障秒开与免风控)
 DOMAIN-SUFFIX,cn,DIRECT
 DOMAIN-SUFFIX,中国,DIRECT
 DOMAIN-SUFFIX,xn--fiqs8s,DIRECT
+DOMAIN-SUFFIX,pwesports.cn,DIRECT
+DOMAIN-SUFFIX,wanmei.com,DIRECT
+DOMAIN-SUFFIX,xiaoheihe.cn,DIRECT
+DOMAIN-SUFFIX,dongqiudi.com,DIRECT
+DOMAIN-SUFFIX,douyu.com,DIRECT
+DOMAIN-SUFFIX,huya.com,DIRECT
+DOMAIN-SUFFIX,zhuanzhuan.com,DIRECT
+DOMAIN-SUFFIX,12306.cn,DIRECT
+DOMAIN-SUFFIX,qunar.com,DIRECT
+DOMAIN-SUFFIX,500px.com.cn,DIRECT
+DOMAIN-SUFFIX,tuchong.com,DIRECT
+DOMAIN-SUFFIX,icourse163.org,DIRECT
+DOMAIN-SUFFIX,10086.cn,DIRECT
+DOMAIN-SUFFIX,95516.com,DIRECT
+DOMAIN-SUFFIX,leigod.com,DIRECT
+DOMAIN-SUFFIX,biubiu001.com,DIRECT
+DOMAIN-SUFFIX,huakesport.com,DIRECT
 DOMAIN-SUFFIX,360buyimg.com,DIRECT
 DOMAIN-SUFFIX,jd.com,DIRECT
 DOMAIN-SUFFIX,jdpay.com,DIRECT
@@ -259,38 +284,80 @@ DOMAIN-SUFFIX,yuewen.com,DIRECT
 DOMAIN-SUFFIX,yumchina.com,DIRECT
 DOMAIN-SUFFIX,douyu.com,DIRECT
 DOMAIN-SUFFIX,cmpassport.com,DIRECT
-DOMAIN-SUFFIX,gepush.com,DIRECT
-DOMAIN-SUFFIX,getui.com,DIRECT
-DOMAIN-SUFFIX,getui.net,DIRECT
-DOMAIN-SUFFIX,jpush.io,DIRECT
-DOMAIN-SUFFIX,geetest.com,DIRECT
-DOMAIN-SUFFIX,umeng.com,DIRECT
-DOMAIN-SUFFIX,tongdun.net,DIRECT
-DOMAIN-SUFFIX,cdnhwc2.com,DIRECT
-DOMAIN-SUFFIX,myhuaweicloud.com,DIRECT
-DOMAIN-SUFFIX,ksyun.com,DIRECT
-DOMAIN-SUFFIX,tfogc.com,DIRECT
-DOMAIN-SUFFIX,pool.ntp.org,DIRECT
 
 [URL Rewrite]
-# --- 百度网盘营销推广与信息流拦截 ---
+# --- 完美世界电竞广告接口拦截 ---
+^https?:\/\/.*\.pwesports\.cn\/(app|api)\/.*(advert|feed\/ad|promote|popup) - reject-dict
+
+# --- 百度网盘营销推广与静态素材拦截 (保证图片加载秒返透明图，杜绝倒计时等待) ---
 ^https?:\/\/pan\.baidu\.com\/rest\/.*\/membership\/(proxy\/)?guide - reject-200
 ^https?:\/\/pan\.baidu\.com\/pmall\/order\/privilege\/info - reject-dict
 ^https?:\/\/pan\.baidu\.com\/api\/useractivity\/activity - reject-dict
 ^https?:\/\/pan\.baidu\.com\/api\/certuser\/get - reject-dict
 ^https?:\/\/pan\.baidu\.com\/component\/view\/(1510|1130)\?vip - reject-dict
-^https?:\/\/pan\.baidu\.com\/feed\/cardinfos - reject-dict
 ^https?:\/\/pan\.baidu\.com\/feed\/hotlist - reject-200
-^https?:\/\/pan\.baidu\.com\/recommend\/shortseries\/list - reject-dict
 ^https?:\/\/pan\.baidu\.com\/coins\/center\/notice - reject-200
 ^https?:\/\/pan\.baidu\.com\/queryintent\/queryhint - reject-200
 ^https?:\/\/pan\.baidu\.com\/api\/taskscore\/tasklist - reject-dict
 ^https?:\/\/ndstatic\.cdn\.bcebos\.com\/activity\/welfare\/(js\/.+\.js|index\.html) - reject-200
 ^https?:\/\/staticsns\.cdn\.bcebos\.com\/amis\/.+\/banner\.png - reject-img
-^https?:\/\/issuecdn\.baidupcs\.com\/issue\/netdisk\/guanggao - reject-200
+^https?:\/\/issuecdn\.baidupcs\.com\/issue\/netdisk\/guanggao - reject-img
 ^https?:\/\/update\.pan\.baidu\.com\/statistics - reject-200
 ^https?:\/\/.*zhangyuyidong\.cn\/api\/zysdk - reject-200
 ^https?:\/\/afd\.baidu\.com\/afd\/entry - reject-dict
+^https?:\/\/pan\.baidu\.com\/buy\/ad\/analytics - reject-200
+^https?:\/\/pan\.baidu\.com\/api\/analytics - reject-200
+
+# --- 酷安搜索热词与开屏素材拦截 ---
+^https?:\/\/api\d?\.coolapk\.com\/v6\/search\?.*type=hotSearch - reject-200
+^https?:\/\/image\.coolapk\.com\/.*splash.* - reject-img
+
+# --- 小黑盒开屏与信息流推广拦截 ---
+^https?:\/\/api\.xiaoheihe\.cn\/bbs\/app\/api\/(startup|ad\/|feed\/ad|general\/v\d\/banner|game\/promote) - reject-dict
+
+# --- NGA玩家社区与恩基爱社区广告拦截 ---
+^https?:\/\/(bbs\.nga\.cn|nga\.178\.com)\/app_api\.php\?.*__lib=(advert|splash) - reject-dict
+
+# --- 懂球帝开屏与资讯信息流广告拦截 ---
+^https?:\/\/api\.dongqiudi\.com\/v\d\/(article\/ad|splash|tab\/ad) - reject-dict
+
+# --- 网易大神开屏与推广拦截 ---
+^https?:\/\/god\.game\.163\.com\/api\/v\d\/(ad\/|splash) - reject-dict
+
+# --- 斗鱼与虎牙直播开屏广告拦截 ---
+^https?:\/\/(capi|apiv2)\.douyucdn\.cn\/api\/v\d\/(getAppSplash|client_ad|room_ad) - reject-dict
+^https?:\/\/hdads\.huya\.com\/ - reject-dict
+^https?:\/\/business\.msorpack\.huya\.com\/.*Adv - reject-dict
+
+# --- 转转开屏广告与商业弹窗拦截 ---
+^https?:\/\/api\.zhuanzhuan\.com\/zz\/transfer\/(splash|ad) - reject-dict
+
+# --- 铁路12306开屏广告拦截 ---
+^https?:\/\/mobile\.12306\.cn\/otsmobile\/init\/(splash|commercial) - reject-dict
+
+# --- 去哪儿与携程旅行商业开屏拦截 ---
+^https?:\/\/app\.qunar\.com\/mobile\/(splash|ad) - reject-dict
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/\d+\/ad(Get|Show) - reject-dict
+
+# --- 500px中国版与图虫摄影社区开屏拦截 ---
+^https?:\/\/api\.500px\.com\.cn\/v\d\/(splash|advertisements) - reject-dict
+^https?:\/\/api\.tuchong\.com\/2\/(splash|ad\/) - reject-dict
+
+# --- 中国大学慕课与知到在线教育开屏拦截 ---
+^https?:\/\/www\.icourse163\.org\/mob\/ad\/ - reject-dict
+^https?:\/\/.*\.zhihuishu\.com\/.*(splash|advert) - reject-dict
+
+# --- 中国移动与云闪付开屏广告拦截 ---
+^https?:\/\/.*\.10086\.cn\/.*(splash|ad|advert) - reject-dict
+^https?:\/\/content\.95516\.com\/api\/v\d\/ad\/ - reject-dict
+
+# --- 雷神加速器与biubiu加速器开屏拦截 ---
+^https?:\/\/.*\.leigod\.com\/api\/v\d\/(splash|ad) - reject-dict
+^https?:\/\/.*\.biubiu001\.com\/.*(splash|ad) - reject-dict
+
+# --- 京东与大众点评营销弹窗拦截 ---
+^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=(start|getAd) - reject-dict
+^https?:\/\/m\.api\.dianping\.com\/(advert|splash)\/ - reject-dict
 
 # --- 闲鱼开屏与首页广告拦截 ---
 ^https?:\/\/(acs|g-acs)\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.splash\.ads\/ - reject-dict
@@ -348,9 +415,6 @@ DOMAIN-SUFFIX,pool.ntp.org,DIRECT
 ^https?:\/\/180\.76\.76\.200\/ - reject
 ^https?:\/\/tiebac\.baidu\.com\/c\/s\/log - reject-200
 
-# --- 酷安搜索热词拦截 ---
-^https?:\/\/api\.coolapk\.com\/v6\/search\?.*type=hotSearch - reject-200
-
 # --- 虎扑推广图片拦截 ---
 ^https?:\/\/.*\.hupucdn\.com\/.*ad.* - reject-img
 
@@ -391,7 +455,6 @@ DOMAIN-SUFFIX,pool.ntp.org,DIRECT
 ^https?:\/\/.*\.mobileapi\.hupu\.com\/.+\/(interfaceAd|banners|search\/v2\/(hotkeylist|hintkeylist)) - reject
 ^https?:\/\/bbs\.mobileapi\.hupu\.com\/.+\/bbsallapi\/(lego\/data|tag\/v\d\/heatTag) - reject-dict
 ^https?:\/\/games\.mobileapi\.hupu\.com\/.+\/bplapi\/user\/v1\/more - reject-dict
-^https?:\/\/.*\.hupucdn\.com\/.*ad.* - reject-img
 
 # --- 美团闪购与商业开屏素材阻断 (防多应用开屏跨界投放) ---
 ^https?:\/\/img\.meituan\.net\/bizad\/ - reject-img
@@ -403,43 +466,41 @@ DOMAIN-SUFFIX,pool.ntp.org,DIRECT
 ^https?:\/\/.*\.ximalaya\.com\/discovery-feed\/(focus\/queryF|isShowUserGiftPendant) - reject
 ^https?:\/\/passport\.ximalaya\.com\/friendship-mobile\/v1\/findFriendsBanner - reject
 
-# --- 百度网盘真机开屏熔断与DSP接口拦截 ---
-^https?:\/\/pan\.baidu\.com\/buy\/ad\/analytics - reject-200
-^https?:\/\/pan\.baidu\.com\/rest\/2\.0\/membership\/advertise\/ - reject-dict
-^https?:\/\/pan\.baidu\.com\/api\/analytics - reject-200
-
 # --- 航旅纵横真机启动网关拦截 ---
 ^https?:\/\/umestartup\.umetrip\.com\/ - reject
 
-# --- 麦当劳开屏广告与弹窗营销拦截 ---
+# --- 麦当劳与肯德基开屏与营销活动弹窗拦截 ---
 ^https?:\/\/api(2)?\.mcd\.cn\/bff\/portal\/(home\/(splash|hotActivity)|richpop) - reject-200
-
-# --- 肯德基开屏与营销活动弹窗拦截 ---
 ^https?:\/\/res\.kfc\.com\.cn\/(advertisement|CRM\/kfcad)\/ - reject-200
 ^https?:\/\/dynamicad\.kfc\.com\.cn\/api\/app5\/homepage\/ai\/popup - reject-200
 
 [Script]
 # 0. 百度网盘急速开屏净化 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
-baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/pcs\/adx?|buy\/ad\/(conf|get)|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
-# 1. 百度贴吧去广告 (JSON + Protobuf 双引擎)
+baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/(rest\/\d\.\d\/(pcs\/adx?|membership\/advertise)|buy\/ad\/(conf|get)|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)|feed\/cardinfos|recommend\/shortseries\/list),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
+
+# 1. 完美世界电竞净化 (开屏秒开、社区与资讯内置信息流广告剥离、轮播Banner净化)
+pwesports_splash = type=http-request,pattern=^https?:\/\/.*\.(pwesports\.cn|wanmei\.com)\/(app|api)\/.*(splash|startup|launch),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
+pwesports_clean = type=http-response,pattern=^https?:\/\/.*\.pwesports\.cn\/(app|api)\/v\d\/(feed|news|community|home|banner),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/pwesports.js,script-update-interval=0
+
+# 2. 百度贴吧去广告 (JSON + Protobuf 双引擎)
 贴吧_JSON = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))$|tiebaads\/commonbatch\?),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,script-update-interval=0
 贴吧_Proto = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?cmd,requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,script-update-interval=0
 
-# 2. 小红书去广告与无水印原图/实况保存
+# 3. 小红书去广告与无水印原图/实况保存
 小红书_净化 = type=http-response,pattern=^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v\d\/(note\/(imagefeed|feed|videofeed|widgets|live_photo\/save|detail)|homefeed|system_service\/(splash_config|config)|search\/(banner|hot)_list|search\/notes|followfeed),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/xiaohongshu.js,script-update-interval=0
 
-# 3. 哔哩哔哩 (JSON开屏推荐 + Protobuf视频播放页净化，完全保障主播直播与动态更新)
+# 4. 哔哩哔哩 (JSON开屏推荐 + Protobuf视频播放页净化，完全保障主播直播与动态更新)
 bili_json = type=http-response,pattern=^https:\/\/app\.bilibili\.com\/x\/(v2\/(splash\/(list|show|brand\/list|event\/list2)|feed\/index\?)|resource\/show\/tab\/v2),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-json.js,script-update-interval=0
 bili_proto = type=http-response,pattern=^https:\/\/(grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.app\.viewunite\.v1\.View\/View$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-proto.js,script-update-interval=0
 
-# 4. 知乎净化 (去除开屏、推荐流广告卡片、商业回答)
+# 5. 知乎净化 (去除开屏、推荐流广告卡片、商业回答)
 知乎_广告净化 = type=http-response,pattern=^https:\/\/(appcloud2\.zhihu\.com\/v3\/config$|www\.zhihu\.com\/api\/v4\/(answers\/\d+\/recommendations|articles\/\d+\/recommendation)|api\.zhihu\.com\/(topstory\/recommend|commercial_api\/(real_time_launch_v2|app_float_layer$)|questions\/\d+\/feeds\?|v4\/questions\/\d+\/answers\?)),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/zhihu.js,script-update-interval=0
 
-# 5. 微博多维度去广告
+# 6. 微博多维度去广告
 weibo_main = type=http-response,pattern=^https?:\/\/api\.weibo\.cn\/2\/(cardlist|page|statuses\/(container_timeline|extend|show)|checkin\/show|client\/publisher_list|push\/active|groups\/allgroups\/v2|comments\/build_comments|profile\/(container_timeline|me|userinfo)|search\/(container_timeline|finder)|video\/tiny_stream_video_list),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
 weibo_preload = type=http-response,pattern=^https?:\/\/(sdkapp|bootpreload|wbapp)\.uve\.weibo\.com\/(interface\/sdk\/sdkad\.php|v[12]\/ad\/preload|wbapplua\/wbpullad\.lua|preload\/get_ad),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
 
-# 6. 高德地图净化 (首页、路线规划、搜索建议与AMDC调度)
+# 7. 高德地图净化 (首页、路线规划、搜索建议与AMDC调度)
 amap_header = type=http-response,pattern=^http:\/\/amdc\.m\.taobao\.com\/amdc\/mobileDispatch$,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/header.js,timeout=60,script-update-interval=0
 amap_drive = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/perception\/drive\/(routeInfo|routePlan)\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
 amap_poi = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/search\/(common\/coupon\/info|poi\/detail)\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
@@ -448,26 +509,25 @@ amap_search = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/s
 amap_home = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(card-service-plan-home|main-page)\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
 amap_frog = type=http-response,pattern=^https:\/\/m5\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable\/1\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
 
-# 7. 网易云音乐净化 (框架、发现页、推荐页、搜索与广告过滤)
+# 8. 网易云音乐净化 (框架、发现页、推荐页、搜索与广告过滤)
 netease_adblock = type=http-response,pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link\/(home\/framework\/tab|page\/(discovery|rcmd)\/resource\/show|position\/show\/resource|scene\/show\/resource)|ios\/upgrade\/get|search\/(default\/keyword\/list|rcmd\/keyword\/get|chart\/(list|detail)|suggest\/keyword\/get|specialkeyword\/get)|ad\/(loading\/(get|current)|get)|vip\/cashier\/tspopup\/get|vipnewcenter\/app\/resource\/newaccountpage|side-bar\/mini-program\/music-service\/account|delivery\/(deliver|batch-deliver)|yunbei\/account\/entrance\/get|creator\/musician\/reminder\/message\/get|batch),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/netease.adblock.js,script-update-interval=0
 
-# 8. 起点读书净化 (开屏广告、每日导读、活动弹窗、悬浮广告)
+# 9. 起点读书净化 (开屏广告、每日导读、活动弹窗、悬浮广告)
 起点_广告净化 = type=http-response,pattern=^https:\/\/magev6\.if\.qidian\.com\/argus\/api\/(v4\/client\/getsplashscreen|v2\/(deeplink\/geturl|dailyrecommend\/getdailyrecommend)|v1\/(client\/getconf$|bookshelf\/getHoverAdv|adv\/getadvlistbatch\?positions=iOS_tab)),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/qidian.js,script-update-interval=0
 
-# 9. 喜马拉雅净化 (首页动态、顶部直播、横幅、分类Tab)
+# 10. 喜马拉雅净化 (首页动态、顶部直播、横幅、分类Tab)
 喜马拉雅_净化 = type=http-response,pattern=^https?:\/\/.*\.xima.*\.com\/(discovery-category\/(customCategories|v\d\/category)|focus-mobile\/focusPic|discovery-feed\/v\d\/mix|mobile-user\/v\d\/homePage),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
 
-# 10. 酷安去广告 (信息流、详情页、评论区、开屏与首页)
-酷安_数据流 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/(page\/)?dataList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
-酷安_详情页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/detail,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
-酷安_评论区 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/feed\/replyList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
-酷安_个人页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/account\/profile,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
-酷安_开屏 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/init,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
-酷安_首页 = type=http-response,pattern=^https?:\/\/api\.coolapk\.com\/v6\/main\/indexV8,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+# 11. 酷安去广告 (信息流、详情页、评论区、开屏与首页)
+酷安_初始化 = type=http-response,pattern=^https?:\/\/api\d?\.coolapk\.com\/v6\/main\/init,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+酷安_首页信息流 = type=http-response,pattern=^https?:\/\/api\d?\.coolapk\.com\/v6\/main\/index.*,requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+酷安_数据列表 = type=http-response,pattern=^https?:\/\/api\d?\.coolapk\.com\/v6\/(page\/|main\/|feed\/)?dataList.*,requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+酷安_动态详情 = type=http-response,pattern=^https?:\/\/api\d?\.coolapk\.com\/v6\/feed\/detail,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+酷安_评论区 = type=http-response,pattern=^https?:\/\/api\d?\.coolapk\.com\/v6\/feed\/replyList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
+酷安_个人中心 = type=http-response,pattern=^https?:\/\/api\d?\.coolapk\.com\/v6\/account\/profile,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 
-# 11. YouTube去广告 (瀑布流与播放页推荐广告)
+# 12. YouTube去广告 (瀑布流与播放页推荐广告)
 youtube_proto = type=http-response,pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next),requires-body=1,binary-body-mode=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% hermes.hupu.com, umestartup.umetrip.com, bda.umetrip.com, app.bilibili.com, grpc.biliapi.net, api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com, api.weibo.cn, *.uve.weibo.com, m5.amap.com, m5-zb.amap.com, oss.amap.com, amdc.m.taobao.com, interface*.music.163.com, magev6.if.qidian.com, *.ximalaya.com, *.xmcdn.com, *.wsa.ximalaya.com, adse.ximalaya.com, adse.wsa.ximalaya.com, mobile.ximalaya.com, passport.ximalaya.com, acs.m.goofish.com, g-acs.m.goofish.com, edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, pan.baidu.com, afd.baidu.com, api.coolapk.com, tiebac.baidu.com, c.tieba.baidu.com, goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com, startup.umetrip.com, discardrp.umetrip.com, oss.umetrip.com, home.umetrip.com, umerp.umetrip.com, img.meituan.net, s3plus.meituan.net, flowplus.meituan.net, youtubei.googleapis.com, api.mcd.cn, api2.mcd.cn, res.kfc.com.cn, dynamicad.kfc.com.cn
-
+hostname = %APPEND% hermes.hupu.com, umestartup.umetrip.com, bda.umetrip.com, app.bilibili.com, grpc.biliapi.net, api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com, api.weibo.cn, *.uve.weibo.com, m5.amap.com, m5-zb.amap.com, oss.amap.com, amdc.m.taobao.com, interface*.music.163.com, magev6.if.qidian.com, *.ximalaya.com, *.xmcdn.com, *.wsa.ximalaya.com, adse.ximalaya.com, adse.wsa.ximalaya.com, mobile.ximalaya.com, passport.ximalaya.com, acs.m.goofish.com, g-acs.m.goofish.com, edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, pan.baidu.com, afd.baidu.com, api.coolapk.com, api2.coolapk.com, *.coolapk.com, goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com, startup.umetrip.com, discardrp.umetrip.com, oss.umetrip.com, home.umetrip.com, umerp.umetrip.com, img.meituan.net, s3plus.meituan.net, flowplus.meituan.net, youtubei.googleapis.com, api.mcd.cn, api2.mcd.cn, res.kfc.com.cn, dynamicad.kfc.com.cn, api.pwesports.cn, app.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, *.pwesports.cn, api.xiaoheihe.cn, bbs.nga.cn, nga.178.com, api.dongqiudi.com, god.game.163.com, capi.douyucdn.cn, apiv2.douyucdn.cn, hdads.huya.com, api.zhuanzhuan.com, mobile.12306.cn, app.qunar.com, api.500px.com.cn, api.tuchong.com, www.icourse163.org, content.95516.com, api.m.jd.com, m.api.dianping.com
