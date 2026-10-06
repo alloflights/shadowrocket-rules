@@ -45,7 +45,7 @@ DOMAIN-SUFFIX,neptune-api.volces.com,REJECT
 DOMAIN-SUFFIX,wmzfylgdsz.com,REJECT
 
 # 直播间推流、直播带货卡片与同城直播强插 (Webcast - 杀错不放过)
-DOMAIN-KEYWORD,webcast,REJECT
+# 不使用 DOMAIN-KEYWORD,webcast：会误伤正常直播正文，广告由接口/SDK规则与响应层处理
 DOMAIN-SUFFIX,bytegecko.com,REJECT
 
 # 广告资源与行为埋点

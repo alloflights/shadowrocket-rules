@@ -40,7 +40,9 @@ function executeScript(scriptPath, requestObj, responseObj) {
         Number: Number,
         Boolean: Boolean,
         Math: Math,
-        RegExp: RegExp
+        RegExp: RegExp,
+        decodeURIComponent: decodeURIComponent,
+        encodeURIComponent: encodeURIComponent
     };
     if (typeof responseObj === 'undefined') {
         delete sandbox.$response;
@@ -273,6 +275,290 @@ runTest('Coolapk edge case: handles malformed or empty response body gracefully'
     assert(res1 && typeof res1 === 'object');
     const res2 = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/init' }, { status: 200, body: '{{' });
     assert(res2 && typeof res2 === 'object');
+});
+
+runTest('Coolapk recursive sanitizer removes GDT/JAD popup cards and commercial deep links while preserving normal content', () => {
+    const payload = {
+        data: [
+            {
+                id: 10,
+                entityType: 'feed',
+                title: '正常内容',
+                extraData: { gdt: { slot: 'x' }, jad: { slot: 'y' }, keep: 'yes' },
+                entities: [
+                    { id: 11, entityType: 'popup', title: '热门推荐礼盒', jump_url: 'jdmobile://virtual?sku=7fresh' },
+                    { id: 12, entityType: 'feed', title: '正常子内容' }
+                ],
+                nested: {
+                    floating_layer: { title: '摇动/点击了解更多内容', link: 'https://ad.jd.com/7fresh' },
+                    normal: { id: 13, title: '保留的嵌套对象' }
+                }
+            },
+            { id: 20, entityType: 'card', title: '七鲜生鲜推广', deeplink: 'https://gdt.qq.com/click?ad=1' }
+        ]
+    };
+    const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/indexV12' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.length, 1);
+    assert.strictEqual(parsed.data[0].entities.length, 1);
+    assert.strictEqual(parsed.data[0].entities[0].id, 12);
+    assert.strictEqual(parsed.data[0].extraData.gdt, undefined);
+    assert.strictEqual(parsed.data[0].extraData.jad, undefined);
+    assert.strictEqual(parsed.data[0].extraData.keep, 'yes');
+    assert.strictEqual(parsed.data[0].nested.floating_layer, undefined);
+    assert.strictEqual(parsed.data[0].nested.normal.id, 13);
+});
+
+runTest('Coolapk sanitizer catches encoded Tencent/JAD click links without deleting normal containers', () => {
+    const payload = {
+        data: [{
+            entityType: 'feed',
+            title: '正常容器',
+            campaign: {
+                entityType: 'card',
+                title: '优量汇推广',
+                click_url: encodeURIComponent('https://sdk.e.qq.com/click?ad=1')
+            },
+            normal: {
+                entityType: 'card',
+                title: '普通内容',
+                click_url: 'https://example.com/article'
+            }
+        }]
+    };
+    const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/indexV13' }, { status: 200, body: JSON.stringify(payload) });
+    const parsed = JSON.parse(res.body);
+    assert(parsed.data[0].campaign === undefined, 'Encoded GDT click card must be removed');
+    assert(parsed.data[0].normal, 'Normal card must be preserved');
+});
+
+runTest('Coolapk request mock covers launch/open-screen/startup variants with a valid empty 200 structure', () => {
+    const urls = [
+        'https://api.coolapk.com/v6/main/launch',
+        'https://api12.coolapk.com/v6/main/launch_ad',
+        'https://api123.coolapk.com/v6/main/startup-ad?version=1',
+        'https://api.coolapk.com/v6/main/bootAd',
+        'https://api.coolapk.com/v6/main/openScreen',
+        'https://api.coolapk.com/v6/main/openscreen',
+        'https://api.coolapk.com/v6/main/open-screen',
+        'https://api.coolapk.com/v6/ad/request'
+    ];
+    urls.forEach(url => {
+        const res = executeScript(coolapkScriptPath, { url }, undefined);
+        assert(res && res.response, `Expected request mock for ${url}`);
+        assert.strictEqual(res.response.status, 200);
+        const body = JSON.parse(res.response.body);
+        assert.strictEqual(body.code, 0);
+        assert.strictEqual(body.splash, null);
+        assert(Array.isArray(body.data));
+    });
+});
+
+runTest('Coolapk response sanitizer tolerates a missing $request object', () => {
+    const payload = { data: [{ entityType: 'card', title: '广告推广' }] };
+    const res = executeScript(coolapkScriptPath, undefined, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert(Array.isArray(parsed.data) && parsed.data.length === 0);
+});
+
+runTest('Coolapk sanitizer removes numeric ad flags but preserves ordinary福利 text', () => {
+    const payload = { data: [
+        { entityType: 'feed', title: '福利经验分享', description: '普通用户经验，不含商业跳转' },
+        { entityType: 'card', is_ad: 1, title: '推广卡片' }
+    ] };
+    const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/indexV14' }, { status: 200, body: JSON.stringify(payload) });
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.length, 1);
+    assert.strictEqual(parsed.data[0].title, '福利经验分享');
+});
+
+// ---------------------------------------------------------
+// Douyin media/ad response tests
+// ---------------------------------------------------------
+console.log('\n--- Testing douyin.js and douyin-web.js ---');
+const douyinScriptPath = path.join(__dirname, '../modules/scripts/douyin.js');
+const douyinWebScriptPath = path.join(__dirname, '../modules/scripts/douyin-web.js');
+
+runTest('Douyin JSON purifier removes explicit ad cards, strips commerce overlays, and normalizes playwm URLs', () => {
+    const payload = {
+        aweme_list: [
+            {
+                aweme_id: 'normal-1',
+                video: {
+                    play_addr: { url_list: ['https://cdn.example.test/video/playwm/abc.mp4'] },
+                    download_addr: { url_list: ['https://cdn.example.test/video/playwm/download.mp4'] },
+                    bit_rate: [{ play_addr: { url_list: ['https://cdn.example.test/video/playwm/abc-hd.mp4'] } }]
+                },
+                commerce_info: { product_id: '7fresh' },
+                image_post_info: {
+                    images: [{ display_image: { url_list: ['https://cdn.example.test/image/original.jpg'] } }]
+                }
+            },
+            { aweme_id: 'ad-1', is_ads: true, title: '商业推广视频' }
+        ]
+    };
+    const res = executeScript(douyinScriptPath, { url: 'https://aweme.snssdk.com/aweme/v1/feed/' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.aweme_list.length, 1);
+    const item = parsed.aweme_list[0];
+    assert.strictEqual(item.video.play_addr.url_list[0], 'https://cdn.example.test/video/play/abc.mp4');
+    assert.strictEqual(item.video.download_addr.url_list[0], 'https://cdn.example.test/video/play/download.mp4');
+    assert.strictEqual(item.video.bit_rate[0].play_addr.url_list[0], 'https://cdn.example.test/video/play/abc-hd.mp4');
+    assert.strictEqual(item.commerce_info, undefined);
+    assert.strictEqual(item.image_post_info.without_watermark, undefined);
+    assert.strictEqual(item.image_post_info.images[0].owner_watermark_image, undefined);
+});
+
+runTest('Douyin web extractor injects a toolbar only when public page data contains media', () => {
+    const data = {
+        item: {
+            video: { play_addr: { url_list: ['https://cdn.example.test/video/playwm/web.mp4'] } },
+            images: [{ url_list: ['https://cdn.example.test/image/1.jpg'] }]
+        }
+    };
+    const html = '<html><body><script id="RENDER_DATA">' + encodeURIComponent(JSON.stringify(data)) + '</script></body></html>';
+    const res = executeScript(douyinWebScriptPath, { url: 'https://www.douyin.com/video/1' }, { status: 200, body: html });
+    assert(res && res.body);
+    assert(res.body.includes('douyin-clean-bar'));
+    assert(res.body.includes('https://cdn.example.test/video/play/web.mp4'));
+    assert(res.body.includes('查看/保存原图'));
+});
+
+runTest('Douyin web extractor accepts SIGI_STATE hydration data', () => {
+    const data = {
+        item: {
+            video: { play_addr: { url_list: ['https://cdn.example.test/video/playwm/sigi.mp4'] } }
+        }
+    };
+    const html = '<html><body><script id="SIGI_STATE">' + JSON.stringify(data) + '</script></body></html>';
+    const res = executeScript(douyinWebScriptPath, { url: 'https://www.douyin.com/note/2' }, { status: 200, body: html });
+    assert(res && res.body);
+    assert(res.body.includes('douyin-clean-bar'));
+    assert(res.body.includes('https://cdn.example.test/video/play/sigi.mp4'));
+});
+
+runTest('Douyin purifier does not forge download permissions or watermark metadata', () => {
+    const payload = {
+        aweme_list: [{
+            aweme_id: 'permission-1',
+            prevent_download: true,
+            aweme_acl: { download_general: { code: 2 } },
+            video: { play_addr: { url_list: ['https://cdn.example.test/video/playwm/fallback.mp4'] } }
+        }]
+    };
+    const res = executeScript(douyinScriptPath, { url: 'https://aweme.snssdk.com/aweme/v1/feed/' }, { status: 200, body: JSON.stringify(payload) });
+    const item = JSON.parse(res.body).aweme_list[0];
+    assert.strictEqual(item.prevent_download, true);
+    assert.deepStrictEqual(item.aweme_acl, { download_general: { code: 2 } });
+    assert.strictEqual(item.video.download_addr.url_list[0], 'https://cdn.example.test/video/play/fallback.mp4');
+    assert.strictEqual(item.video.has_watermark, undefined);
+});
+
+runTest('Douyin web extractor parses nested _ROUTER_DATA without truncating inner braces', () => {
+    const data = {
+        page: { title: '文本包含 } 花括号' },
+        nested: { media: { video: { play_addr: { url_list: ['https://cdn.example.test/video/playwm/router.mp4'] } } } }
+    };
+    const html = '<html><body><script>window._ROUTER_DATA = ' + JSON.stringify(data) + ';</script></body></html>';
+    const res = executeScript(douyinWebScriptPath, { url: 'https://www.douyin.com/video/router' }, { status: 200, body: html });
+    assert(res && res.body);
+    assert(res.body.includes('douyin-clean-bar'));
+    assert(res.body.includes('https://cdn.example.test/video/play/router.mp4'));
+});
+
+runTest('Douyin routing avoids the broad webcast kill switch across complete configurations', () => {
+    const files = [
+        'modules/douyin.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of files) {
+        const content = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
+        assert(!content.includes('DOMAIN-KEYWORD,webcast,REJECT'), `Broad webcast REJECT must not be present in ${relPath}`);
+    }
+});
+
+// ---------------------------------------------------------
+// GDT/JAD synchronization tests
+// ---------------------------------------------------------
+console.log('\n--- Testing synchronized GDT/JAD rules ---');
+const gdtJadFiles = [
+    'modules/coolapk.sgmodule',
+    'modules/adblock-ultimate.sgmodule',
+    'Shadowrocket_LazyGroup_Merged.conf',
+    'Shadowrocket_AllInOne_Ultimate.conf'
+];
+const gdtJadRules = [
+    'DOMAIN-SUFFIX,gdt.qq.com,REJECT',
+    'DOMAIN,c.gdt.qq.com,REJECT',
+    'DOMAIN,v.gdt.qq.com,REJECT',
+    'DOMAIN,win.gdt.qq.com,REJECT',
+    'DOMAIN,t.gdt.qq.com,REJECT',
+    'DOMAIN,api.gdt.qq.com,REJECT',
+    'DOMAIN,mi.gdt.qq.com,REJECT',
+    'DOMAIN-SUFFIX,e.qq.com,REJECT',
+    'DOMAIN,sdk.e.qq.com,REJECT',
+    'DOMAIN,ad.qq.com,REJECT',
+    'DOMAIN-SUFFIX,qzs.qq.com,REJECT',
+    'DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT',
+    'DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT',
+    'DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT',
+    'DOMAIN-SUFFIX,adsmind.ugdtimg.com,REJECT',
+    'DOMAIN-SUFFIX,splashqzs.gdtimg.com,REJECT',
+    'DOMAIN-SUFFIX,qzs.gdtimg.com,REJECT',
+    'DOMAIN-SUFFIX,v2.gdt.qq.com,REJECT',
+    'DOMAIN-SUFFIX,tangram.e.qq.com,REJECT',
+    'DOMAIN-SUFFIX,gdtimg.com,REJECT',
+    'DOMAIN-SUFFIX,ugdtimg.com,REJECT',
+    'DOMAIN-SUFFIX,gtimg.cn,REJECT',
+    'DOMAIN-SUFFIX,tmead.y.qq.com,REJECT',
+    'DOMAIN-SUFFIX,tmeadquic.y.qq.com,REJECT',
+    'DOMAIN-SUFFIX,ad.tencentmusic.com,REJECT',
+    'DOMAIN-SUFFIX,adstats.tencentmusic.com,REJECT',
+    'DOMAIN-SUFFIX,jadyun.com,REJECT',
+    'DOMAIN-SUFFIX,jad.jd.com,REJECT',
+    'DOMAIN-SUFFIX,dsp-x.jd.com,REJECT',
+    'DOMAIN-SUFFIX,ad.jd.com,REJECT',
+    'IP-CIDR,119.29.29.98/32,REJECT,no-resolve',
+    'IP-CIDR,182.254.116.0/24,REJECT,no-resolve'
+];
+runTest('GDT/JAD rules and Tencent HTTPDNS blocks are synchronized across all four surfaces', () => {
+    for (const relPath of gdtJadFiles) {
+        const content = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
+        for (const rule of gdtJadRules) assert(content.includes(rule), `Missing ${rule} in ${relPath}`);
+    }
+});
+
+runTest('Broad GDT image blocking wins before existing gtimg.cn DIRECT fallbacks in complete configs', () => {
+    for (const relPath of ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf']) {
+        const content = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
+        const rejectAt = content.indexOf('DOMAIN-SUFFIX,gtimg.cn,REJECT');
+        const directAt = content.indexOf('DOMAIN-SUFFIX,gtimg.cn,DIRECT');
+        assert(rejectAt >= 0, `Missing GDT reject rule in ${relPath}`);
+        assert(directAt < 0 || rejectAt < directAt, `gtimg.cn DIRECT must not shadow GDT REJECT in ${relPath}`);
+    }
+});
+
+runTest('Coolapk startup routes use a valid HTTP request mock instead of reject-dict', () => {
+    const files = [
+        'modules/coolapk.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of files) {
+        const content = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
+        assert(content.includes('酷安_开屏Mock = type=http-request'), `Missing Coolapk startup mock in ${relPath}`);
+        assert(content.includes('openscreen|open-screen'), `Coolapk mock must cover lowercase and hyphenated open-screen paths in ${relPath}`);
+        assert(content.includes('launch_ad|launch-ad|launchad'), `Coolapk mock must cover launch-ad variants in ${relPath}`);
+        assert(content.includes('startup_ad|startup-ad|startupad'), `Coolapk mock must cover startup-ad variants in ${relPath}`);
+        assert(content.includes('api\\d*\\.coolapk'), `Coolapk API host pattern must support api, api2 and future numbered hosts in ${relPath}`);
+        assert(!content.includes('(splash|launch|openScreen) - reject-dict'), `Coolapk startup must not use reject-dict in ${relPath}`);
+    }
 });
 
 // ---------------------------------------------------------
