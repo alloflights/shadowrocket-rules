@@ -498,8 +498,12 @@ const gdtJadRules = [
     'DOMAIN,v.gdt.qq.com,REJECT',
     'DOMAIN,win.gdt.qq.com,REJECT',
     'DOMAIN,t.gdt.qq.com,REJECT',
+    'DOMAIN,a.gdt.qq.com,REJECT',
     'DOMAIN,api.gdt.qq.com,REJECT',
     'DOMAIN,mi.gdt.qq.com,REJECT',
+    'DOMAIN-SUFFIX,adnet.qq.com,REJECT',
+    'DOMAIN,api.adnet.qq.com,REJECT',
+    'DOMAIN,test-api.adnet.qq.com,REJECT',
     'DOMAIN-SUFFIX,e.qq.com,REJECT',
     'DOMAIN,sdk.e.qq.com,REJECT',
     'DOMAIN,ad.qq.com,REJECT',
@@ -515,6 +519,10 @@ const gdtJadRules = [
     'DOMAIN-SUFFIX,gdtimg.com,REJECT',
     'DOMAIN-SUFFIX,ugdtimg.com,REJECT',
     'DOMAIN-SUFFIX,gtimg.cn,REJECT',
+    'DOMAIN-SUFFIX,beacon.qq.com,REJECT',
+    'DOMAIN-SUFFIX,otheve.beacon.qq.com,REJECT',
+    'DOMAIN-SUFFIX,btrace.qq.com,REJECT',
+    'DOMAIN-SUFFIX,adsmind.apdcdn.tc.qq.com,REJECT',
     'DOMAIN-SUFFIX,tmead.y.qq.com,REJECT',
     'DOMAIN-SUFFIX,tmeadquic.y.qq.com,REJECT',
     'DOMAIN-SUFFIX,ad.tencentmusic.com,REJECT',
@@ -524,6 +532,8 @@ const gdtJadRules = [
     'DOMAIN-SUFFIX,dsp-x.jd.com,REJECT',
     'DOMAIN-SUFFIX,ad.jd.com,REJECT',
     'IP-CIDR,119.29.29.98/32,REJECT,no-resolve',
+    'IP-CIDR,182.254.116.117/32,REJECT,no-resolve',
+    'IP-CIDR,182.254.118.118/32,REJECT,no-resolve',
     'IP-CIDR,182.254.116.0/24,REJECT,no-resolve'
 ];
 runTest('GDT/JAD rules and Tencent HTTPDNS blocks are synchronized across all four surfaces', () => {
@@ -531,6 +541,31 @@ runTest('GDT/JAD rules and Tencent HTTPDNS blocks are synchronized across all fo
         const content = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
         for (const rule of gdtJadRules) assert(content.includes(rule), `Missing ${rule} in ${relPath}`);
     }
+});
+
+runTest('Coolapk feed and dataList patterns cover modern feed endpoints across all configurations', () => {
+    for (const relPath of gdtJadFiles) {
+        const content = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
+        assert(content.includes('(?:main|feed)\\/index'), `Missing (?:main|feed)/index pattern in ${relPath}`);
+        assert(content.includes('(?:page|main|feed)\\/(?:dataList|list|feedList|stream)'), `Missing extended dataList/list/feedList pattern in ${relPath}`);
+    }
+});
+
+runTest('Coolapk feed sanitizer eliminates GDT and mediation single-card ads without children', () => {
+    const payload = {
+        data: [
+            { id: 101, entityType: 'feed', entityTemplate: 'feed_default', title: '酷友日常刷机探讨' },
+            { id: 102, entityType: 'feed', entityTemplate: 'feed_default', title: '限时抢购好礼', extraData: { gdt: { slot: 'pos_123' }, is_ad: 1 } },
+            { id: 103, entityType: 'feed', entityTemplate: 'feed_default', title: '京媒特惠活动', extraData: { jad: { posId: 'jad_456' } } },
+            { id: 104, entityType: 'feed', entityTemplate: 'feed_default', title: '另一条普通酷友动态' }
+        ]
+    };
+    const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/feed/index' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.length, 2, 'Both GDT and JAD feed cards must be completely stripped');
+    assert.strictEqual(parsed.data[0].id, 101);
+    assert.strictEqual(parsed.data[1].id, 104);
 });
 
 runTest('Broad GDT image blocking wins before existing gtimg.cn DIRECT fallbacks in complete configs', () => {

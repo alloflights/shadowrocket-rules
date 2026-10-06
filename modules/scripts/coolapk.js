@@ -78,7 +78,18 @@
         "adtag": true,
         "admetadata": true,
         "feedad": true,
-        "marketingcard": true
+        "marketingcard": true,
+        "giftbox": true,
+        "gift_box": true,
+        "redpacket": true,
+        "red_packet": true,
+        "activitypopup": true,
+        "marketingpopup": true,
+        "gdttoken": true,
+        "gdtslot": true,
+        "biddingslot": true,
+        "tencentad": true,
+        "adnet": true
     };
 
 
@@ -118,7 +129,7 @@
         if (lowerUrl.indexOf("/main/init") !== -1) {
             if (Array.isArray(obj.data)) obj.data = filterCoolapkList(obj.data);
             if (obj.config && typeof obj.config === "object") scrubObject(obj.config);
-        } else if (lowerUrl.indexOf("/main/index") !== -1 || lowerUrl.indexOf("datalist") !== -1) {
+        } else if (lowerUrl.indexOf("/main/index") !== -1 || lowerUrl.indexOf("datalist") !== -1 || lowerUrl.indexOf("/feed/index") !== -1 || lowerUrl.indexOf("/feed/list") !== -1 || lowerUrl.indexOf("/feed/stream") !== -1) {
             if (Array.isArray(obj.data)) obj.data = filterCoolapkList(obj.data);
         } else if (lowerUrl.indexOf("/feed/detail") !== -1) {
             if (obj.data && typeof obj.data === "object") {
@@ -257,8 +268,8 @@
                 break;
             }
         }
-        return /(?:gdt\.qq\.com|gdtimg\.com|ugdtimg\.com|gtimg\.cn|qzs\.qq\.com|qzs\.gdtimg\.com|e\.qq\.com|ad\.qq\.com|tmead(?:quic)?\.y\.qq\.com|ad(?:stats)?\.tencentmusic\.com|jad\.jd\.com|jadyun\.com|dsp-x\.jd\.com|(?:^|[./])ad\.jd\.com|jd\.com\/(?:[^?#]+\/)?(?:ad|ads|union|promotion)(?:[/?&#]|$)|7fresh\.com|qixian\.com)/i.test(link) ||
-            /^(?:jdmobile|jdapp|jdpay|gdt|tbopen|alipays):/i.test(link);
+        return /(?:gdt\.qq\.com|adnet\.qq\.com|gdtimg\.com|ugdtimg\.com|pgdt\.gtimg\.cn|qzs\.qq\.com|qzs\.gdtimg\.com|e\.qq\.com|ad\.qq\.com|tmead(?:quic)?\.y\.qq\.com|ad(?:stats)?\.tencentmusic\.com|jad\.jd\.com|jadyun\.com|dsp-x\.jd\.com|(?:^|[./])ad\.jd\.com|jd\.com\/(?:[^?#]+\/)?(?:ad|ads|union|promotion)(?:[/?&#]|$)|7fresh\.com|qixian\.com|pangolin-sdk|pangle|gromore|mobads\.baidu\.com|adukwai|kuaishouzt|sigmob|toponad|mintegral)/i.test(link) ||
+            /^(?:jdmobile|jdapp|openapp\.jdmobile|jdpay|gdt|tbopen|taobao|tmall|pinduoduo|alipays|snssdk1128|kwai|vipshop|meituan|dianping):/i.test(link);
     }
 
     function isCoolapkAd(item) {
@@ -270,18 +281,30 @@
 
         var type = String(item.entityType || "").toLowerCase();
         var template = String(item.entityTemplate || "").toLowerCase();
-        if (/(?:splash|advert|adcard|feed_ad|sponsor|popup|interstitial|floating|imagescalecard|goodscard|goodsgridcard)/i.test(type + " " + template)) return true;
+        if (/(?:splash|advert|adcard|feed_ad|sponsor|popup|interstitial|floating|imagescalecard|goodscard|goodsgridcard|commercial|marketing|promocard)/i.test(type + " " + template)) return true;
 
-        // 明确的 SDK/广告元数据或客户端唤醒对象。
-        var flags = ["is_ad", "isAd", "is_feed_ad", "advertisement", "raw_ad_data", "ad_info", "ad_tag",
-            "sponsor", "gdt", "jad", "gromore", "pangle", "popup", "pop_window", "interstitial", "floating_layer"];
+        // 标签/来源判定
+        if (item.tag === "广告" || item.label === "广告" || item.tag === "赞助" || item.label === "赞助" ||
+            item.tag === "推广" || item.source_type === "ad" || item.sourceType === "ad") return true;
+
+        var hasChildren = (Array.isArray(item.entities) && item.entities.length > 0) ||
+            (Array.isArray(item.rows) && item.rows.length > 0) ||
+            (Array.isArray(item.items) && item.items.length > 0);
+
+        // 明确的 SDK/广告元数据或客户端唤醒对象
+        var flags = ["is_ad", "isAd", "is_feed_ad", "isFeedAd", "advertisement", "raw_ad_data", "ad_info", "ad_tag",
+            "ad_id", "adId", "ad_type", "adType", "sponsor", "gdt", "adnet", "jad", "gromore", "pangle",
+            "mobads", "sigmob", "topon", "mintegral", "popup", "pop_window", "interstitial", "floating_layer"];
         for (var i = 0; i < flags.length; i++) {
-            if (isEnabled(item[flags[i]]) || (item[flags[i]] && typeof item[flags[i]] === "object")) return true;
+            var fVal = item[flags[i]];
+            if (isEnabled(fVal) || (fVal && typeof fVal === "object" && Object.keys(fVal).length > 0)) {
+                if (!hasChildren) return true;
+            }
         }
 
         var text = [item.title, item.subTitle, item.subtitle, item.description, item.buttonText,
             item.actionText, item.label, item.tag].filter(Boolean).join(" ");
-        var hasStrongCommercialText = /广告|开屏|赞助|七鲜|优量汇|广点通|京媒|摇一摇|摇动|点击了解更多|自动关闭/i.test(text);
+        var hasStrongCommercialText = /广告|开屏|赞助|七鲜|优量汇|广点通|京媒|穿山甲|摇一摇|摇动|点击了解更多|自动关闭/i.test(text);
         var hasWeakCommercialText = /推广|带货|好物|礼盒/i.test(text);
         var hasCommercialLink = false;
         var linkKeys = ["url", "link", "jump_url", "jumpUrl", "deepLink", "deeplink",
@@ -298,9 +321,14 @@
         var extra = item.extraData;
         var hasSdkAdMeta = false;
         if (extra && typeof extra === "object") {
-            var extraKeys = ["gdt", "jad", "gromore", "pangle", "popup", "pop_window", "interstitial", "floating_layer"];
+            var extraKeys = ["gdt", "gdt_ad", "gdt_token", "gdtdata", "adnet", "jad", "jad_ad", "jaddata",
+                "gromore", "pangle", "mobads", "baidu_ad", "tencent_ad", "kuaishou", "sigmob", "topon",
+                "mintegral", "popup", "pop_window", "popwindow", "interstitial", "floating_layer",
+                "floating_window", "shake", "shaketojump", "shake_config", "ad", "ads", "ad_id",
+                "ad_type", "ad_source", "ad_tag", "pos_id", "posId", "slot_id", "ad_slot", "is_ad"];
             for (var e = 0; e < extraKeys.length; e++) {
-                if (extra[extraKeys[e]]) {
+                var eVal = extra[extraKeys[e]];
+                if (eVal && (typeof eVal !== "object" || Object.keys(eVal).length > 0)) {
                     hasSdkAdMeta = true;
                     break;
                 }
@@ -309,11 +337,14 @@
 
         var isCardLike = template === "card" || type === "card" || type === "feed" || item.entityId !== undefined;
         var isAdLikeType = /(?:ad|advert|sponsor|popup|interstitial|floating|goods|promo|commercial)/i.test(type + " " + template);
+
+        // 如果单条Feed卡片带有SDK广告元数据（无子节点容器），直接判定为广告整卡剔除
+        if (hasSdkAdMeta && !hasChildren) return true;
+
         if (isCardLike) {
             if (hasStrongCommercialText || hasCommercialLink) return true;
             // “推广/礼盒/好物”本身可能出现在普通帖子正文；只有卡片类型或 SDK 广告元数据同时出现时才删除。
             if (hasWeakCommercialText && (isAdLikeType || hasSdkAdMeta)) return true;
-            // SDK 元数据 alone 不足以删除普通容器；只有同时具备商业卡片形态才整项剔除。
             if (hasSdkAdMeta && isAdLikeType) return true;
         }
         if (String(item.title || "") === "酷安热搜") return true;
@@ -326,6 +357,7 @@
 
     function isCoolapkReplyAd(item) {
         if (!item || !item.id) return true;
-        return isCoolapkAd(item) || item.entityType === "ad" || item.extraData && (item.extraData.ad || item.extraData.gdt || item.extraData.jad);
+        return isCoolapkAd(item) || item.entityType === "ad" || item.entityTemplate === "reply_ad" ||
+            (item.extraData && (item.extraData.ad || item.extraData.gdt || item.extraData.jad || item.extraData.adnet));
     }
 })();
