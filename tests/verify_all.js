@@ -927,6 +927,36 @@ runTest('Check that Apple authentication and CDN domains have always-real-ip and
     }
 });
 
+runTest('Check that global and domestic top ad networks (AdMob, AppLovin, Unity Ads, IronSource, Vungle, InMobi, ByteGoofy, Xiaomi/Huawei OEM) are present across core configs', () => {
+    const targetConfigs = [
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    const requiredAdDomains = [
+        'DOMAIN-SUFFIX,bytegoofy.com,REJECT',
+        'DOMAIN-SUFFIX,ad.xiaomi.com,REJECT',
+        'DOMAIN-SUFFIX,ad.huawei.com,REJECT',
+        'DOMAIN-SUFFIX,admob.com,REJECT',
+        'DOMAIN-SUFFIX,applovin.com,REJECT',
+        'DOMAIN-SUFFIX,unityads.unity3d.com,REJECT',
+        'DOMAIN-SUFFIX,ironsrc.com,REJECT',
+        'DOMAIN-SUFFIX,vungle.com,REJECT',
+        'DOMAIN-SUFFIX,inmobi.com,REJECT',
+        'DOMAIN-SUFFIX,chartboost.com,REJECT',
+        'DOMAIN-SUFFIX,fyber.com,REJECT',
+        'DOMAIN-SUFFIX,an.facebook.com,REJECT',
+        'DOMAIN-SUFFIX,amazon-adsystem.com,REJECT',
+        'DOMAIN-SUFFIX,smaato.net,REJECT'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        for (const adRule of requiredAdDomains) {
+            assert(content.includes(adRule), `Missing required global ad network rule ${adRule} in ${relPath}`);
+        }
+    }
+});
+
 console.log(`\n================================================================`);
 console.log(`FINAL RESULTS: ${passedTests} / ${totalTests} tests passed.`);
 console.log('================================================================\n');
