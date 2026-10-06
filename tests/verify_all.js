@@ -625,6 +625,22 @@ runTest('Check that client.pwesports.cn, ad.pwesports.cn, advert.pwesports.cn an
     }
 });
 
+runTest('Check that Claude and Gemini policy groups in LazyGroup are locked to Singapore node', () => {
+    const lazyConf = fs.readFileSync(path.join(repoRoot, 'Shadowrocket_LazyGroup_Merged.conf'), 'utf8');
+    assert(lazyConf.includes('Claude = select,新加坡节点') && lazyConf.includes('policy-select-name=新加坡节点'), 'Claude policy group must be locked to 新加坡节点');
+    assert(lazyConf.includes('Gemini = select,新加坡节点') && lazyConf.includes('policy-select-name=新加坡节点'), 'Gemini policy group must be locked to 新加坡节点');
+});
+
+runTest('Check that Apple authentication and CDN domains have always-real-ip and system DNS host mapping across confs', () => {
+    const targetConfigs = ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf'];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(content.includes('always-real-ip =') && content.includes('*.apple.com') && content.includes('*.mzstatic.com'), `Missing always-real-ip Apple domains in ${relPath}`);
+        assert(content.includes('*.apple.com = server:system') && content.includes('*.itunes.com = server:system'), `Missing Apple server:system Host mappings in ${relPath}`);
+        assert(content.includes('*.mzstatic.com') && content.includes('*.itunes.com') && content.includes('skip-proxy ='), `Missing App Store auth domains in skip-proxy in ${relPath}`);
+    }
+});
+
 console.log(`\n================================================================`);
 console.log(`FINAL RESULTS: ${passedTests} / ${totalTests} tests passed.`);
 console.log('================================================================\n');
