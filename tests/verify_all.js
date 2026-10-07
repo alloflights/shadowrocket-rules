@@ -992,6 +992,56 @@ runTest('Check that global and domestic top ad networks (AdMob, AppLovin, Unity 
     }
 });
 
+runTest('Check that Alibaba Tanx and Alimama ad network suite is present across all core configs and coolapk module', () => {
+    const targetConfigs = [
+        'modules/coolapk.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    const requiredTanxAlimamaDomains = [
+        'DOMAIN-SUFFIX,tanx.com,REJECT',
+        'DOMAIN-SUFFIX,alimama.com,REJECT',
+        'DOMAIN-SUFFIX,alimama.cn,REJECT',
+        'DOMAIN-SUFFIX,alimama.net,REJECT',
+        'DOMAIN-SUFFIX,alimama.alicdn.com,REJECT',
+        'DOMAIN-SUFFIX,atanx.alicdn.com,REJECT',
+        'DOMAIN-SUFFIX,atanx2.alicdn.com,REJECT',
+        'DOMAIN-SUFFIX,alimm.com,REJECT',
+        'DOMAIN-SUFFIX,strip.taobaocdn.com,REJECT'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        for (const rule of requiredTanxAlimamaDomains) {
+            assert(content.includes(rule), `Missing ${rule} in ${relPath}`);
+        }
+    }
+});
+
+runTest('Coolapk sanitizer eliminates Alibaba Tanx and Alimama mediation feed ads and commercial links', () => {
+    const payload = {
+        data: [
+            { id: 201, entityType: 'feed', title: '日常正常动态' },
+            { id: 202, entityType: 'feed', title: '阿里妈妈推广好物', extraData: { alimama: { ad_id: 'mm_101' } } },
+            { id: 203, entityType: 'card', title: 'Tanx实时竞价广告', click_url: 'https://atanx.alicdn.com/click?ad=123' },
+            { id: 204, entityType: 'feed', title: '带有Tanx元数据的单独卡片', extraData: { tanx: { slot_id: 'tanx_99' } } },
+            { id: 205, entityType: 'feed', title: '又一条正常酷友动态' }
+        ],
+        config: {
+            alimama_config: { enable: 1 },
+            tanx_config: { appId: "tanx_app" }
+        }
+    };
+    const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/indexV14' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.length, 2, 'Only 2 legitimate feeds must remain');
+    assert.strictEqual(parsed.data[0].id, 201);
+    assert.strictEqual(parsed.data[1].id, 205);
+    assert.strictEqual(parsed.config.alimama_config, undefined, 'alimama_config must be scrubbed');
+    assert.strictEqual(parsed.config.tanx_config, undefined, 'tanx_config must be scrubbed');
+});
+
 console.log(`\n================================================================`);
 console.log(`FINAL RESULTS: ${passedTests} / ${totalTests} tests passed.`);
 console.log('================================================================\n');

@@ -89,7 +89,16 @@
         "gdtslot": true,
         "biddingslot": true,
         "tencentad": true,
-        "adnet": true
+        "adnet": true,
+        "tanx": true,
+        "tanxconfig": true,
+        "tanxdata": true,
+        "tanxad": true,
+        "alimama": true,
+        "alimamaconfig": true,
+        "alimamadata": true,
+        "alimamaad": true,
+        "alimm": true
     };
 
 
@@ -268,7 +277,7 @@
                 break;
             }
         }
-        return /(?:gdt\.qq\.com|adnet\.qq\.com|gdtimg\.com|ugdtimg\.com|pgdt\.gtimg\.cn|qzs\.qq\.com|qzs\.gdtimg\.com|e\.qq\.com|ad\.qq\.com|tmead(?:quic)?\.y\.qq\.com|ad(?:stats)?\.tencentmusic\.com|jad\.jd\.com|jadyun\.com|dsp-x\.jd\.com|(?:^|[./])ad\.jd\.com|jd\.com\/(?:[^?#]+\/)?(?:ad|ads|union|promotion)(?:[/?&#]|$)|7fresh\.com|qixian\.com|pangolin-sdk|pangle|gromore|mobads\.baidu\.com|adukwai|kuaishouzt|sigmob|toponad|mintegral)/i.test(link) ||
+        return /(?:gdt\.qq\.com|adnet\.qq\.com|gdtimg\.com|ugdtimg\.com|pgdt\.gtimg\.cn|qzs\.qq\.com|qzs\.gdtimg\.com|e\.qq\.com|ad\.qq\.com|tmead(?:quic)?\.y\.qq\.com|ad(?:stats)?\.tencentmusic\.com|jad\.jd\.com|jadyun\.com|dsp-x\.jd\.com|(?:^|[./])ad\.jd\.com|jd\.com\/(?:[^?#]+\/)?(?:ad|ads|union|promotion)(?:[/?&#]|$)|7fresh\.com|qixian\.com|pangolin-sdk|pangle|gromore|mobads\.baidu\.com|adukwai|kuaishouzt|sigmob|toponad|mintegral|tanx\.com|alimama\.(?:com|cn|net)|atanx\d?\.alicdn\.com|alimama\.alicdn\.com|alimm\.com|strip\.taobaocdn\.com)/i.test(link) ||
             /^(?:jdmobile|jdapp|openapp\.jdmobile|jdpay|gdt|tbopen|taobao|tmall|pinduoduo|alipays|snssdk1128|kwai|vipshop|meituan|dianping):/i.test(link);
     }
 
@@ -294,7 +303,8 @@
         // 明确的 SDK/广告元数据或客户端唤醒对象
         var flags = ["is_ad", "isAd", "is_feed_ad", "isFeedAd", "advertisement", "raw_ad_data", "ad_info", "ad_tag",
             "ad_id", "adId", "ad_type", "adType", "sponsor", "gdt", "adnet", "jad", "gromore", "pangle",
-            "mobads", "sigmob", "topon", "mintegral", "popup", "pop_window", "interstitial", "floating_layer"];
+            "mobads", "sigmob", "topon", "mintegral", "tanx", "tanx_ad", "tanxAd", "alimama", "alimama_ad", "alimamaAd", "alimm",
+            "popup", "pop_window", "interstitial", "floating_layer"];
         for (var i = 0; i < flags.length; i++) {
             var fVal = item[flags[i]];
             if (isEnabled(fVal) || (fVal && typeof fVal === "object" && Object.keys(fVal).length > 0)) {
@@ -304,7 +314,7 @@
 
         var text = [item.title, item.subTitle, item.subtitle, item.description, item.buttonText,
             item.actionText, item.label, item.tag].filter(Boolean).join(" ");
-        var hasStrongCommercialText = /广告|开屏|赞助|七鲜|优量汇|广点通|京媒|穿山甲|摇一摇|摇动|点击了解更多|自动关闭/i.test(text);
+        var hasStrongCommercialText = /广告|开屏|赞助|七鲜|优量汇|广点通|京媒|穿山甲|阿里妈妈|tanx|摇一摇|摇动|点击了解更多|自动关闭/i.test(text);
         var hasWeakCommercialText = /推广|带货|好物|礼盒/i.test(text);
         var hasCommercialLink = false;
         var linkKeys = ["url", "link", "jump_url", "jumpUrl", "deepLink", "deeplink",
@@ -323,7 +333,8 @@
         if (extra && typeof extra === "object") {
             var extraKeys = ["gdt", "gdt_ad", "gdt_token", "gdtdata", "adnet", "jad", "jad_ad", "jaddata",
                 "gromore", "pangle", "mobads", "baidu_ad", "tencent_ad", "kuaishou", "sigmob", "topon",
-                "mintegral", "popup", "pop_window", "popwindow", "interstitial", "floating_layer",
+                "mintegral", "tanx", "tanx_ad", "tanxdata", "alimama", "alimama_ad", "alimamadata", "alimm",
+                "popup", "pop_window", "popwindow", "interstitial", "floating_layer",
                 "floating_window", "shake", "shaketojump", "shake_config", "ad", "ads", "ad_id",
                 "ad_type", "ad_source", "ad_tag", "pos_id", "posId", "slot_id", "ad_slot", "is_ad"];
             for (var e = 0; e < extraKeys.length; e++) {
@@ -358,6 +369,6 @@
     function isCoolapkReplyAd(item) {
         if (!item || !item.id) return true;
         return isCoolapkAd(item) || item.entityType === "ad" || item.entityTemplate === "reply_ad" ||
-            (item.extraData && (item.extraData.ad || item.extraData.gdt || item.extraData.jad || item.extraData.adnet));
+            (item.extraData && (item.extraData.ad || item.extraData.gdt || item.extraData.jad || item.extraData.adnet || item.extraData.tanx || item.extraData.alimama));
     }
 })();
