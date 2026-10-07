@@ -1042,6 +1042,224 @@ runTest('Coolapk sanitizer eliminates Alibaba Tanx and Alimama mediation feed ad
     assert.strictEqual(parsed.config.tanx_config, undefined, 'tanx_config must be scrubbed');
 });
 
+// ---------------------------------------------------------
+// Coolapk Splash Neutralization & Zero-Delay Launch Tests
+// ---------------------------------------------------------
+console.log('\n--- Testing Coolapk Splash Neutralization & Instant Launch ---');
+
+runTest('Coolapk /main/init neutralizes V8_APP_EXTRA SplashAd configurations to prevent empty container timeout', () => {
+    const rawInitPayload = {
+        data: [
+            {
+                entityType: "card",
+                entityTemplate: "configCard",
+                cardId: 6390,
+                cardPageName: "V8_APP_EXTRA",
+                title: "全局配置",
+                extraDataArr: {
+                    selectedHomeTab: "V9_HOME_TAB_HEADLINE",
+                    "SplashAd.Type": "TT_SPLASH | 5014732 | 887429169",
+                    "SplashAd.Expires": "900",
+                    "SplashAd.Timeout": "5",
+                    "SplashAd.onResume": "1",
+                    "Ad.TT_APP_ID": "5014732",
+                    "Ad.GDT_APP_ID": "1107915162"
+                },
+                extraData: JSON.stringify({
+                    selectedHomeTab: "V9_HOME_TAB_HEADLINE",
+                    "SplashAd.Type": "TT_SPLASH | 5014732 | 887429169",
+                    "SplashAd.Expires": "900",
+                    "SplashAd.Timeout": "5",
+                    "SplashAd.onResume": "1",
+                    "Ad.TT_APP_ID": "5014732",
+                    "Ad.GDT_APP_ID": "1107915162"
+                })
+            },
+            {
+                entityId: 944,
+                title: "搜索栏广告"
+            }
+        ],
+        config: {
+            splash: { duration: 5 },
+            splash_config: { timeout: 5 }
+        }
+    };
+
+    const res = executeScript(coolapkScriptPath, { url: 'https://api.coolapk.com/v6/main/init' }, { status: 200, body: JSON.stringify(rawInitPayload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+
+    // cardId 6390 must be kept so general app configuration is not lost
+    assert.strictEqual(parsed.data.length, 1, 'Only configCard 6390 must be kept; entity 944 must be removed');
+    const configCard = parsed.data[0];
+    assert.strictEqual(configCard.cardId, 6390);
+
+    // extraDataArr must have empty SplashAd.Type to disable splash container loading
+    assert.strictEqual(configCard.extraDataArr["SplashAd.Type"], "", "SplashAd.Type must be empty");
+    assert.strictEqual(configCard.extraDataArr["SplashAd.Timeout"], "0", "SplashAd.Timeout must be 0");
+    assert.strictEqual(configCard.extraDataArr["SplashAd.onResume"], "0", "SplashAd.onResume must be 0");
+    assert.strictEqual(configCard.extraDataArr["SplashAd.Expires"], 2147483647, "SplashAd.Expires must be set to far future");
+    assert.strictEqual(configCard.extraDataArr["Ad.TT_APP_ID"], undefined, "Ad.TT_APP_ID must be deleted");
+    assert.strictEqual(configCard.extraDataArr["Ad.GDT_APP_ID"], undefined, "Ad.GDT_APP_ID must be deleted");
+    assert.strictEqual(configCard.extraDataArr.selectedHomeTab, "V9_HOME_TAB_HEADLINE", "Legitimate configs must be preserved");
+
+    // extraData string must match synchronized JSON
+    const parsedExtra = JSON.parse(configCard.extraData);
+    assert.strictEqual(parsedExtra["SplashAd.Type"], "");
+    assert.strictEqual(parsedExtra["SplashAd.Timeout"], "0");
+    assert.strictEqual(parsedExtra["Ad.TT_APP_ID"], undefined);
+
+    // config object must have splash and splash_config stripped
+    assert.strictEqual(parsed.config.splash, undefined);
+    assert.strictEqual(parsed.config.splash_config, undefined);
+});
+
+// ---------------------------------------------------------
+// Zhihu Pro Tests (2026 真机对齐测试)
+// ---------------------------------------------------------
+console.log('\n--- Testing zhihu.js ---');
+const zhihuScriptPath = path.join(__dirname, '../modules/scripts/zhihu.js');
+
+runTest('Zhihu /feed-root/: filters commercial sections, slot event cards, and items', () => {
+    const payload = {
+        data: [
+            { id: 101, type: "normal", title: "真正的知乎学术讨论" },
+            { id: 102, type: "feed_advert", title: "假装是回答的广告卡片" },
+            { id: 103, card_type: "slot_event_card", title: "商业插槽广告" }
+        ],
+        sections: [
+            {
+                section_name: "热点",
+                type: "normal",
+                items: [
+                    { id: 201, title: "真实问答" },
+                    { id: 202, ad: { ad_id: 123 }, title: "广告问答" }
+                ]
+            },
+            {
+                section_name: "商业专区",
+                type: "commercial",
+                items: [{ id: 301, title: "商业广告" }]
+            }
+        ]
+    };
+
+    const res = executeScript(zhihuScriptPath, { url: 'https://api.zhihu.com/feed-root/sections/query/v2' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+
+    assert.strictEqual(parsed.data.length, 1, 'Only genuine feed items must remain');
+    assert.strictEqual(parsed.data[0].id, 101);
+    assert.strictEqual(parsed.sections.length, 1, 'Commercial sections must be dropped');
+    assert.strictEqual(parsed.sections[0].items.length, 1, 'Ad items within sections must be dropped');
+    assert.strictEqual(parsed.sections[0].items[0].id, 201);
+});
+
+runTest('Zhihu /moments: filters dynamic/timeline feed ads, adjson and slot cards', () => {
+    const payload = {
+        data: [
+            { id: 1, type: "pin", content: "好友发表的想法" },
+            { id: 2, adjson: '{"ad_id": 999}', content: "动态信息流广告" },
+            { id: 3, card_type: "slot_event_card", content: "商业插槽卡片" },
+            { id: 4, extra: { is_ad: true }, content: "带extra广告标的卡片" },
+            { id: 5, target: { type: "advert" }, content: "目标为广告的推广" }
+        ]
+    };
+
+    const res = executeScript(zhihuScriptPath, { url: 'https://api.zhihu.com/moments/recommend' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+
+    assert.strictEqual(parsed.data.length, 1, 'Only genuine moment/pin items must remain');
+    assert.strictEqual(parsed.data[0].id, 1);
+});
+
+runTest('Zhihu /topstory/recommend: filters feed adverts and commercial cards', () => {
+    const payload = {
+        data: [
+            { id: 11, type: "feed_advert", title: "推荐流直接广告" },
+            { id: 12, type: "normal", title: "高赞深度好回答" },
+            { id: 13, author: { name: "知乎广告" }, title: "广告主账号发表的内容" }
+        ]
+    };
+
+    const res = executeScript(zhihuScriptPath, { url: 'https://api.zhihu.com/topstory/recommend' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+
+    assert.strictEqual(parsed.data.length, 1);
+    assert.strictEqual(parsed.data[0].id, 12);
+});
+
+runTest('Zhihu /topstory/hot-lists: filters sponsored hot list items', () => {
+    const payload = {
+        data: [
+            { id: 21, title: "真实热搜第一名" },
+            { id: 22, card_type: "slot_event_card", title: "商业插播热榜广告" },
+            { id: 23, title: "真实热搜第二名" }
+        ]
+    };
+
+    const res = executeScript(zhihuScriptPath, { url: 'https://api.zhihu.com/topstory/hot-lists/total' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+
+    assert.strictEqual(parsed.data.length, 2);
+    assert.strictEqual(parsed.data[0].id, 21);
+    assert.strictEqual(parsed.data[1].id, 23);
+});
+
+runTest('Zhihu /questions/.../answers: deletes ad_info and drops commercial answers', () => {
+    const payload = {
+        ad_info: { ad_id: 12345 },
+        data: [
+            { id: 31, type: "answer", excerpt: "专业人士的回答" },
+            { id: 32, type: "commercial", excerpt: "商业合作带货回答" },
+            { id: 33, ad_info: { id: 1 }, excerpt: "带广告元数据的回答" }
+        ]
+    };
+
+    const res = executeScript(zhihuScriptPath, { url: 'https://api.zhihu.com/v4/questions/123456/answers' }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+
+    assert.strictEqual(parsed.ad_info, undefined, 'ad_info must be deleted');
+    assert.strictEqual(parsed.data.length, 1);
+    assert.strictEqual(parsed.data[0].id, 31);
+});
+
+runTest('Zhihu /ad-style-service/ and /commercial_api/ return standard valid JSON to prevent parser crash', () => {
+    const resStyle = executeScript(zhihuScriptPath, { url: 'https://api.zhihu.com/ad-style-service/launch_animation' }, { status: 200, body: '{"error": 0}' });
+    assert(resStyle && resStyle.body);
+    const parsedStyle = JSON.parse(resStyle.body);
+    assert.strictEqual(parsedStyle.code, 0);
+    assert(Array.isArray(parsedStyle.data) && parsedStyle.data.length === 0);
+
+    const resLaunch = executeScript(zhihuScriptPath, { url: 'https://api.zhihu.com/commercial_api/real_time_launch' }, { status: 200, body: '{"launch":"{\\"ads\\":[{\\"id\\":1}]}"}' });
+    assert(resLaunch && resLaunch.body);
+    const parsedLaunch = JSON.parse(resLaunch.body);
+    const launchObj = JSON.parse(parsedLaunch.launch);
+    assert(Array.isArray(launchObj.ads) && launchObj.ads.length === 0);
+});
+
+runTest('Zhihu script patterns and max-size are synchronized across all configurations', () => {
+    const files = [
+        'modules/zhihu.sgmodule',
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of files) {
+        const content = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
+        assert(content.includes('feed-root'), `Zhihu pattern must include feed-root in ${relPath}`);
+        assert(content.includes('moments'), `Zhihu pattern must include moments in ${relPath}`);
+        assert(content.includes('topstory/hot-lists') || content.includes('topstory\\/hot-lists'), `Zhihu pattern must include topstory/hot-lists in ${relPath}`);
+        assert(content.includes('max-size=5242880'), `Zhihu max-size must be 5242880 (5MB) in ${relPath}`);
+        assert(!content.includes('zhihu_clean = type=http-response,max-size=0'), `Zhihu must not have max-size=0 in ${relPath}`);
+    }
+});
+
 console.log(`\n================================================================`);
 console.log(`FINAL RESULTS: ${passedTests} / ${totalTests} tests passed.`);
 console.log('================================================================\n');

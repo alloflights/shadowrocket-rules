@@ -136,8 +136,20 @@
 
         // 先按接口形态处理数组字段，随后再做一次全树清洗，覆盖新版本嵌套字段。
         if (lowerUrl.indexOf("/main/init") !== -1) {
-            if (Array.isArray(obj.data)) obj.data = filterCoolapkList(obj.data);
-            if (obj.config && typeof obj.config === "object") scrubObject(obj.config);
+            if (Array.isArray(obj.data)) {
+                for (var d = 0; d < obj.data.length; d++) {
+                    neutralizeCoolapkSplash(obj.data[d]);
+                }
+                obj.data = filterCoolapkList(obj.data);
+            }
+            if (obj.config && typeof obj.config === "object") {
+                delete obj.config.splash;
+                delete obj.config.splash_config;
+                delete obj.config.splashConfig;
+                delete obj.config.launch_ad;
+                delete obj.config.launchAd;
+                scrubObject(obj.config);
+            }
         } else if (lowerUrl.indexOf("/main/index") !== -1 || lowerUrl.indexOf("datalist") !== -1 || lowerUrl.indexOf("/feed/index") !== -1 || lowerUrl.indexOf("/feed/list") !== -1 || lowerUrl.indexOf("/feed/stream") !== -1) {
             if (Array.isArray(obj.data)) obj.data = filterCoolapkList(obj.data);
         } else if (lowerUrl.indexOf("/feed/detail") !== -1) {
@@ -284,7 +296,12 @@
     function isCoolapkAd(item) {
         if (!item || typeof item !== "object") return false;
 
-        var adEntityIds = [944, 945, 1373, 6390, 8639, 20099, 20131, 21703,
+        // V8_APP_EXTRA 全局配置卡片由 neutralizeCoolapkSplash 净化开屏配置，不作为广告整卡删除
+        if (item.cardId === 6390 || item.cardPageName === "V8_APP_EXTRA" || item.entityTemplate === "configCard") {
+            return false;
+        }
+
+        var adEntityIds = [944, 945, 1373, 8639, 20099, 20131, 21703,
             24455, 28212, 29349, 31114, 32557, 33006, 36839, 39396, 43906];
         if (adEntityIds.indexOf(Number(item.entityId)) !== -1) return true;
 
@@ -364,6 +381,50 @@
 
     function isEnabled(value) {
         return value === true || value === 1 || value === "1" || value === "true";
+    }
+
+    function neutralizeCoolapkSplash(item) {
+        if (!item || typeof item !== "object") return;
+
+        // 1. 深度净化 extraDataArr 对象（抹平开屏广告SDK类型与超时，实现瞬间秒开）
+        if (item.extraDataArr && typeof item.extraDataArr === "object") {
+            sanitizeSplashMap(item.extraDataArr);
+            try {
+                item.extraData = JSON.stringify(item.extraDataArr);
+            } catch (e) {}
+        }
+
+        // 2. 深度净化 extraData JSON 字符串
+        if (typeof item.extraData === "string" && item.extraData) {
+            try {
+                var extraObj = JSON.parse(item.extraData);
+                sanitizeSplashMap(extraObj);
+                item.extraData = JSON.stringify(extraObj);
+                if (!item.extraDataArr || typeof item.extraDataArr !== "object") {
+                    item.extraDataArr = extraObj;
+                }
+            } catch (e) {}
+        }
+    }
+
+    function sanitizeSplashMap(map) {
+        if (!map || typeof map !== "object") return;
+        map["SplashAd.Type"] = "";
+        map["SplashAd.hType"] = "";
+        map["SplashAd.resumeType"] = "";
+        map["SplashAd.Timeout"] = "0";
+        map["SplashAd.onResume"] = "0";
+        map["SplashAd.Expires"] = 2147483647;
+        map["Ad.SPLASH_RETRY_PERIOD"] = "2147483647";
+        map["Ad.PRELOAD"] = "0";
+        map["Ad.PRELOAD_AFTER_USE"] = "0";
+        map["SplashAd.loadType"] = "0";
+        delete map["Ad.TT_APP_ID"];
+        delete map["Ad.GDT_APP_ID"];
+        delete map["Ad.KS_APP_ID"];
+        delete map["Ad.BAIDU_APP_ID"];
+        delete map["Ad.SIGMOB_APP_ID"];
+        delete map["SplashAd.AdSlot"];
     }
 
     function isCoolapkReplyAd(item) {
