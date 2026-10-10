@@ -745,7 +745,7 @@ for (const relPath of allTargetFiles) {
             if (currentSection === 'Rule') {
                 const parts = line.split(',');
                 const ruleType = parts[0].trim();
-                const validTypes = ['DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'IP-CIDR', 'IP-CIDR6', 'IP-ASN', 'GEOIP', 'USER-AGENT', 'URL-REGEX', 'RULE-SET', 'FINAL', 'PROCESS-NAME'];
+                const validTypes = ['DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'IP-CIDR', 'IP-CIDR6', 'IP-ASN', 'GEOIP', 'USER-AGENT', 'URL-REGEX', 'RULE-SET', 'FINAL', 'PROCESS-NAME', 'DST-PORT', 'DEST-PORT'];
                 assert(validTypes.includes(ruleType), `Line ${lineNo} in ${relPath}: Unknown Rule type "${ruleType}"`);
                 assert(parts.length >= 2, `Line ${lineNo} in ${relPath}: Rule must have at least 2 comma-separated fields: "${line}"`);
                 if (ruleType === 'URL-REGEX') {
@@ -1257,6 +1257,70 @@ runTest('Zhihu script patterns and max-size are synchronized across all configur
         assert(content.includes('topstory/hot-lists') || content.includes('topstory\\/hot-lists'), `Zhihu pattern must include topstory/hot-lists in ${relPath}`);
         assert(content.includes('max-size=5242880'), `Zhihu max-size must be 5242880 (5MB) in ${relPath}`);
         assert(!content.includes('zhihu_clean = type=http-response,max-size=0'), `Zhihu must not have max-size=0 in ${relPath}`);
+    }
+});
+
+// ---------------------------------------------------------
+// Mail & Outlook Connectivity Tests
+// ---------------------------------------------------------
+console.log('\n--- Testing Outlook & Mail Connectivity Rules ---');
+
+runTest('Check that standard mail protocol ports are routed directly via DST-PORT', () => {
+    const targetConfigs = ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf'];
+    const requiredPorts = ['25', '110', '143', '465', '587', '993', '995'];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        for (const port of requiredPorts) {
+            assert(
+                content.includes(`DST-PORT,${port},DIRECT`),
+                `Missing DST-PORT,${port},DIRECT in ${relPath}`
+            );
+        }
+    }
+});
+
+runTest('Check that Outlook and Office 365 domains are routed DIRECT before proxy fallbacks', () => {
+    const targetConfigs = ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf'];
+    const requiredDomains = [
+        'DOMAIN-SUFFIX,outlook.com,DIRECT',
+        'DOMAIN-SUFFIX,office365.com,DIRECT',
+        'DOMAIN-SUFFIX,live.com,DIRECT',
+        'DOMAIN-SUFFIX,hotmail.com,DIRECT',
+        'DOMAIN-SUFFIX,acompli.net,DIRECT'
+    ];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        for (const rule of requiredDomains) {
+            assert(content.includes(rule), `Missing rule "${rule}" in ${relPath}`);
+        }
+        
+        // Ensure Outlook rules appear before Global.list or Microsoft.list proxy rules
+        const outlookPos = content.indexOf('DOMAIN-SUFFIX,outlook.com,DIRECT');
+        if (content.includes('RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Microsoft/Microsoft.list')) {
+            const msPos = content.indexOf('RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Microsoft/Microsoft.list');
+            assert(outlookPos < msPos, `Outlook DIRECT rule must precede Microsoft.list in ${relPath}`);
+        }
+        if (content.includes('RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Global/Global.list,PROXY')) {
+            const globalPos = content.indexOf('RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Global/Global.list,PROXY');
+            assert(outlookPos < globalPos, `Outlook DIRECT rule must precede Global.list PROXY in ${relPath}`);
+        }
+    }
+});
+
+runTest('Check that 微软服务 policy group in LazyGroup defaults to DIRECT', () => {
+    const lazyConf = fs.readFileSync(path.join(repoRoot, 'Shadowrocket_LazyGroup_Merged.conf'), 'utf8');
+    assert(
+        lazyConf.includes('微软服务 = select,DIRECT,PROXY') && lazyConf.includes('policy-select-name=DIRECT'),
+        '微软服务 policy group must default to DIRECT (policy-select-name=DIRECT)'
+    );
+});
+
+runTest('Check that Outlook domains are present in always-real-ip and [Host] server:system across configs', () => {
+    const targetConfigs = ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf'];
+    for (const relPath of targetConfigs) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');
+        assert(content.includes('*.outlook.com') && content.includes('always-real-ip ='), `Missing *.outlook.com in always-real-ip in ${relPath}`);
+        assert(content.includes('*.outlook.com = server:system'), `Missing *.outlook.com = server:system in [Host] in ${relPath}`);
     }
 });
 
