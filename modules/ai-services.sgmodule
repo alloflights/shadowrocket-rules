@@ -87,6 +87,10 @@ RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Sh
 DOMAIN-SUFFIX,claude.ai,PROXY
 DOMAIN-SUFFIX,anthropic.com,PROXY
 DOMAIN-SUFFIX,claude.usercontent.com,PROXY
+DOMAIN-SUFFIX,statsigapi.net,PROXY
+DOMAIN-SUFFIX,usefathom.com,PROXY
+DOMAIN,challenges.cloudflare.com,PROXY
+DOMAIN,static.cloudflareinsights.com,PROXY
 RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Claude/Claude.list,PROXY
 
 # ==================== 5. xAI (Grok) 矩阵 ====================
