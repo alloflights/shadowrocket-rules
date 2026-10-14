@@ -1382,69 +1382,6 @@ runTest("Coolapk eliminates cards with stringified JSON extraData containing GDT
     assert.strictEqual(parsed.data[0].id, 1);
 });
 
-console.log("\n--- Testing X (Twitter) & YouTube Overseas Streaming Purifier (twitter.js) ---");
-const twitterScriptPath = path.join(__dirname, "../modules/scripts/twitter.js");
-
-runTest("X (Twitter) GraphQL HomeTimeline & TweetDetail removes promoted tweets and thread ads while preserving cursors", () => {
-    const xPayload = {
-        data: {
-            home: {
-                home_timeline_urt: {
-                    instructions: [
-                        {
-                            type: "TimelineAddEntries",
-                            entries: [
-                                { entryId: "tweet-1001", content: { itemContent: { tweet_results: { result: { rest_id: "1001" } } } } },
-                                { entryId: "promoted-tweet-9999", content: { itemContent: { promotedMetadata: { advertiser_name: "AdCorp" } } } },
-                                { entryId: "tweet-1002", content: { itemContent: { promotedMetadata: { impressionId: "imp_1" } } } },
-                                {
-                                    entryId: "conversationthread-2001",
-                                    content: {
-                                        items: [
-                                            { entryId: "tweet-2001-reply1", item: { itemContent: { tweet_results: { result: { rest_id: "2001" } } } } },
-                                            { entryId: "tweet-2001-ad", item: { itemContent: { promotedMetadata: { advertiser_name: "Sponsor" } } } }
-                                        ]
-                                    }
-                                },
-                                { entryId: "cursor-bottom-12345", content: { value: "next_cursor_token" } }
-                            ]
-                        }
-                    ]
-                }
-            }
-        }
-    };
-    const res = executeScript(twitterScriptPath, { url: "https://api.x.com/graphql/abc123/HomeTimeline" }, { status: 200, body: JSON.stringify(xPayload) });
-    assert(res && res.body);
-    const entries = JSON.parse(res.body).data.home.home_timeline_urt.instructions[0].entries;
-    assert.strictEqual(entries.length, 3, "Only normal tweet, cleaned thread, and bottom cursor must remain");
-    assert.strictEqual(entries[0].entryId, "tweet-1001");
-    assert.strictEqual(entries[1].entryId, "conversationthread-2001");
-    assert.strictEqual(entries[1].content.items.length, 1, "Promoted reply inside conversation thread must be removed");
-    assert.strictEqual(entries[2].entryId, "cursor-bottom-12345", "Pagination cursor must be preserved");
-});
-
-runTest("YouTube JSON purifier strips adPlacements, playerAds, adSlots, and in-feed ad renderers", () => {
-    const ytPayload = {
-        videoDetails: { videoId: "vid_123", title: "Genuine Tech Review" },
-        adPlacements: [{ adPlacementRenderer: { config: {} } }],
-        playerAds: [{ playerLegacyDesktopWatchAdsRenderer: {} }],
-        adSlots: [{ adSlotRenderer: {} }],
-        contents: [
-            { richItemRenderer: { content: { videoRenderer: { videoId: "v1" } } } },
-            { richItemRenderer: { content: { adSlotRenderer: { adId: "ad1" } } } }
-        ]
-    };
-    const res = executeScript(twitterScriptPath, { url: "https://m.youtube.com/youtubei/v1/player" }, { status: 200, body: JSON.stringify(ytPayload) });
-    assert(res && res.body);
-    const parsed = JSON.parse(res.body);
-    assert.strictEqual(parsed.adPlacements, undefined);
-    assert.strictEqual(parsed.playerAds, undefined);
-    assert.strictEqual(parsed.adSlots, undefined);
-    assert.strictEqual(parsed.contents.length, 1);
-    assert.strictEqual(parsed.videoDetails.videoId, "vid_123");
-});
-
 console.log("\n--- Testing Silent Zero-Popup Execution Across Bilibili, Qidian, Tieba & All Scripts ---");
 const biliJsonPath = path.join(__dirname, "../modules/scripts/bilibili-json.js");
 const qidianPath = path.join(__dirname, "../modules/scripts/qidian.js");
@@ -1498,19 +1435,20 @@ runTest("Zero-Touch Guarantee: No purification script invokes $notification.post
     }
 });
 
-runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT and overseas streaming rules are synced across core configs", () => {
+runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT, Twitter adblock is completely removed, and YouTube rules are synced", () => {
+    assert(!fs.existsSync(path.join(repoRoot, "modules/twitter.sgmodule")), "modules/twitter.sgmodule must be removed");
+    assert(!fs.existsSync(path.join(repoRoot, "modules/scripts/twitter.js")), "modules/scripts/twitter.js must be removed");
     for (const relPath of allTargetFiles) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
         assert(!content.includes("DOMAIN-SUFFIX,volces.com,REJECT"), `Forbidden DOMAIN-SUFFIX,volces.com,REJECT found in ${relPath}`);
+        assert(!content.includes("ads-api.twitter.com") && !content.includes("ads-api.x.com"), `Forbidden Twitter ad rule found in ${relPath}`);
+        assert(!content.includes(", api.x.com") && !content.includes(", api.twitter.com") && !content.includes(", x.com"), `Forbidden X MITM host found in ${relPath}`);
     }
     const coreFiles = ["Shadowrocket_LazyGroup_Merged.conf", "Shadowrocket_AllInOne_Ultimate.conf", "modules/adblock-ultimate.sgmodule"];
     for (const relPath of coreFiles) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
-        assert(content.includes("DOMAIN,ads-api.twitter.com,REJECT") && content.includes("DOMAIN,ads-api.x.com,REJECT"), `Missing X/Twitter ad rules in ${relPath}`);
-        assert(!content.includes("AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP"), `Forbidden X UDP 443 block found in ${relPath}`);
-        assert(!content.includes(", api.x.com") && !content.includes(", api.twitter.com") && !content.includes(", x.com"), `Forbidden SSL-pinned X MITM host found in ${relPath}`);
         assert(content.includes("DOMAIN-SUFFIX,ads.youtube.com,REJECT"), `Missing YouTube ad rules in ${relPath}`);
-        assert(content.includes("youtube_json = type=http-response"), `Missing youtube_json script in ${relPath}`);
+        assert(content.includes("youtube_proto = type=http-response"), `Missing youtube_proto script in ${relPath}`);
         assert(content.includes("酷安_初始化请求 = type=http-request"), `Missing 酷安_初始化请求 304-bypass script in ${relPath}`);
         assert(content.includes("tiebac.baidu.com") && content.includes("youtubei.googleapis.com"), `Missing synchronized MITM hostnames in ${relPath}`);
     }

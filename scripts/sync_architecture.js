@@ -61,13 +61,6 @@ const OVERSEAS_STREAM_AD_RULES = [
     "DOMAIN,www.googletagservices.com,REJECT",
     "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/initplayback.+&oad,REJECT-200",
     "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/videoplayback.*(&ctier=L&|&oad=|&adformat=),REJECT-200",
-    "DOMAIN,ads-api.twitter.com,REJECT",
-    "DOMAIN,ads-api.x.com,REJECT",
-    "DOMAIN,ads.twitter.com,REJECT",
-    "DOMAIN,ads.x.com,REJECT",
-    "DOMAIN,analytics.twitter.com,REJECT",
-    "DOMAIN,analytics.x.com,REJECT",
-    "DOMAIN,static.ads-twitter.com,REJECT",
     "DOMAIN,ads-fa.spotify.com,REJECT",
     "DOMAIN,adstudio.spotify.com,REJECT",
     "DOMAIN,adeventtracker.spotify.com,REJECT",
@@ -92,6 +85,13 @@ const REMOVED_BROKEN_TWITTER_RULES = new Set([
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP",
+    "DOMAIN,ads-api.twitter.com,REJECT",
+    "DOMAIN,ads-api.x.com,REJECT",
+    "DOMAIN,ads.twitter.com,REJECT",
+    "DOMAIN,ads.x.com,REJECT",
+    "DOMAIN,analytics.twitter.com,REJECT",
+    "DOMAIN,analytics.x.com,REJECT",
+    "DOMAIN,static.ads-twitter.com,REJECT",
     "DOMAIN,scribe.twitter.com,REJECT",
     "DOMAIN,scribe.x.com,REJECT",
     "DOMAIN,p.twitter.com,REJECT",
@@ -363,9 +363,8 @@ netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.mus
 # 11. 喜马拉雅净化 (首页动态、顶部直播、横幅、分类Tab)
 喜马拉雅_净化 = type=http-response,pattern=^https?:\\/\\/.*\\.xima.*\\.com\\/(discovery-category\\/(customCategories|v\\d\\/category)|focus-mobile\\/focusPic|discovery-feed\\/v\\d\\/mix|mobile-user\\/v\\d\\/homePage),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
 
-# 12. YouTube 海外流媒体去广告 (Protobuf + JSON 双引擎，不拦截 X/Twitter 原生客户端 MITM 以防证书锁定断流)
+# 12. YouTube 海外流媒体去广告 (Protobuf 二进制引擎)
 youtube_proto = type=http-response,pattern=^https?:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(browse|next|player|search|reel\\/reel_watch_sequence),requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
-youtube_json = type=http-response,pattern=^https?:\\/\\/(www|m|music)\\.youtube\\.com\\/youtubei\\/v1\\/(player|browse|next|search|reel\\/reel_watch_sequence),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
 
 # 13. 全网外链“零等待”302直跳与 Safari 移动端网页去流氓化 (自动展开全文/解除复制限制/防强跳App)
 全网外链直接跳转 = type=http-request,pattern=^https?:\\/\\/(link\\.(zhihu|csdn|juejin)\\.(com|net|cn)|(www\\.)?jianshu\\.com\\/go-wild|weibo\\.cn\\/sinaurl|jump2?\\.bdimg\\.com\\/safecheck|c\\.pc\\.qq\\.com\\/middlem|sspai\\.com\\/link|gitee\\.com\\/link|www\\.yuque\\.com\\/r\\/goto),requires-body=0,max-size=0,timeout=10,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/direct-link.js,script-update-interval=0
@@ -403,7 +402,7 @@ const UNIFIED_MITM_HOSTS = [
 ];
 
 function cleanRuleSection(ruleSectionText, isModule) {
-    // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT and strip broken Twitter UDP/embed REJECT rules
+    // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT and strip all Twitter ad/UDP rules
     let lines = ruleSectionText
         .split("\n")
         .map(line => {
@@ -415,8 +414,8 @@ function cleanRuleSection(ruleSectionText, isModule) {
         .filter(line => !REMOVED_BROKEN_TWITTER_RULES.has(line.trim()));
 
     // 2. Inject Overseas Streaming Ad Rules right after the Global & Domestic Top Ad Networks section if not already present
-    const hasTwitterAds = lines.some(l => l.trim() === "DOMAIN,ads-api.twitter.com,REJECT");
-    if (!hasTwitterAds) {
+    const hasYouTubeAds = lines.some(l => l.trim() === "DOMAIN-SUFFIX,ads.youtube.com,REJECT");
+    if (!hasYouTubeAds) {
         let insertIdx = lines.findIndex(l => l.includes("DOMAIN-SUFFIX,adcolony.com,REJECT"));
         if (insertIdx === -1) {
             insertIdx = lines.findIndex(l => l.includes("IP-CIDR,182.254.118.0/24,REJECT,no-resolve"));

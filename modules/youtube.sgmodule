@@ -29,7 +29,6 @@ URL-REGEX,^https?:\/\/[\w-]+\.googlevideo\.com\/videoplayback.*(&ctier=L&|&oad=|
 
 [Script]
 youtube_proto = type=http-response,pattern=^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence),requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
-youtube_json = type=http-response,pattern=^https?:\/\/(www|m|music)\.youtube\.com\/youtubei\/v1\/(player|browse|next|search|reel\/reel_watch_sequence),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
 
 [MITM]
 hostname = %APPEND% youtubei.googleapis.com, *.googlevideo.com, www.youtube.com, m.youtube.com, music.youtube.com

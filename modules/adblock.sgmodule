@@ -142,8 +142,6 @@ DOMAIN-SUFFIX,an.facebook.com,REJECT
 DOMAIN-SUFFIX,amazon-adsystem.com,REJECT
 DOMAIN-SUFFIX,smaato.net,REJECT
 DOMAIN-SUFFIX,ads.youtube.com,REJECT
-DOMAIN,ads-api.twitter.com,REJECT
-DOMAIN,ads-api.x.com,REJECT
 DOMAIN,ads-fa.spotify.com,REJECT
 DOMAIN,ads.reddit.com,REJECT
 DOMAIN,ad.pixiv.org,REJECT

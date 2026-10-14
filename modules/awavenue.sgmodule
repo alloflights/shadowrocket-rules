@@ -86,7 +86,6 @@ DOMAIN,admobile.top,REJECT,extended-matching,pre-matching
 DOMAIN,adreq.vivo.com.cn,REJECT,extended-matching,pre-matching
 DOMAIN,ads-api-o.api.leiniao.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads-api.tiktok.com,REJECT,extended-matching,pre-matching
-DOMAIN,ads-api.twitter.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads-img-al.xhscdn.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads-img-qc.xhscdn.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads-jp.tiktok.com,REJECT,extended-matching,pre-matching
@@ -776,7 +775,6 @@ DOMAIN,staging-notify.sec.miui.com,REJECT,extended-matching,pre-matching
 DOMAIN,stat.dongqiudi.com,REJECT,extended-matching,pre-matching
 DOMAIN,stat.y.qq.com,REJECT,extended-matching,pre-matching
 DOMAIN,static-s.iqiyi.com,REJECT,extended-matching,pre-matching
-DOMAIN,static.ads-twitter.com,REJECT,extended-matching,pre-matching
 DOMAIN,statichf.shihuocdn.cn,REJECT,extended-matching,pre-matching
 DOMAIN,statics.woozooo.com,REJECT,extended-matching,pre-matching
 DOMAIN,stats.wp.com,REJECT,extended-matching,pre-matching
