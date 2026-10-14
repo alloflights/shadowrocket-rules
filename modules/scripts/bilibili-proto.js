@@ -13,7 +13,7 @@ class ViewReply$Type extends MessageType{constructor(){super("ViewReply",[{no:7,
 const url = $request.url;
 const method = $request.method;
 if (method !== "POST") {
-    $notification.post(notifyTitle, "method错误:", method);
+    /* silent */
 }
 let headers = $response.headers;
 const isQuanX = typeof $task !== "undefined";

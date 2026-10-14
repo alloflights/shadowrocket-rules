@@ -1324,6 +1324,193 @@ runTest('Check that Outlook domains are present in always-real-ip and [Host] ser
     }
 });
 
+
+// --- v2.0 Refactor & Overseas Streaming Tests ---
+console.log("\n--- Testing v2.0 Coolapk Empty Ad Container Elimination & 304 Cache Bypass ---");
+
+runTest("Coolapk /main/init http-request strips If-None-Match and If-Modified-Since headers to prevent 304 cached splash ad page", () => {
+    const res = executeScript(coolapkScriptPath, {
+        url: "https://api.coolapk.com/v6/main/init",
+        headers: {
+            "User-Agent": "Coolapk/16.5",
+            "If-None-Match": "W/\"etag-12345\"",
+            "if-modified-since": "Wed, 14 Oct 2026 00:00:00 GMT"
+        }
+    }, undefined);
+    assert(res && res.headers, "Expected modified headers object");
+    assert.strictEqual(res.headers["User-Agent"], "Coolapk/16.5");
+    assert.strictEqual(res.headers["If-None-Match"], undefined);
+    assert.strictEqual(res.headers["if-modified-since"], undefined);
+});
+
+runTest("Coolapk eliminates cards with stringified JSON extraData containing GDT/JAD/Pangle slot IDs and removes empty shell parent containers", () => {
+    const payload = {
+        data: [
+            {
+                id: 1,
+                entityType: "feed",
+                title: "真实用户动态",
+                message: "今天体验很丝滑"
+            },
+            {
+                id: 2,
+                entityType: "feed",
+                entityTemplate: "feed_default",
+                title: "伪装成普通动态但extraData字符串含GDT广告槽",
+                extraData: JSON.stringify({ gdt_pos_id: "887429169", ad_id: 9981, is_ad: 1 })
+            },
+            {
+                id: 3,
+                entityType: "card",
+                entityTemplate: "listCard",
+                title: "外层广告容器（原本有子广告，过滤后变空壳应整卡移除）",
+                entities: [
+                    { entityId: 944, entityType: "ad", title: "子广告1" },
+                    { entityType: "card", extraDataArr: { jad: { slotId: "jad_01" } }, title: "子广告2" }
+                ]
+            }
+        ]
+    };
+    const res = executeScript(coolapkScriptPath, { url: "https://api.coolapk.com/v6/main/indexV8" }, { status: 200, body: JSON.stringify(payload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.length, 1, "Both stringified-extraData ad card and empty-shell wrapper card must be completely removed");
+    assert.strictEqual(parsed.data[0].id, 1);
+});
+
+console.log("\n--- Testing X (Twitter) & YouTube Overseas Streaming Purifier (twitter.js) ---");
+const twitterScriptPath = path.join(__dirname, "../modules/scripts/twitter.js");
+
+runTest("X (Twitter) GraphQL HomeTimeline & TweetDetail removes promoted tweets and thread ads while preserving cursors", () => {
+    const xPayload = {
+        data: {
+            home: {
+                home_timeline_urt: {
+                    instructions: [
+                        {
+                            type: "TimelineAddEntries",
+                            entries: [
+                                { entryId: "tweet-1001", content: { itemContent: { tweet_results: { result: { rest_id: "1001" } } } } },
+                                { entryId: "promoted-tweet-9999", content: { itemContent: { promotedMetadata: { advertiser_name: "AdCorp" } } } },
+                                { entryId: "tweet-1002", content: { itemContent: { promotedMetadata: { impressionId: "imp_1" } } } },
+                                {
+                                    entryId: "conversationthread-2001",
+                                    content: {
+                                        items: [
+                                            { entryId: "tweet-2001-reply1", item: { itemContent: { tweet_results: { result: { rest_id: "2001" } } } } },
+                                            { entryId: "tweet-2001-ad", item: { itemContent: { promotedMetadata: { advertiser_name: "Sponsor" } } } }
+                                        ]
+                                    }
+                                },
+                                { entryId: "cursor-bottom-12345", content: { value: "next_cursor_token" } }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    };
+    const res = executeScript(twitterScriptPath, { url: "https://api.x.com/graphql/abc123/HomeTimeline" }, { status: 200, body: JSON.stringify(xPayload) });
+    assert(res && res.body);
+    const entries = JSON.parse(res.body).data.home.home_timeline_urt.instructions[0].entries;
+    assert.strictEqual(entries.length, 3, "Only normal tweet, cleaned thread, and bottom cursor must remain");
+    assert.strictEqual(entries[0].entryId, "tweet-1001");
+    assert.strictEqual(entries[1].entryId, "conversationthread-2001");
+    assert.strictEqual(entries[1].content.items.length, 1, "Promoted reply inside conversation thread must be removed");
+    assert.strictEqual(entries[2].entryId, "cursor-bottom-12345", "Pagination cursor must be preserved");
+});
+
+runTest("YouTube JSON purifier strips adPlacements, playerAds, adSlots, and in-feed ad renderers", () => {
+    const ytPayload = {
+        videoDetails: { videoId: "vid_123", title: "Genuine Tech Review" },
+        adPlacements: [{ adPlacementRenderer: { config: {} } }],
+        playerAds: [{ playerLegacyDesktopWatchAdsRenderer: {} }],
+        adSlots: [{ adSlotRenderer: {} }],
+        contents: [
+            { richItemRenderer: { content: { videoRenderer: { videoId: "v1" } } } },
+            { richItemRenderer: { content: { adSlotRenderer: { adId: "ad1" } } } }
+        ]
+    };
+    const res = executeScript(twitterScriptPath, { url: "https://m.youtube.com/youtubei/v1/player" }, { status: 200, body: JSON.stringify(ytPayload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.adPlacements, undefined);
+    assert.strictEqual(parsed.playerAds, undefined);
+    assert.strictEqual(parsed.adSlots, undefined);
+    assert.strictEqual(parsed.contents.length, 1);
+    assert.strictEqual(parsed.videoDetails.videoId, "vid_123");
+});
+
+console.log("\n--- Testing Silent Zero-Popup Execution Across Bilibili, Qidian, Tieba & All Scripts ---");
+const biliJsonPath = path.join(__dirname, "../modules/scripts/bilibili-json.js");
+const qidianPath = path.join(__dirname, "../modules/scripts/qidian.js");
+const tiebaJsonPath = path.join(__dirname, "../modules/scripts/tieba-json.js");
+
+runTest("Bilibili JSON purifier cleans splash, tabs, and feed ads silently and tolerates empty/malformed responses", () => {
+    const emptyRes = executeScript(biliJsonPath, { url: "https://app.bilibili.com/x/v2/feed/index?id=1", method: "POST" }, { status: 200, body: "" });
+    assert(emptyRes && typeof emptyRes === "object");
+
+    const feedRes = executeScript(biliJsonPath, { url: "https://app.bilibili.com/x/v2/feed/index?id=1", method: "GET" }, {
+        status: 200,
+        body: JSON.stringify({
+            data: {
+                items: [
+                    { card_type: "small_cover_v2", card_goto: "av", title: "正常UP主视频" },
+                    { card_type: "cm_v2", card_goto: "ad_web_s", title: "商业小卡片广告" },
+                    { card_type: "small_cover_v10", card_goto: "game", title: "游戏推广" }
+                ]
+            }
+        })
+    });
+    const parsed = JSON.parse(feedRes.body);
+    assert.strictEqual(parsed.data.items.length, 1);
+    assert.strictEqual(parsed.data.items[0].title, "正常UP主视频");
+});
+
+runTest("Qidian & Tieba JSON purifiers execute silently without $notification.post and tolerate empty bodies", () => {
+    const qRes = executeScript(qidianPath, { url: "https://magev6.if.qidian.com/argus/api/v4/client/getsplashscreen", method: "GET" }, {
+        status: 200,
+        body: JSON.stringify({ Data: { List: [{ id: 1 }], EnableGDT: 1 } })
+    });
+    const qParsed = JSON.parse(qRes.body);
+    assert.strictEqual(qParsed.Data.List, null);
+    assert.strictEqual(qParsed.Data.EnableGDT, 0);
+
+    const tRes = executeScript(tiebaJsonPath, { url: "https://tiebac.baidu.com/c/f/ad/getSplashAd", method: "POST" }, {
+        status: 200,
+        body: JSON.stringify({ error_code: 0, data: { splash: 1 } })
+    });
+    const tParsed = JSON.parse(tRes.body);
+    assert.strictEqual(tParsed.error_code, 2230209);
+    assert.strictEqual(tParsed.data, null);
+});
+
+runTest("Zero-Touch Guarantee: No purification script invokes $notification.post to disturb the user", () => {
+    const scriptsDir = path.join(repoRoot, "modules/scripts");
+    const scriptFiles = fs.readdirSync(scriptsDir).filter(f => f.endsWith(".js") && f !== "boxjs.js");
+    for (const file of scriptFiles) {
+        const content = fs.readFileSync(path.join(scriptsDir, file), "utf8");
+        assert(!content.includes("$notification.post("), `Found intrusive $notification.post( in modules/scripts/${file}`);
+    }
+});
+
+runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT and overseas streaming rules are synced across core configs", () => {
+    for (const relPath of allTargetFiles) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
+        assert(!content.includes("DOMAIN-SUFFIX,volces.com,REJECT"), `Forbidden DOMAIN-SUFFIX,volces.com,REJECT found in ${relPath}`);
+    }
+    const coreFiles = ["Shadowrocket_LazyGroup_Merged.conf", "Shadowrocket_AllInOne_Ultimate.conf", "modules/adblock-ultimate.sgmodule"];
+    for (const relPath of coreFiles) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
+        assert(content.includes("DOMAIN,ads-api.twitter.com,REJECT") && content.includes("DOMAIN,ads-api.x.com,REJECT"), `Missing X/Twitter ad rules in ${relPath}`);
+        assert(content.includes("DOMAIN-SUFFIX,ads.youtube.com,REJECT"), `Missing YouTube ad rules in ${relPath}`);
+        assert(content.includes("twitter_clean = type=http-response"), `Missing twitter_clean script in ${relPath}`);
+        assert(content.includes("youtube_json = type=http-response"), `Missing youtube_json script in ${relPath}`);
+        assert(content.includes("酷安_初始化请求 = type=http-request"), `Missing 酷安_初始化请求 304-bypass script in ${relPath}`);
+        assert(content.includes("tiebac.baidu.com") && content.includes("api.x.com"), `Missing synchronized MITM hostnames in ${relPath}`);
+    }
+});
+
 console.log(`\n================================================================`);
 console.log(`FINAL RESULTS: ${passedTests} / ${totalTests} tests passed.`);
 console.log('================================================================\n');

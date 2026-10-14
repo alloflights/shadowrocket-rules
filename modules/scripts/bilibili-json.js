@@ -1,123 +1,122 @@
-const url = $request.url;
-const method = $request.method;
-const notifyTitle = "bilibili-json";
-console.log(`b站json-2023.10.22`);
-if (!$response.body) {
-    // 有undefined的情况
-    console.log(`$response.body为undefined:${url}`);
-    $done({});
-}
-if (method !== "GET") {
-    $notification.post(notifyTitle, "method错误:", method);
-}
-let body = JSON.parse($response.body);
+/**
+ * 哔哩哔哩 (Bilibili) JSON 深度无感净化脚本
+ *
+ * 核心能力：
+ * 1. 开屏广告接口 (x/v2/splash/list, show, brand/list, event/list2) 秒级抹平 show 字段并置最大过期时间，杜绝开屏停留；
+ * 2. 底栏与顶栏净化 (resource/show/tab/v2)：移除顶部游戏中心、底部会员购与冗余发布按钮，自动重排 pos 序号；
+ * 3. 推荐流深度净化 (x/v2/feed/index)：精准剥离 banner 广告、创作推广、大视频广告、游戏推广、带货与直播广告卡片；
+ * 4. 100% 静默无感运行：零 $notification.post 弹窗打扰，完整 try/catch 容错与空响应早退保护。
+ */
 
+(function bilibiliJsonPro() {
+    var request = (typeof $request !== "undefined" && $request) ? $request : null;
+    var url = (request && request.url) ? String(request.url) : "";
+    var hasResponse = typeof $response !== "undefined" && $response;
 
-if (!body.data) {
-    console.log(url);
-    console.log(`body:${$response.body}`);
-    $notification.post(notifyTitle, url, "data字段错误");
-} else {
-    if (url.includes("x/v2/splash")) {
-        console.log('开屏页' + (url.includes("splash/show") ? 'show' : 'list'));
-        if (!body.data.show) {
-            // 有时候返回的数据没有show字段
-            console.log('数据无show字段');
-        } else {
-            delete body.data.show;
-            console.log('成功');
+    if (!hasResponse || !$response.body) {
+        $done({});
+        return;
+    }
+
+    try {
+        var body = JSON.parse($response.body);
+        if (!body || typeof body !== "object" || !body.data) {
+            $done({});
+            return;
         }
-    } else if (url.includes("resource/show/tab/v2")) {
-        console.log('tab修改');
-        // 顶部右上角
-        if (!body.data.top) {
-            console.log(`body:${$response.body}`);
-            $notification.post(notifyTitle, 'tab', "top字段错误");
-        } else {
-            body.data.top = body.data.top.filter(item => {
-                if (item.name === '游戏中心') {
-                    console.log('去除右上角游戏中心');
-                    return false;
+
+        // 1. 开屏广告净化 (x/v2/splash/*)
+        if (url.indexOf("x/v2/splash") !== -1) {
+            if (body.data.show) {
+                delete body.data.show;
+            }
+            if (Array.isArray(body.data.list)) {
+                for (var s = 0; s < body.data.list.length; s++) {
+                    var splashItem = body.data.list[s];
+                    if (splashItem && typeof splashItem === "object") {
+                        splashItem.duration = 0;
+                        splashItem.begin_time = 2240150400;
+                        splashItem.end_time = 2240150400;
+                    }
                 }
-                return true;
-            });
-            fixPos(body.data.top);
+            }
         }
-        // 底部tab栏
-        if (!body.data.bottom) {
-            console.log(`body:${$response.body}`);
-            $notification.post(notifyTitle, 'tab', "bottom字段错误");
-        } else {
-            body.data.bottom = body.data.bottom.filter(item => {
-                if (item.name === '发布') {
-                    console.log('去除发布');
-                    return false;
-                } else if (item.name === '会员购' || item.tab_id === '会员购Bottom') {
-                    console.log('去除会员购');
-                    return false;
-                }
-                return true;
-            });
-            fixPos(body.data.bottom);
-        }
-    } else if (url.includes("x/v2/feed/index")) {
-        console.log('推荐页');
-        if (!body.data.items?.length) {
-            console.log(`body:${$response.body}`);
-            $notification.post(notifyTitle, '推荐页', "items字段错误");
-        } else {
-            body.data.items = body.data.items.filter(i => {
-                const {card_type: cardType, card_goto: cardGoto} = i;
-                if (cardType && cardGoto) {
-                    if (cardType === 'banner_v8' && cardGoto === 'banner') {
-                        if (!i.banner_item) {
-                            console.log(`body:${$response.body}`);
-                            $notification.post(notifyTitle, '推荐页', "banner_item错误");
-                        } else {
-                            for (const v of i.banner_item) {
-                                if (!v.type) {
-                                    console.log(`body:${$response.body}`);
-                                    $notification.post(notifyTitle, '推荐页', "type错误");
-                                } else {
-                                    if (v.type === 'ad') {
-                                        console.log('banner广告');
-                                        return false;
-                                    }
-                                }
-                            }
-                        }
-                    } else if (cardType === 'cm_v2' && ['ad_web_s', 'ad_av', 'ad_web_gif', 'ad_player', 'ad_inline_3d', 'ad_inline_eggs'].includes(cardGoto)) {
-                        // ad_player大视频广告 ad_web_gif大gif广告 ad_web_s普通小广告 ad_av创作推广广告 ad_inline_3d  上方大的视频3d广告 ad_inline_eggs 上方大的视频广告
-                        console.log(`${cardGoto}广告去除)`);
-                        return false;
-                    } else if (cardType === 'small_cover_v10' && cardGoto === 'game') {
-                        console.log('游戏广告去除');
-                        return false;
-                    } else if (cardType === 'cm_double_v9' && cardGoto === 'ad_inline_av') {
-                        console.log('创作推广-大视频广告');
+        // 2. 顶栏与底栏 Tab 净化 (resource/show/tab/v2)
+        else if (url.indexOf("resource/show/tab/v2") !== -1) {
+            if (Array.isArray(body.data.top)) {
+                body.data.top = body.data.top.filter(function (item) {
+                    return item && item.name !== "游戏中心" && item.tab_id !== "游戏中心Top";
+                });
+                fixPos(body.data.top);
+            }
+            if (Array.isArray(body.data.bottom)) {
+                body.data.bottom = body.data.bottom.filter(function (item) {
+                    if (!item) return false;
+                    if (item.name === "发布" || item.name === "会员购" || item.tab_id === "会员购Bottom") {
                         return false;
                     }
-                } else {
-                    console.log(`body:${$response.body}`);
-                    $notification.post(notifyTitle, '推荐页', "无card_type/card_goto");
-                }
-                return true;
-            });
+                    return true;
+                });
+                fixPos(body.data.bottom);
+            }
         }
-    } else {
-        $notification.post(notifyTitle, "路径匹配错误:", url);
+        // 3. 首页推荐流净化 (x/v2/feed/index)
+        else if (url.indexOf("x/v2/feed/index") !== -1) {
+            if (Array.isArray(body.data.items)) {
+                var adGotoSet = {
+                    "ad_web_s": true,
+                    "ad_av": true,
+                    "ad_web_gif": true,
+                    "ad_player": true,
+                    "ad_inline_3d": true,
+                    "ad_inline_eggs": true,
+                    "ad_inline_av": true,
+                    "ad_inline_live": true,
+                    "ad_ogv": true,
+                    "ad_drm": true
+                };
+                body.data.items = body.data.items.filter(function (item) {
+                    if (!item || typeof item !== "object") return false;
+                    var cardType = String(item.card_type || "");
+                    var cardGoto = String(item.card_goto || "");
+
+                    if (item.ad_info || item.ad_type) return false;
+
+                    if (cardType.indexOf("banner") !== -1 && cardGoto === "banner" && Array.isArray(item.banner_item)) {
+                        item.banner_item = item.banner_item.filter(function (b) {
+                            return b && b.type !== "ad" && !b.is_ad;
+                        });
+                        if (item.banner_item.length === 0) return false;
+                    }
+
+                    if ((cardType === "cm_v2" || cardType === "cm_v1" || cardType === "cm_double_v9" || cardType === "cm_double_v7") &&
+                        (adGotoSet[cardGoto] || cardGoto.indexOf("ad_") === 0)) {
+                        return false;
+                    }
+
+                    if (cardGoto.indexOf("ad_") === 0 || cardType.indexOf("cm_") === 0) {
+                        return false;
+                    }
+
+                    if (cardType === "small_cover_v10" && cardGoto === "game") {
+                        return false;
+                    }
+
+                    return true;
+                });
+            }
+        }
+
+        $done({ body: JSON.stringify(body) });
+    } catch (e) {
+        $done({});
     }
-}
 
-body = JSON.stringify(body);
-$done({
-    body
-});
-
-
-function fixPos(arr) {
-    for (let i = 0; i < arr.length; i++) {
-        // 修复pos
-        arr[i].pos = i + 1;
+    function fixPos(arr) {
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] && typeof arr[i] === "object") {
+                arr[i].pos = i + 1;
+            }
+        }
     }
-}
+})();

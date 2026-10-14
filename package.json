@@ -1,8 +1,9 @@
 {
   "name": "shadowrocket-rules",
-  "version": "1.0.0",
-  "description": "Shadowrocket Ultimate Rules & Purification Modules",
+  "version": "2.0.0",
+  "description": "Shadowrocket Zero-Touch AdBlock & Precision Routing Architecture",
   "scripts": {
+    "build": "node scripts/sync_architecture.js",
     "test": "node tests/verify_all.js"
   },
   "author": "allofights",

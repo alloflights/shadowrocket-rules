@@ -1,11 +1,11 @@
 #!name=公共广告联盟与摇一摇拦截底座 (General AdBlock)
-#!desc=封杀字节穿山甲(Pangolin)、腾讯优量汇(GDT)、快手联盟、百青藤(MobAds)、西柚(Sigmob)、TopOn、掌驭及HTTPDNS直连绕过，全网App通用
+#!desc=封杀字节穿山甲(Pangolin/GroMore)、腾讯优量汇(GDT/AdNet)、京东京媒(JAD)、阿里妈妈(Tanx/Alimama)、快手联盟、百青藤(MobAds)、西柚(Sigmob)、TopOn、掌驭、海外顶级广告联盟及HTTPDNS直连绕过
 #!author=allofights
 #!system=ios
 #!category=广告拦截
 
 [Rule]
-# 1. 字节跳动穿山甲广告联盟 (Pangolin SDK & OceanEngine)
+# 1. 字节跳动穿山甲广告联盟 (Pangolin SDK & OceanEngine & GroMore)
 DOMAIN,pangolin.snssdk.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
@@ -14,11 +14,15 @@ DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
 DOMAIN-SUFFIX,pangle.io,REJECT
+DOMAIN-SUFFIX,gromore.com,REJECT
 DOMAIN-SUFFIX,csjplatform.com,REJECT
 DOMAIN-SUFFIX,csjbi.com,REJECT
 DOMAIN-SUFFIX,isplusurl.com,REJECT
 DOMAIN-SUFFIX,bytead.net,REJECT
 DOMAIN-SUFFIX,byte-ads.com,REJECT
+DOMAIN-SUFFIX,bytegoofy.com,REJECT
+DOMAIN-SUFFIX,bytegos.com,REJECT
+DOMAIN-SUFFIX,bytegecko.com,REJECT
 DOMAIN,ads3-normal-lf.zijieapi.com,REJECT
 DOMAIN,ads5-normal-lf.zijieapi.com,REJECT
 DOMAIN,ad.zijieapi.com,REJECT
@@ -29,17 +33,54 @@ DOMAIN-SUFFIX,oceanengine.com,REJECT
 DOMAIN-SUFFIX,toblog.ctobsnssdk.com,REJECT
 DOMAIN-SUFFIX,toblog.snssdk.com,REJECT
 
-# 2. 腾讯优量汇 / 广点通 (GDT SDK)
+# 2. 腾讯优量汇 / 广点通 (GDT / AdNet SDK) 与京东京媒 (JAD)
 DOMAIN-SUFFIX,gdt.qq.com,REJECT
+DOMAIN,c.gdt.qq.com,REJECT
+DOMAIN,v.gdt.qq.com,REJECT
+DOMAIN,win.gdt.qq.com,REJECT
+DOMAIN,t.gdt.qq.com,REJECT
+DOMAIN,a.gdt.qq.com,REJECT
+DOMAIN,api.gdt.qq.com,REJECT
+DOMAIN,mi.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,adnet.qq.com,REJECT
+DOMAIN,api.adnet.qq.com,REJECT
+DOMAIN,test-api.adnet.qq.com,REJECT
+DOMAIN-SUFFIX,e.qq.com,REJECT
+DOMAIN,sdk.e.qq.com,REJECT
+DOMAIN,ad.qq.com,REJECT
+DOMAIN-SUFFIX,qzs.qq.com,REJECT
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
 DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
 DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
-DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
-DOMAIN-SUFFIX,e.qq.com,REJECT
+DOMAIN-SUFFIX,adsmind.ugdtimg.com,REJECT
+DOMAIN-SUFFIX,splashqzs.gdtimg.com,REJECT
+DOMAIN-SUFFIX,qzs.gdtimg.com,REJECT
+DOMAIN-SUFFIX,v2.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,tangram.e.qq.com,REJECT
+DOMAIN-SUFFIX,gdtimg.com,REJECT
+DOMAIN-SUFFIX,ugdtimg.com,REJECT
+DOMAIN-SUFFIX,gtimg.cn,REJECT
 DOMAIN-SUFFIX,tmead.y.qq.com,REJECT
 DOMAIN-SUFFIX,tmeadquic.y.qq.com,REJECT
+DOMAIN-SUFFIX,ad.tencentmusic.com,REJECT
+DOMAIN-SUFFIX,adstats.tencentmusic.com,REJECT
+DOMAIN-SUFFIX,jadyun.com,REJECT
+DOMAIN-SUFFIX,jad.jd.com,REJECT
+DOMAIN-SUFFIX,dsp-x.jd.com,REJECT
+DOMAIN-SUFFIX,ad.jd.com,REJECT
 
-# 3. 百度移动广告联盟 (Baidu MobAds / 百青藤)
+# 3. 阿里妈妈与 Tanx 移动变现体系
+DOMAIN-SUFFIX,tanx.com,REJECT
+DOMAIN-SUFFIX,alimama.com,REJECT
+DOMAIN-SUFFIX,alimama.cn,REJECT
+DOMAIN-SUFFIX,alimama.net,REJECT
+DOMAIN-SUFFIX,alimama.alicdn.com,REJECT
+DOMAIN-SUFFIX,atanx.alicdn.com,REJECT
+DOMAIN-SUFFIX,atanx2.alicdn.com,REJECT
+DOMAIN-SUFFIX,alimm.com,REJECT
+DOMAIN-SUFFIX,strip.taobaocdn.com,REJECT
+
+# 4. 百度移动广告联盟 (Baidu MobAds / 百青藤)
 DOMAIN-SUFFIX,mobads.baidu.com,REJECT
 DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT
 DOMAIN-SUFFIX,mobads.baidu.cn,REJECT
@@ -55,7 +96,7 @@ DOMAIN-SUFFIX,cpu.baidu.com,REJECT
 DOMAIN-SUFFIX,caclick.baidu.com,REJECT
 DOMAIN-SUFFIX,eclick.baidu.com,REJECT
 
-# 4. 聚合广告与开屏摇一摇专线 SDK (西柚 / 掌驭 / TopOn / Mintegral / 快手联盟 / 倍孜 / UBIX)
+# 5. 聚合广告与开屏摇一摇专线 SDK (西柚 / 掌驭 / TopOn / Mintegral / 快手联盟 / 倍孜 / UBIX)
 DOMAIN-SUFFIX,sigmob.cn,REJECT
 DOMAIN-SUFFIX,sigmob.com,REJECT
 DOMAIN-SUFFIX,ads.sigmob.com,REJECT
@@ -82,9 +123,39 @@ DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
 DOMAIN-SUFFIX,adx.adintl.cn,REJECT
 DOMAIN-SUFFIX,impdsp.meituan.com,REJECT
 
-# 5. HTTPDNS 直连解析阻断 (防止 App 绕过域名分流直接请求广告 IP)
+# 6. 海外主流广告联盟与流媒体广告 (AdMob / AppLovin / Unity / X / YouTube / Spotify)
+DOMAIN-SUFFIX,admob.com,REJECT
+DOMAIN-SUFFIX,googleads.g.doubleclick.net,REJECT
+DOMAIN-SUFFIX,pagead2.googlesyndication.com,REJECT
+DOMAIN-SUFFIX,adservice.google.com,REJECT
+DOMAIN-SUFFIX,app-measurement.com,REJECT
+DOMAIN-SUFFIX,mobileads.google.com,REJECT
+DOMAIN-SUFFIX,applovin.com,REJECT
+DOMAIN-SUFFIX,applvn.com,REJECT
+DOMAIN-SUFFIX,unityads.unity3d.com,REJECT
+DOMAIN-SUFFIX,ironsrc.com,REJECT
+DOMAIN-SUFFIX,vungle.com,REJECT
+DOMAIN-SUFFIX,inmobi.com,REJECT
+DOMAIN-SUFFIX,chartboost.com,REJECT
+DOMAIN-SUFFIX,fyber.com,REJECT
+DOMAIN-SUFFIX,an.facebook.com,REJECT
+DOMAIN-SUFFIX,amazon-adsystem.com,REJECT
+DOMAIN-SUFFIX,smaato.net,REJECT
+DOMAIN-SUFFIX,ads.youtube.com,REJECT
+DOMAIN,ads-api.twitter.com,REJECT
+DOMAIN,ads-api.x.com,REJECT
+DOMAIN,ads-fa.spotify.com,REJECT
+DOMAIN,ads.reddit.com,REJECT
+DOMAIN,ad.pixiv.org,REJECT
+
+# 7. HTTPDNS 直连解析阻断 (防止 App 绕过域名分流直接请求广告 IP)
 DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
 DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
 DOMAIN-SUFFIX,httpdns.pro,REJECT
 IP-CIDR,180.76.76.200/32,REJECT,no-resolve
 IP-CIDR,203.107.1.1/24,REJECT,no-resolve
+IP-CIDR,119.29.29.98/32,REJECT,no-resolve
+IP-CIDR,182.254.116.117/32,REJECT,no-resolve
+IP-CIDR,182.254.118.118/32,REJECT,no-resolve
+IP-CIDR,182.254.116.0/24,REJECT,no-resolve
+IP-CIDR,182.254.118.0/24,REJECT,no-resolve

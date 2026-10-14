@@ -12,7 +12,7 @@ let body;
 
 console.log(`youtube:2024-04-28`);
 if($request.method !== 'POST'){
-    $notification.post('youtube-proto去广告脚本错误', "请求方法不为POST:", url);
+    /* silent */
 }
 
 if(url.includes("/v1/browse")){
@@ -33,7 +33,7 @@ if(url.includes("/v1/browse")){
         body = nextRes.toBinary(nextMessage);
     }
 } else {
-    $notification.post('youtube-proto脚本匹配错误', "url:", url);
+    /* silent */
 }
 if(needProcessFlag){
     console.log(`${body.byteLength}---${body.buffer.byteLength}`);

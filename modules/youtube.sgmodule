@@ -1,11 +1,32 @@
-#!name=YouTube去广告 (YouTube Pro)
-#!desc=去除YouTube客户端首页信息流推荐广告、视频播放页下方推荐位赞助广告与浮层
-#!author=app2smile
+#!name=YouTube 深度去广告增强版 (YouTube & Music Pro)
+#!desc=去除 YouTube 与 YouTube Music 首页瀑布流推荐广告、视频播放页下方赞助广告、贴片广告请求(initplayback/oad/midroll)与 DoubleClick 追踪
+#!author=app2smile, allofights
 #!system=ios
 #!category=应用净化
 
+[Rule]
+DOMAIN-SUFFIX,ads.youtube.com,REJECT
+DOMAIN,ad.youtube.com,REJECT
+DOMAIN,youtube.cleverads.vn,REJECT
+DOMAIN-SUFFIX,doubleclick.net,REJECT
+DOMAIN-SUFFIX,googleadservices.com,REJECT
+DOMAIN-SUFFIX,googlesyndication.com,REJECT
+DOMAIN-SUFFIX,googletagservices.com,REJECT
+DOMAIN-SUFFIX,2mdn.net,REJECT
+DOMAIN,s0.2mdn.net,REJECT
+DOMAIN,static.doubleclick.net,REJECT
+DOMAIN,www.googletagservices.com,REJECT
+URL-REGEX,^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad,REJECT-200
+URL-REGEX,^https?:\/\/[\w-]+\.googlevideo\.com\/videoplayback.*(&ctier=L&|&oad=|&adformat=),REJECT-200
+
+[URL Rewrite]
+^https?:\/\/[\w-]+\.googlevideo\.com\/(?!dclk_video_ads).+&(oad|ctier=L)(?=&|$) - reject-200
+^https?:\/\/(www|m|music)\.youtube\.com\/(api\/stats\/ads|pagead\/|ptracking|get_midroll_info) - reject-200
+^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(ad_break|att\/get) - reject-dict
+
 [Script]
 youtube_proto = type=http-response,pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next),requires-body=1,binary-body-mode=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
+youtube_json = type=http-response,pattern=^https?:\/\/(www|m|music)\.youtube\.com\/youtubei\/v1\/(player|browse|next|search|reel\/reel_watch_sequence),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
 
 [MITM]
-hostname = %APPEND% youtubei.googleapis.com
+hostname = %APPEND% youtubei.googleapis.com, *.googlevideo.com, www.youtube.com, m.youtube.com, music.youtube.com

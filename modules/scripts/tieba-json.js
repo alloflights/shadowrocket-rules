@@ -1,275 +1,151 @@
-const url = $request.url;
-const method = $request.method;
-const postMethod = "POST";
-const notifyTitle = "贴吧json脚本错误";
-console.log(`贴吧json-2025.08.28`);
+/**
+ * 百度贴吧 (Tieba) JSON 深度无感净化脚本
+ *
+ * 核心能力：
+ * 1. 开屏广告 (c/f/ad/getSplashAd)：置 error_code=2230209 并清空 data，秒过开屏；
+ * 2. 看图模式广告 (tiebaads/commonbatch)：清空 res.ad 数组；
+ * 3. 全局配置同步 (c/s/sync)：清空右下角悬浮图标、回帖栏广告、外部 ABTest，
+ *    禁用穿山甲(csj)/广点通(gdt)/快手(ks)/百青藤(bqt)/优效/Ubix/华为等第三方 SDK 初始化开关；
+ * 4. 吧内列表与详情页 (frs/page, threadlist, pb/page, personalized)：剥离直播强插帖、带货 goods_info 与顶部商业横幅；
+ * 5. 100% 静默无感运行：彻底移除全部 $notification.post 报错弹窗，配备完整 try/catch 与空包早退保护。
+ */
 
-let body = JSON.parse($response.body);
-// 直接全局搜索 @Modify(
-if (url.includes("c/f/ad/getSplashAd")) {
-    if (body.error_code === 0) {
-        console.log(`去除开屏广告:${body.error_code}`);
-        body.error_code = 2230209;
-        body.data = null;
-    } else {
-        console.log(`无需处理开屏广告:${body.error_code}`);
+(function tiebaJsonPro() {
+    var request = (typeof $request !== "undefined" && $request) ? $request : null;
+    var url = (request && request.url) ? String(request.url) : "";
+    var hasResponse = typeof $response !== "undefined" && $response;
+
+    if (!hasResponse || !$response.body) {
+        $done({});
+        return;
     }
-} else if (url.includes("tiebaads/commonbatch") && method === postMethod) {
-    // 看图模式下的广告
-    let adCmd = getUrlParamValue(url, "adcmd");
-    if (!adCmd) {
-        console.log(`url:${url}`);
-        $notification.post(notifyTitle, "贴吧-tiebaads/commonbatch", "adCmd参数不存在");
-    } else {
-        console.log(`commonbatch:${adCmd}`);
-        if (body.error_code === 0) {
-            if (!body.res.ad?.length) {
-                console.log('ad字段为空');
-            } else {
+
+    try {
+        var body = JSON.parse($response.body);
+        if (!body || typeof body !== "object") {
+            $done({});
+            return;
+        }
+
+        if (url.indexOf("c/f/ad/getSplashAd") !== -1) {
+            body.error_code = 2230209;
+            body.data = null;
+        } else if (url.indexOf("tiebaads/commonbatch") !== -1) {
+            if (body.res && Array.isArray(body.res.ad)) {
                 body.res.ad = [];
-                // 即使ad有内容 也不一定显示广告
-                // 因为如果服务器下发的数据少了一些字段同样是无广告的
-                console.log('成功');
             }
-        } else {
-            console.log('error_code不为0:' + body.error_code);
-        }
-    }
-} else if (url.includes('c/f/pb/picpage')) {
-    console.log(`picpage`);
-    const liveLength = body.recom_live_list?.length;
-    if (liveLength) {
-        console.log(`去除直播:${liveLength}`);
-        body.recom_live_list = [];
-    }
-} else if (url.includes('c/s/sync')) {
-    // get post(贴吧使用了post)均可访问
-    console.log('贴吧-sync');
-    if ('floating_icon' in body) {
-        console.log('右下角悬浮icon');
-        if (body.floating_icon) {
-            if (body.floating_icon.homepage?.icon_url) {
-                console.log('homepage悬浮去除');
-            } else {
-                console.log('无需去除homepage悬浮');
+        } else if (url.indexOf("c/f/pb/picpage") !== -1) {
+            if (Array.isArray(body.recom_live_list)) {
+                body.recom_live_list = [];
             }
-            if (body.floating_icon.pb?.icon_url) {
-                console.log('pb悬浮去除');
-            } else {
-                console.log('无需去除pb悬浮');
+        } else if (url.indexOf("c/s/sync") !== -1) {
+            if ("floating_icon" in body) {
+                body.floating_icon = null;
             }
-            body.floating_icon = null;
-        } else {
-            console.log('无需修改floating_icon字段值');
-        }
-    } else {
-        console.log(`body:${$response.body}`);
-        $notification.post(notifyTitle, "贴吧-sync", "无floating_icon字段");
-    }
-
-    // 回帖栏的广告
-    if ('advertisement_config' in body) {
-        if (!body.advertisement_config?.advertisement_str) {
-            console.log('无需处理advertisement_config');
-        } else {
-            console.log(`advertisement_str:${body.advertisement_config.advertisement_str}`);
-            body.advertisement_config = null;
-        }
-    } else {
-        console.log(`body:${$response.body}`);
-        $notification.post(notifyTitle, "贴吧-sync", "无advertisement_config字段");
-    }
-
-    // 部分广告配置在abtest中
-    if (body.cloud_control_data_info?.common_config?.external_abtest_switch) {
-        console.log(`去除external_abtest_switch:${body.cloud_control_data_info.common_config.external_abtest_switch}`);
-        body.cloud_control_data_info.common_config.external_abtest_switch = null;
-    }
-    if ('config' in body) {
-        if (body.config?.switch) {
-            for (const item of body.config.switch) {
-                // 穿山甲/广点通/快手/Ubix/百青藤/
-                if (['platform_csj_init', 'platform_ks_init', 'platform_gdt_init',
-                    'platform_baidu_bqt_init', 'platform_jy_init', 'platform_ubix_init', 'platform_hw_init'].includes(item.name)) {
-                    if (item.type !== '0') {
-                        item.type = '0';
-                        console.log(`禁止初始化${item.name}`);
-                    }
-                }
-                if ('ad_baichuan_open' === item.name) {
-                    if (item.type !== '0') {
-                        item.type = '0';
-                        console.log(`关闭开屏广告`);
+            if ("advertisement_config" in body) {
+                body.advertisement_config = null;
+            }
+            if (body.cloud_control_data_info &&
+                body.cloud_control_data_info.common_config &&
+                body.cloud_control_data_info.common_config.external_abtest_switch) {
+                body.cloud_control_data_info.common_config.external_abtest_switch = null;
+            }
+            if (body.config && Array.isArray(body.config.switch)) {
+                var blockSdkSwitches = {
+                    "platform_csj_init": true,
+                    "platform_ks_init": true,
+                    "platform_gdt_init": true,
+                    "platform_baidu_bqt_init": true,
+                    "platform_jy_init": true,
+                    "platform_ubix_init": true,
+                    "platform_hw_init": true,
+                    "ad_baichuan_open": true
+                };
+                for (var i = 0; i < body.config.switch.length; i++) {
+                    var item = body.config.switch[i];
+                    if (item && blockSdkSwitches[item.name]) {
+                        item.type = "0";
                     }
                 }
             }
+            if (body.screen_fill_data_result && typeof body.screen_fill_data_result === "object") {
+                body.screen_fill_data_result.screen_fill_advertisement_bear_switch = "0";
+                body.screen_fill_data_result.screen_fill_advertisement_plj_cpc_switch = "0";
+                body.screen_fill_data_result.screen_fill_advertisement_plj_switch = "0";
+            }
+            if ("ad_stlog_switch" in body) {
+                body.ad_stlog_switch = "0";
+            }
+            if (body.lcs_strategy && typeof body.lcs_strategy === "object") {
+                body.lcs_strategy.conn_conf = "1";
+            }
+        } else if (url.indexOf("c/f/frs/page") !== -1) {
+            if (Array.isArray(body.live_fuse_forum)) {
+                body.live_fuse_forum = [];
+            }
+            if (body.activityhead && body.activityhead.is_ad) {
+                body.activityhead = {};
+            }
+            body.thread_list = removeLiveAndAds(body.thread_list);
+            if (body.forum && body.forum.banner_list) {
+                removeGoodsInfo(body.forum.banner_list.app);
+            }
+        } else if (url.indexOf("c/f/frs/threadlist") !== -1) {
+            body.thread_list = removeLiveAndAds(body.thread_list);
+            if (body.banner_list) {
+                removeGoodsInfo(body.banner_list.app);
+            }
+        } else if (url.indexOf("c/f/pb/page") !== -1) {
+            if (body.recom_ala_info && body.recom_ala_info.live_id) {
+                body.recom_ala_info = null;
+            }
+            if (Array.isArray(body.post_list)) {
+                for (var p = 0; p < body.post_list.length; p++) {
+                    if (body.post_list[p] && body.post_list[p].outer_item) {
+                        body.post_list[p].outer_item = null;
+                    }
+                }
+            }
+            if (body.banner_list) {
+                removeGoodsInfo(body.banner_list.app);
+                if (body.banner_list.pb_banner_ad && Array.isArray(body.banner_list.pb_banner_ad.goods_info)) {
+                    body.banner_list.pb_banner_ad.goods_info = [];
+                }
+            }
+        } else if (url.indexOf("c/f/excellent/personalized") !== -1) {
+            if (body.banner_list) {
+                removeGoodsInfo(body.banner_list.app);
+            }
+            body.thread_list = removeLiveAndAds(body.thread_list);
+            if (body.live_answer) {
+                body.live_answer = null;
+            }
+        } else if (url.indexOf("c/f/frs/generalTabList") !== -1) {
+            removeGoodsInfo(body.app_list);
         }
-    } else {
-        console.log(`body:${$response.body}`);
-        $notification.post(notifyTitle, "贴吧-sync", "无config字段");
+
+        $done({ body: JSON.stringify(body) });
+    } catch (e) {
+        $done({});
     }
 
-    if ('screen_fill_data_result' in body) {
-        if (body.screen_fill_data_result.screen_fill_advertisement_bear_switch === "1") {
-            body.screen_fill_data_result.screen_fill_advertisement_bear_switch = '0';
-            console.log('开屏不展示小熊广告');
-        } else {
-            console.log('无需修改screen_fill_advertisement_bear_switch');
-        }
-        if (body.screen_fill_data_result.screen_fill_advertisement_plj_cpc_switch === "1") {
-            body.screen_fill_data_result.screen_fill_advertisement_plj_cpc_switch = '0';
-            console.log('开屏不展示序章CPC');
-        } else {
-            console.log('无需修改screen_fill_advertisement_plj_cpc_switch');
-        }
-        if (body.screen_fill_data_result.screen_fill_advertisement_plj_switch === "1") {
-            body.screen_fill_data_result.screen_fill_advertisement_plj_switch = '0';
-            console.log('开屏不展示序章');
-        } else {
-            console.log('无需修改screen_fill_advertisement_plj_switch');
-        }
-    } else {
-        console.log(`body:${$response.body}`);
-        $notification.post(notifyTitle, "贴吧-sync", "无screen_fill_data_result字段");
-    }
-
-    if ('ad_stlog_switch' in body) {
-        if (body.ad_stlog_switch === '1') {
-            body.ad_stlog_switch = '0';
-            console.log('修改ad_stlog_switch');
-        } else {
-            console.log('无需修改ad_stlog_switch');
-        }
-    } else {
-        console.log(`body:${$response.body}`);
-        $notification.post(notifyTitle, "贴吧-sync", "无ad_stlog_switch字段");
-    }
-
-    if ('lcs_strategy' in body) {
-        // 控制长连接开关 开启时帖子会走socket
-        if (body.lcs_strategy.conn_conf === '0') {
-            // 关闭
-            body.lcs_strategy.conn_conf = '1';
-            console.log('修改conn_conf');
-        } else {
-            console.log('无需修改conn_conf');
-        }
-    } else {
-        console.log(`body:${$response.body}`);
-        $notification.post(notifyTitle, "贴吧-sync", "无lcs_strategy字段");
-    }
-} else if (url.includes("c/f/frs/page")) {
-    console.log('贴吧-FrsPage');
-    if (body.live_fuse_forum?.length) {
-        body.live_fuse_forum = [];
-        console.log(`去除吧头直播`);
-    } else {
-        console.log(`无需处理吧头直播`);
-    }
-
-    if (body.activityhead?.is_ad) {
-        body.activityhead = {};
-        console.log('去除吧内header图片广告');
-    } else {
-        console.log('无需处理activityhead');
-    }
-    body.thread_list = removeLive(body.thread_list);
-    removeGoodsInfo(body.forum?.banner_list?.app);
-} else if (url.includes("c/f/frs/threadlist")) {
-    console.log('贴吧-threadlist');
-    removeGoodsInfo(body.banner_list?.app);
-} else if (url.includes("c/f/pb/page")) {
-    console.log('贴吧-PbPage');
-    if (body.recom_ala_info?.live_id) {
-        console.log('帖子详情页推荐的直播广告去除');
-        body.recom_ala_info = null;
-    } else {
-        console.log('帖子详情页无直播广告');
-    }
-
-    if (body.post_list?.length) {
-        for (const post of body.post_list) {
-            if (post.outer_item) {
-                console.log('outer_item去除');
-                post.outer_item = null;
+    function removeGoodsInfo(app) {
+        if (!Array.isArray(app)) return;
+        for (var i = 0; i < app.length; i++) {
+            if (app[i] && Array.isArray(app[i].goods_info)) {
+                app[i].goods_info = [];
             }
         }
-    } else {
-        console.log('无需处理postList中的outer_item');
     }
-    removeGoodsInfo(body.banner_list?.app);
-    const bannerGoodsInfoLength = body.banner_list?.pb_banner_ad?.goods_info?.length;
-    if (bannerGoodsInfoLength) {
-        console.log(`去除pb_banner_ad的goods_info:${bannerGoodsInfoLength}`)
-        body.banner_list.pb_banner_ad.goods_info = []
-    }
-} else if (url.includes("c/f/excellent/personalized")) {
-    console.log('贴吧-personalized');
-    removeGoodsInfo(body.banner_list?.app);
-    body.thread_list = removeLive(body.thread_list);
-    if (body.live_answer) {
-        console.log('去除推荐页上方的banner广告');
-        body.live_answer = null;
-    } else {
-        console.log('推荐页无banner广告');
-    }
-} else if (url.includes("c/f/frs/generalTabList")) {
-    console.log('贴吧-generalTabList');
-    removeGoodsInfo(body.app_list);
-} else {
-    $notification.post(notifyTitle, "路径/请求方法匹配错误:", method + "," + url);
-}
 
-body = JSON.stringify(body);
-
-$done({
-    body
-});
-
-
-function getUrlParamValue(url, queryName) {
-    return Object.fromEntries(url.substring(url.indexOf("?") + 1)
-        .split("&")
-        .map(pair => pair.split("="))
-    )[queryName];
-}
-
-function removeGoodsInfo(app) {
-    if (app?.length) {
-        let goodsInfoSize = 0;
-        app.forEach(item => {
-            if (item.goods_info?.length) {
-                goodsInfoSize++;
-                item.goods_info = [];
-            }
-        })
-        if (goodsInfoSize) {
-            console.log(`去除goods_info:${goodsInfoSize}`);
-        } else {
-            console.log(`app内无goods_info`)
-        }
-
-    } else {
-        console.log(`app为空,无需处理`);
-    }
-}
-
-function removeLive(threadList) {
-    let newThreadList = threadList;
-    const beforeLength = threadList?.length;
-    if (beforeLength) {
-        newThreadList = threadList.filter(item => {
-            if (item.ala_info) {
-                console.log('去除推荐的直播帖子');
+    function removeLiveAndAds(threadList) {
+        if (!Array.isArray(threadList)) return threadList;
+        return threadList.filter(function (item) {
+            if (!item || typeof item !== "object") return false;
+            if (item.ala_info || item.ad_info || item.is_ad === 1 || item.is_ad === true) {
                 return false;
             }
             return true;
         });
-        if (beforeLength === newThreadList.length) {
-            console.log("无推荐的直播帖子");
-        }
-    } else {
-        console.log('无需处理threadList');
     }
-    return newThreadList;
-}
+})();

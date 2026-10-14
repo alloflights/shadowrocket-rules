@@ -179,7 +179,7 @@ if(resStatus !== 200) {
 
         body = GeneralTabListResIdl.toBinary(generalTabListResIdlObj);
     } else {
-        $notification.post('贴吧proto去广告脚本错误', "url匹配错误:", url);
+        /* silent */
     }
 
     if(isQuanX){
