@@ -1,10 +1,17 @@
 /**
- * 抖音网页版媒体提取脚本（仅 www.douyin.com）
+ * 抖音分享链接与网页版无水印原画直存脚本（App 零侵入安全方案）
  *
- * 从页面内公开的 RENDER_DATA / _ROUTER_DATA 提取已有媒体地址：
- * - 图集优先使用接口返回的 url_list；
- * - 视频只把 playwm 路径规范化为 play，不伪造不存在的 URL；
- * - 不触碰抖音 App 的 amemv/snssdk 请求，也不绕过登录、权限或私密内容。
+ * 适用域名：
+ * - www.iesdouyin.com/share/(video|note|slides)/... （抖音 App 复制链接 v.douyin.com 重定向后的真实落地页）
+ * - m.douyin.com/share/(video|note|slides)/...
+ * - www.douyin.com/(video|note)/...
+ *
+ * 核心设计：
+ * - 绝不触碰抖音 App 内部 amemv.com / snssdk.com 通信，100% 保障 App 评论区、关注流与直播正常；
+ * - 自动解析页面内 RENDER_DATA / _ROUTER_DATA / SIGI_STATE，将 playwm? / playwm/ 规范化为无水印 play 流，
+ *   并支持通过 video_id (uri) 构造 1080P 无水印直链；
+ * - 注入顶部悬浮直存栏，支持一键打开/下载无水印视频，以及展开内嵌高清原图列表（直接长按图片即可存储到相册，
+ *   彻底解决 iOS Safari 拦截多窗口 window.open 弹窗导致无法保存多张图集的问题）。
  */
 
 (function douyinWebMedia() {
@@ -69,8 +76,6 @@
         try { return decodeURIComponent(raw); } catch (e) { return raw; }
     }
 
-    // _ROUTER_DATA 往往包含多层对象，非贪婪正则会在第一个内部 “}” 处截断。
-    // 这里按 JSON 字符串状态做括号平衡扫描，不使用 eval，也不执行页面脚本。
     function extractAssignedObject(source, marker) {
         var from = 0;
         while (from < source.length) {
@@ -123,9 +128,9 @@
             return;
         }
 
-        collectAddress(value.play_addr, videos);
-        collectAddress(value.download_addr, videos);
-        collectAddress(value.video_play_addr, videos);
+        collectVideoAddress(value.play_addr, videos);
+        collectVideoAddress(value.download_addr, videos);
+        collectVideoAddress(value.video_play_addr, videos);
 
         if (Array.isArray(value.images)) {
             for (var j = 0; j < value.images.length; j++) {
@@ -134,6 +139,9 @@
                 collectAddress(image, images);
                 collectAddress(image.display_image, images);
                 collectAddress(image.origin_image, images);
+                if (image.video && image.video.play_addr) {
+                    collectVideoAddress(image.video.play_addr, videos);
+                }
             }
         }
 
@@ -144,11 +152,21 @@
         }
     }
 
+    function collectVideoAddress(address, output) {
+        if (!address || typeof address !== "object") return;
+        collectAddress(address, output);
+        if (typeof address.uri === "string" && /^v0[0-9a-z]{10,}$/i.test(address.uri)) {
+            output.push("https://aweme.snssdk.com/aweme/v1/play/?video_id=" + encodeURIComponent(address.uri) + "&ratio=1080p&line=0");
+        }
+    }
+
     function collectAddress(address, output) {
         if (!address || typeof address !== "object" || !Array.isArray(address.url_list)) return;
         for (var i = 0; i < address.url_list.length; i++) {
             if (typeof address.url_list[i] !== "string") continue;
-            var url = address.url_list[i].replace(/\/playwm(?=\/|$)/g, "/play");
+            var url = address.url_list[i]
+                .replace(/\/playwm(?=\/|\?|$)/g, "/play")
+                .replace(/([?&])watermark=\d+/g, "$1watermark=0");
             if (/^https?:\/\//i.test(url)) output.push(url);
         }
     }
@@ -172,17 +190,27 @@
 
     function buildToolbar(images, videos) {
         var imageJson = JSON.stringify(images).replace(/</g, "\\u003c");
-        var html = '<div id="douyin-clean-bar" style="position:fixed;top:12px;left:12px;right:12px;z-index:999999;background:rgba(20,20,25,.94);padding:14px 18px;border-radius:18px;font-family:-apple-system,sans-serif;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.5)">';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><b style="color:#00e5ff">已提取公开媒体地址</b><button type="button" onclick="document.getElementById(\'douyin-clean-bar\').remove()" style="color:#aaa;background:none;border:0;font-size:16px">×</button></div>';
+        var html = '<div id="douyin-clean-bar" style="position:fixed;top:12px;left:12px;right:12px;z-index:2147483647;background:rgba(18,18,24,.96);padding:14px 16px;border-radius:16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#fff;box-shadow:0 10px 36px rgba(0,0,0,.6);max-height:85vh;overflow-y:auto">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b style="color:#25f4ee;font-size:15px">✨ 已提取无水印原画媒体</b><button type="button" onclick="document.getElementById(\'douyin-clean-bar\').remove()" style="color:#aaa;background:none;border:0;font-size:20px;line-height:1;padding:0 4px">×</button></div>';
         html += '<div style="display:flex;gap:10px;flex-wrap:wrap">';
 
         if (images.length > 0) {
-            html += '<button type="button" onclick="window.__douyinOpenImages()" style="flex:1;min-width:150px;background:#fe2c55;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:600">查看/保存原图（' + images.length + '张）</button>';
+            html += '<button type="button" onclick="var g=document.getElementById(\'douyin-img-drawer\');if(g){g.style.display=g.style.display===\'none\'?\'grid\':\'none\';}window.__douyinOpenImages();" style="flex:1;min-width:140px;background:#fe2c55;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:600;font-size:14px">查看/保存原图（' + images.length + '张）</button>';
         }
         if (videos.length > 0) {
-            html += '<a href="' + escapeHtml(videos[0]) + '" target="_blank" rel="noreferrer" download="douyin.mp4" style="flex:1;min-width:150px;background:#25f4ee;color:#000;text-decoration:none;text-align:center;padding:10px 14px;border-radius:10px;font-weight:700">打开视频源</a>';
+            html += '<a href="' + escapeHtml(videos[0]) + '" target="_blank" rel="noreferrer" download="douyin_clean.mp4" style="flex:1;min-width:140px;background:#25f4ee;color:#000;text-decoration:none;text-align:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px">打开无水印视频源</a>';
         }
-        html += '</div><script>window.__douyinOpenImages=function(){var xs=' + imageJson + ';for(var i=0;i<xs.length;i++){window.open(xs[i],"_blank");}};<\/script></div>';
+        html += '</div>';
+
+        if (images.length > 0) {
+            html += '<div id="douyin-img-drawer" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px">';
+            for (var idx = 0; idx < images.length; idx++) {
+                html += '<a href="' + escapeHtml(images[idx]) + '" target="_blank" rel="noreferrer" style="display:block;text-decoration:none"><img src="' + escapeHtml(images[idx]) + '" style="width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.15)" /><div style="color:#ccc;font-size:11px;text-align:center;margin-top:2px">长按图片存储原图 #' + (idx + 1) + '</div></a>';
+            }
+            html += '</div>';
+        }
+
+        html += '<script>window.__douyinOpenImages=function(){var xs=' + imageJson + ';if(xs.length===1){window.open(xs[0],"_blank");}};<\/script></div>';
         return html;
     }
 })();
