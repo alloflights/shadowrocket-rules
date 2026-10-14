@@ -1507,11 +1507,16 @@ runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT and ov
     for (const relPath of coreFiles) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
         assert(content.includes("DOMAIN,ads-api.twitter.com,REJECT") && content.includes("DOMAIN,ads-api.x.com,REJECT"), `Missing X/Twitter ad rules in ${relPath}`);
+        assert(!content.includes("AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP"), `Forbidden X UDP 443 block found in ${relPath}`);
+        assert(!content.includes(", api.x.com") && !content.includes(", api.twitter.com") && !content.includes(", x.com"), `Forbidden SSL-pinned X MITM host found in ${relPath}`);
         assert(content.includes("DOMAIN-SUFFIX,ads.youtube.com,REJECT"), `Missing YouTube ad rules in ${relPath}`);
-        assert(content.includes("twitter_clean = type=http-response"), `Missing twitter_clean script in ${relPath}`);
         assert(content.includes("youtube_json = type=http-response"), `Missing youtube_json script in ${relPath}`);
         assert(content.includes("酷安_初始化请求 = type=http-request"), `Missing 酷安_初始化请求 304-bypass script in ${relPath}`);
-        assert(content.includes("tiebac.baidu.com") && content.includes("api.x.com"), `Missing synchronized MITM hostnames in ${relPath}`);
+        assert(content.includes("tiebac.baidu.com") && content.includes("youtubei.googleapis.com"), `Missing synchronized MITM hostnames in ${relPath}`);
+    }
+    for (const confPath of ["Shadowrocket_LazyGroup_Merged.conf", "Shadowrocket_AllInOne_Ultimate.conf"]) {
+        const content = fs.readFileSync(path.join(repoRoot, confPath), "utf8");
+        assert(content.includes("DOMAIN-SUFFIX,x.com,PROXY") && content.includes("DOMAIN-SUFFIX,twimg.com,PROXY"), `Missing explicit X PROXY rules in ${confPath}`);
     }
 });
 

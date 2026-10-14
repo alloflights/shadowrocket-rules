@@ -13,8 +13,8 @@ const ROOT = path.resolve(__dirname, "..");
  *    - modules/adblock-ultimate.sgmodule
  * 2. Injects complete domestic & overseas streaming adblock rules (GDT/AdNet, JAD, Tanx/Alimama,
  *    Pangle/CSJ/GroMore, MobAds, Kwai, Sigmob, TopOn, YouTube, X/Twitter, Spotify, Twitch, Reddit, Pixiv).
- * 3. Eliminates rule conflicts (such as volces.com REJECT shadowing volces.com DIRECT, or gtimg.cn/gepush.com/umeng.com
- *    duplicate DIRECT rules after REJECT) and removes all exact duplicate rules within each section.
+ * 3. Excludes SSL-pinned native app domains (api.x.com / api.twitter.com / *.amemv.com / *.snssdk.com) from [MITM]
+ *    so native iOS X (Twitter) and Douyin clients never fail TLS handshakes or timeline/comment refreshes.
  */
 
 const UNIFIED_SKIP_PROXY = [
@@ -48,9 +48,6 @@ const OVERSEAS_STREAM_AD_RULES = [
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP",
     "DOMAIN-SUFFIX,ads.youtube.com,REJECT",
     "DOMAIN,ad.youtube.com,REJECT",
     "DOMAIN,youtube.cleverads.vn,REJECT",
@@ -71,11 +68,6 @@ const OVERSEAS_STREAM_AD_RULES = [
     "DOMAIN,analytics.twitter.com,REJECT",
     "DOMAIN,analytics.x.com,REJECT",
     "DOMAIN,static.ads-twitter.com,REJECT",
-    "DOMAIN,scribe.twitter.com,REJECT",
-    "DOMAIN,scribe.x.com,REJECT",
-    "DOMAIN,p.twitter.com,REJECT",
-    "DOMAIN,syndication.twitter.com,REJECT",
-    "DOMAIN,syndication-oembed.twitter.com,REJECT",
     "DOMAIN,ads-fa.spotify.com,REJECT",
     "DOMAIN,adstudio.spotify.com,REJECT",
     "DOMAIN,adeventtracker.spotify.com,REJECT",
@@ -96,6 +88,17 @@ const OVERSEAS_STREAM_AD_RULES = [
     "DOMAIN-SUFFIX,scorecardresearch.com,REJECT"
 ];
 
+const REMOVED_BROKEN_TWITTER_RULES = new Set([
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP",
+    "DOMAIN,scribe.twitter.com,REJECT",
+    "DOMAIN,scribe.x.com,REJECT",
+    "DOMAIN,p.twitter.com,REJECT",
+    "DOMAIN,syndication.twitter.com,REJECT",
+    "DOMAIN,syndication-oembed.twitter.com,REJECT"
+]);
+
 const UNIFIED_HOST_SECTION = `[Host]
 *.apple.com = server:system
 *.icloud.com = server:system
@@ -111,11 +114,10 @@ const UNIFIED_URL_REWRITE_BODY = `# --- Google 搜索引擎防跳转重写 ---
 ^https?://(www.)?g.cn https://www.google.com 302
 ^https?://(www.)?google.cn https://www.google.com 302
 
-# --- YouTube / X (Twitter) / Spotify 海外流媒体广告与贴片重写 ---
+# --- YouTube / Spotify 海外流媒体广告与贴片重写 ---
 ^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/(?!dclk_video_ads).+&(oad|ctier=L)(?=&|$) - reject-200
 ^https?:\\/\\/(www|m|music)\\.youtube\\.com\\/(api\\/stats\\/ads|pagead\\/|ptracking|get_midroll_info) - reject-200
 ^https?:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(ad_break|att\\/get) - reject-dict
-^https?:\\/\\/(api\\.)?(twitter|x)\\.com\\/(1\\.1|2)\\/(ads|promoted_content|jot|live_pipeline\\/update_subscriptions) - reject-200
 ^https?:\\/\\/spclient\\.wg\\.spotify\\.com\\/(ads|ad-logic)\\/ - reject-200
 
 # --- 完美世界电竞广告接口拦截 ---
@@ -361,10 +363,9 @@ netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.mus
 # 11. 喜马拉雅净化 (首页动态、顶部直播、横幅、分类Tab)
 喜马拉雅_净化 = type=http-response,pattern=^https?:\\/\\/.*\\.xima.*\\.com\\/(discovery-category\\/(customCategories|v\\d\\/category)|focus-mobile\\/focusPic|discovery-feed\\/v\\d\\/mix|mobile-user\\/v\\d\\/homePage),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
 
-# 12. YouTube 与 X (Twitter) 海外流媒体去广告 (Protobuf + GraphQL JSON 双引擎)
+# 12. YouTube 海外流媒体去广告 (Protobuf + JSON 双引擎，不拦截 X/Twitter 原生客户端 MITM 以防证书锁定断流)
 youtube_proto = type=http-response,pattern=^https?:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(browse|next|player|search|reel\\/reel_watch_sequence),requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
 youtube_json = type=http-response,pattern=^https?:\\/\\/(www|m|music)\\.youtube\\.com\\/youtubei\\/v1\\/(player|browse|next|search|reel\\/reel_watch_sequence),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
-twitter_clean = type=http-response,pattern=^https?:\\/\\/(api\\.|mobile\\.|gql\\.)?(twitter|x)\\.com\\/(graphql\\/.+\\/(Home|Following|ForYou|Tweet|ThreadedConversation|Search|User|List|Communit|Explore|GenericTimeline|Timeline|Bookmark|Favorites).*|2\\/(timeline|guide|search|live_event)|1\\.1\\/timeline\\/),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
 
 # 13. 全网外链“零等待”302直跳与 Safari 移动端网页去流氓化 (自动展开全文/解除复制限制/防强跳App)
 全网外链直接跳转 = type=http-request,pattern=^https?:\\/\\/(link\\.(zhihu|csdn|juejin)\\.(com|net|cn)|(www\\.)?jianshu\\.com\\/go-wild|weibo\\.cn\\/sinaurl|jump2?\\.bdimg\\.com\\/safecheck|c\\.pc\\.qq\\.com\\/middlem|sspai\\.com\\/link|gitee\\.com\\/link|www\\.yuque\\.com\\/r\\/goto),requires-body=0,max-size=0,timeout=10,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/direct-link.js,script-update-interval=0
@@ -389,7 +390,6 @@ const UNIFIED_MITM_HOSTS = [
     "acs.m.goofish.com", "g-acs.m.goofish.com",
     "img.meituan.net", "s3plus.meituan.net", "flowplus.meituan.net",
     "youtubei.googleapis.com", "*.googlevideo.com", "www.youtube.com", "m.youtube.com", "music.youtube.com",
-    "api.twitter.com", "api.x.com", "gql.twitter.com", "gql.x.com", "twitter.com", "x.com", "mobile.twitter.com", "mobile.x.com",
     "spclient.wg.spotify.com",
     "api.pwesports.cn", "app.pwesports.cn", "esports.wanmei.com", "api.esports.wanmei.com", "client.pwesports.cn", "ad.pwesports.cn", "advert.pwesports.cn", "*.pwesports.cn", "*.wanmei.com",
     "api.xiaoheihe.cn", "bbs.nga.cn", "nga.178.com", "api.dongqiudi.com", "god.game.163.com",
@@ -402,14 +402,17 @@ const UNIFIED_MITM_HOSTS = [
     "m.zhihu.com", "blog.csdn.net", "tieba.baidu.com", "m.weibo.cn"
 ];
 
-function cleanRuleSection(ruleSectionText) {
-    // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT so Volcengine/Doubao DIRECT is never broken
-    let lines = ruleSectionText.split("\n").map(line => {
-        if (line.trim() === "DOMAIN-SUFFIX,volces.com,REJECT") {
-            return "DOMAIN-SUFFIX,neptune-api.volces.com,REJECT";
-        }
-        return line;
-    });
+function cleanRuleSection(ruleSectionText, isModule) {
+    // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT and strip broken Twitter UDP/embed REJECT rules
+    let lines = ruleSectionText
+        .split("\n")
+        .map(line => {
+            if (line.trim() === "DOMAIN-SUFFIX,volces.com,REJECT") {
+                return "DOMAIN-SUFFIX,neptune-api.volces.com,REJECT";
+            }
+            return line;
+        })
+        .filter(line => !REMOVED_BROKEN_TWITTER_RULES.has(line.trim()));
 
     // 2. Inject Overseas Streaming Ad Rules right after the Global & Domestic Top Ad Networks section if not already present
     const hasTwitterAds = lines.some(l => l.trim() === "DOMAIN,ads-api.twitter.com,REJECT");
@@ -420,6 +423,23 @@ function cleanRuleSection(ruleSectionText) {
         }
         if (insertIdx !== -1) {
             lines.splice(insertIdx + 1, 0, "", ...OVERSEAS_STREAM_AD_RULES);
+        }
+    }
+
+    // 2b. For main .conf files, ensure X (Twitter) core domains are explicitly routed to PROXY
+    if (!isModule && !lines.some(l => l.trim() === "DOMAIN-SUFFIX,x.com,PROXY")) {
+        const redditIdx = lines.findIndex(l => l.trim() === "DOMAIN-SUFFIX,reddit.com,PROXY");
+        if (redditIdx !== -1) {
+            lines.splice(
+                redditIdx,
+                0,
+                "DOMAIN-SUFFIX,x.com,PROXY",
+                "DOMAIN-SUFFIX,twitter.com,PROXY",
+                "DOMAIN-SUFFIX,twimg.com,PROXY",
+                "DOMAIN-SUFFIX,t.co,PROXY",
+                "DOMAIN-SUFFIX,pscp.tv,PROXY",
+                "DOMAIN-SUFFIX,periscope.tv,PROXY"
+            );
         }
     }
 
@@ -451,7 +471,6 @@ function cleanRuleSection(ruleSectionText) {
         if (policy.startsWith("REJECT")) {
             rejectedDomainKeys.add(typeKey);
         } else if (policy === "DIRECT" && rejectedDomainKeys.has(typeKey)) {
-            // Skip shadowed DIRECT rule that conflicts with an earlier explicit REJECT rule (e.g., gtimg.cn, gepush.com, umeng.com)
             continue;
         }
 
@@ -483,10 +502,9 @@ function rebuildConfFile(relPath, isModule) {
     const fullPath = path.join(ROOT, relPath);
     let content = fs.readFileSync(fullPath, "utf8");
 
-    // Extract [Rule] section
     const ruleMatch = content.match(/\[Rule\]([\s\S]*?)(?=\n\[(Host|URL Rewrite|Script|MITM)\]|$)/);
     if (!ruleMatch) throw new Error(`Missing [Rule] in ${relPath}`);
-    const cleanedRuleBody = cleanRuleSection(ruleMatch[1]);
+    const cleanedRuleBody = cleanRuleSection(ruleMatch[1], isModule);
 
     if (isModule) {
         const headerMatch = content.match(/^([\s\S]*?)(?=\[Rule\])/);
@@ -511,7 +529,6 @@ ${mitmLine}
         return;
     }
 
-    // For .conf files (LazyGroup and AllInOne)
     const beforeRuleMatch = content.match(/^([\s\S]*?)(?=\[Rule\])/);
     let beforeRule = beforeRuleMatch ? beforeRuleMatch[1] : "";
     beforeRule = updateGeneralSection(beforeRule);

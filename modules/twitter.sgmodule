@@ -1,17 +1,14 @@
 #!name=YouTube & X (Twitter) 海外流媒体终极去广告模块 (YouTube & X AdBlock Pro)
-#!desc=【独立挂载模块】强制阻断 YouTube 与 X (Twitter) 的 HTTP/3 QUIC 绕过，通过 Protobuf 二进制与 GraphQL JSON 双引擎彻底去除 YouTube 首页/播放页/贴片广告与 X 时间线/评论区推广推文
+#!desc=【独立挂载模块】强制阻断 YouTube 的 HTTP/3 QUIC 绕过，通过 Protobuf 二进制与 JSON 双引擎彻底去除 YouTube 首页/播放页/贴片广告，并通过独立广告域名拦截净化 X (Twitter) / Spotify / Reddit / Pixiv（不对 X 原生客户端启用 MITM，100% 保障推文刷新不断流）
 #!author=allofights
 #!system=ios
 #!category=应用净化
 
 [Rule]
-# 1. 关键：强制阻断 YouTube 与 X (Twitter) 的 UDP 443 (QUIC/HTTP3)，防止客户端绕过 Shadowrocket MITM 与脚本
+# 1. 强制阻断 YouTube 的 UDP 443 (QUIC/HTTP3)，防止客户端绕过 Shadowrocket MITM 与脚本
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP
-AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP
-AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP
-AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP
 
 # 2. YouTube 广告分发与 DoubleClick 追踪封杀
 DOMAIN-SUFFIX,ads.youtube.com,REJECT
@@ -28,7 +25,7 @@ DOMAIN,www.googletagservices.com,REJECT
 URL-REGEX,^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad,REJECT-200
 URL-REGEX,^https?:\/\/[\w-]+\.googlevideo\.com\/videoplayback.*(&ctier=L&|&oad=|&adformat=),REJECT-200
 
-# 3. X (Twitter) 商业广告与遥测域名封杀
+# 3. X (Twitter) 独立商业广告与遥测域名封杀（不触碰 api.x.com / x.com 主链路与 twimg.com，保障原生客户端证书锁定校验通过与秒刷）
 DOMAIN,ads-api.twitter.com,REJECT
 DOMAIN,ads-api.x.com,REJECT
 DOMAIN,ads.twitter.com,REJECT
@@ -36,11 +33,6 @@ DOMAIN,ads.x.com,REJECT
 DOMAIN,analytics.twitter.com,REJECT
 DOMAIN,analytics.x.com,REJECT
 DOMAIN,static.ads-twitter.com,REJECT
-DOMAIN,scribe.twitter.com,REJECT
-DOMAIN,scribe.x.com,REJECT
-DOMAIN,p.twitter.com,REJECT
-DOMAIN,syndication.twitter.com,REJECT
-DOMAIN,syndication-oembed.twitter.com,REJECT
 
 # 4. Spotify / Twitch / Reddit / Pixiv 广告域名拦截
 DOMAIN,ads-fa.spotify.com,REJECT
@@ -67,8 +59,6 @@ DOMAIN-SUFFIX,scorecardresearch.com,REJECT
 ^https?:\/\/[\w-]+\.googlevideo\.com\/(?!dclk_video_ads).+&(oad|ctier=L)(?=&|$) - reject-200
 ^https?:\/\/(www|m|music)\.youtube\.com\/(api\/stats\/ads|pagead\/|ptracking|get_midroll_info) - reject-200
 ^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(ad_break|att\/get) - reject-dict
-# X (Twitter) 广告接口重写
-^https?:\/\/(api\.)?(twitter|x)\.com\/(1\.1|2)\/(ads|promoted_content|jot|live_pipeline\/update_subscriptions) - reject-200
 # Spotify 音频广告重写
 ^https?:\/\/spclient\.wg\.spotify\.com\/(ads|ad-logic)\/ - reject-200
 
@@ -79,9 +69,6 @@ youtube_proto = type=http-response,pattern=^https?:\/\/youtubei\.googleapis\.com
 # 2. YouTube 网页端与 Music JSON 引擎
 youtube_json = type=http-response,pattern=^https?:\/\/(www|m|music)\.youtube\.com\/youtubei\/v1\/(player|browse|next|search|reel\/reel_watch_sequence),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
 
-# 3. X (Twitter) 全量 GraphQL 与 REST 时间线、推文评论区对话串、搜索流与热搜去广告
-twitter_clean = type=http-response,pattern=^https?:\/\/(api\.|mobile\.|gql\.)?(twitter|x)\.com\/(graphql\/.+\/(Home|Following|ForYou|Tweet|ThreadedConversation|Search|User|List|Communit|Explore|GenericTimeline|Timeline|Bookmark|Favorites).*|2\/(timeline|guide|search|live_event)|1\.1\/timeline\/),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
-
 [MITM]
-hostname = %APPEND% youtubei.googleapis.com, *.googlevideo.com, www.youtube.com, m.youtube.com, music.youtube.com, api.twitter.com, api.x.com, gql.twitter.com, gql.x.com, twitter.com, x.com, mobile.twitter.com, mobile.x.com, spclient.wg.spotify.com
+hostname = %APPEND% youtubei.googleapis.com, *.googlevideo.com, www.youtube.com, m.youtube.com, music.youtube.com, spclient.wg.spotify.com
 h2 = true
