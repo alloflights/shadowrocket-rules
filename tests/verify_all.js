@@ -1435,22 +1435,24 @@ runTest("Zero-Touch Guarantee: No purification script invokes $notification.post
     }
 });
 
-runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT, Twitter adblock is completely removed, and YouTube rules are synced", () => {
+runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT, and Twitter/YouTube adblock modules and MITM are completely removed", () => {
     assert(!fs.existsSync(path.join(repoRoot, "modules/twitter.sgmodule")), "modules/twitter.sgmodule must be removed");
     assert(!fs.existsSync(path.join(repoRoot, "modules/scripts/twitter.js")), "modules/scripts/twitter.js must be removed");
+    assert(!fs.existsSync(path.join(repoRoot, "modules/youtube.sgmodule")), "modules/youtube.sgmodule must be removed");
+    assert(!fs.existsSync(path.join(repoRoot, "modules/scripts/youtube.js")), "modules/scripts/youtube.js must be removed");
     for (const relPath of allTargetFiles) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
         assert(!content.includes("DOMAIN-SUFFIX,volces.com,REJECT"), `Forbidden DOMAIN-SUFFIX,volces.com,REJECT found in ${relPath}`);
         assert(!content.includes("ads-api.twitter.com") && !content.includes("ads-api.x.com"), `Forbidden Twitter ad rule found in ${relPath}`);
+        assert(!content.includes("ads.youtube.com") && !content.includes("youtube_proto"), `Forbidden YouTube ad rule/script found in ${relPath}`);
+        assert(!content.includes("youtubei.googleapis.com"), `Forbidden YouTube MITM host found in ${relPath}`);
         assert(!content.includes(", api.x.com") && !content.includes(", api.twitter.com") && !content.includes(", x.com"), `Forbidden X MITM host found in ${relPath}`);
     }
     const coreFiles = ["Shadowrocket_LazyGroup_Merged.conf", "Shadowrocket_AllInOne_Ultimate.conf", "modules/adblock-ultimate.sgmodule"];
     for (const relPath of coreFiles) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
-        assert(content.includes("DOMAIN-SUFFIX,ads.youtube.com,REJECT"), `Missing YouTube ad rules in ${relPath}`);
-        assert(content.includes("youtube_proto = type=http-response"), `Missing youtube_proto script in ${relPath}`);
         assert(content.includes("酷安_初始化请求 = type=http-request"), `Missing 酷安_初始化请求 304-bypass script in ${relPath}`);
-        assert(content.includes("tiebac.baidu.com") && content.includes("youtubei.googleapis.com"), `Missing synchronized MITM hostnames in ${relPath}`);
+        assert(content.includes("tiebac.baidu.com"), `Missing synchronized MITM hostnames in ${relPath}`);
     }
     for (const confPath of ["Shadowrocket_LazyGroup_Merged.conf", "Shadowrocket_AllInOne_Ultimate.conf"]) {
         const content = fs.readFileSync(path.join(repoRoot, confPath), "utf8");

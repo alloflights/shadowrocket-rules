@@ -44,13 +44,7 @@ const UNIFIED_TUN_EXCLUDED = [
 ].join(", ");
 
 const OVERSEAS_STREAM_AD_RULES = [
-    "# ==================== 海外流媒体与社交平台去广告 (YouTube / X / Spotify / Twitch / Reddit / Pixiv) ====================",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP",
-    "DOMAIN-SUFFIX,ads.youtube.com,REJECT",
-    "DOMAIN,ad.youtube.com,REJECT",
-    "DOMAIN,youtube.cleverads.vn,REJECT",
+    "# ==================== 海外流媒体与社交平台去广告 (Spotify / Twitch / Reddit / Pixiv) ====================",
     "DOMAIN-SUFFIX,doubleclick.net,REJECT",
     "DOMAIN-SUFFIX,googleadservices.com,REJECT",
     "DOMAIN-SUFFIX,googlesyndication.com,REJECT",
@@ -59,8 +53,6 @@ const OVERSEAS_STREAM_AD_RULES = [
     "DOMAIN,s0.2mdn.net,REJECT",
     "DOMAIN,static.doubleclick.net,REJECT",
     "DOMAIN,www.googletagservices.com,REJECT",
-    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/initplayback.+&oad,REJECT-200",
-    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/videoplayback.*(&ctier=L&|&oad=|&adformat=),REJECT-200",
     "DOMAIN,ads-fa.spotify.com,REJECT",
     "DOMAIN,adstudio.spotify.com,REJECT",
     "DOMAIN,adeventtracker.spotify.com,REJECT",
@@ -82,6 +74,14 @@ const OVERSEAS_STREAM_AD_RULES = [
 ];
 
 const REMOVED_BROKEN_TWITTER_RULES = new Set([
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP",
+    "DOMAIN-SUFFIX,ads.youtube.com,REJECT",
+    "DOMAIN,ad.youtube.com,REJECT",
+    "DOMAIN,youtube.cleverads.vn,REJECT",
+    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/initplayback.+&oad,REJECT-200",
+    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/videoplayback.*(&ctier=L&|&oad=|&adformat=),REJECT-200",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP",
@@ -114,10 +114,7 @@ const UNIFIED_URL_REWRITE_BODY = `# --- Google 搜索引擎防跳转重写 ---
 ^https?://(www.)?g.cn https://www.google.com 302
 ^https?://(www.)?google.cn https://www.google.com 302
 
-# --- YouTube / Spotify 海外流媒体广告与贴片重写 ---
-^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/(?!dclk_video_ads).+&(oad|ctier=L)(?=&|$) - reject-200
-^https?:\\/\\/(www|m|music)\\.youtube\\.com\\/(api\\/stats\\/ads|pagead\\/|ptracking|get_midroll_info) - reject-200
-^https?:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(ad_break|att\\/get) - reject-dict
+# --- Spotify 海外流媒体广告重写 ---
 ^https?:\\/\\/spclient\\.wg\\.spotify\\.com\\/(ads|ad-logic)\\/ - reject-200
 
 # --- 完美世界电竞广告接口拦截 ---
@@ -363,10 +360,7 @@ netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.mus
 # 11. 喜马拉雅净化 (首页动态、顶部直播、横幅、分类Tab)
 喜马拉雅_净化 = type=http-response,pattern=^https?:\\/\\/.*\\.xima.*\\.com\\/(discovery-category\\/(customCategories|v\\d\\/category)|focus-mobile\\/focusPic|discovery-feed\\/v\\d\\/mix|mobile-user\\/v\\d\\/homePage),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
 
-# 12. YouTube 海外流媒体去广告 (Protobuf 二进制引擎)
-youtube_proto = type=http-response,pattern=^https?:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(browse|next|player|search|reel\\/reel_watch_sequence),requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
-
-# 13. 全网外链“零等待”302直跳与 Safari 移动端网页去流氓化 (自动展开全文/解除复制限制/防强跳App)
+# 12. 全网外链“零等待”302直跳与 Safari 移动端网页去流氓化 (自动展开全文/解除复制限制/防强跳App)
 全网外链直接跳转 = type=http-request,pattern=^https?:\\/\\/(link\\.(zhihu|csdn|juejin)\\.(com|net|cn)|(www\\.)?jianshu\\.com\\/go-wild|weibo\\.cn\\/sinaurl|jump2?\\.bdimg\\.com\\/safecheck|c\\.pc\\.qq\\.com\\/middlem|sspai\\.com\\/link|gitee\\.com\\/link|www\\.yuque\\.com\\/r\\/goto),requires-body=0,max-size=0,timeout=10,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/direct-link.js,script-update-interval=0
 safari_clean = type=http-response,pattern=^https?:\\/\\/(m\\.zhihu\\.com\\/(question\\/\\d+|p\\/\\d+)|blog\\.csdn\\.net\\/\\w+\\/article\\/details\\/\\d+|tieba\\.baidu\\.com\\/p\\/\\d+|m\\.weibo\\.cn\\/detail\\/\\d+),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/safari-clean.js,script-update-interval=0`;
 
@@ -388,7 +382,6 @@ const UNIFIED_MITM_HOSTS = [
     "*.ximalaya.com", "*.xmcdn.com", "*.wsa.ximalaya.com", "adse.ximalaya.com", "adse.wsa.ximalaya.com", "mobile.ximalaya.com", "passport.ximalaya.com",
     "acs.m.goofish.com", "g-acs.m.goofish.com",
     "img.meituan.net", "s3plus.meituan.net", "flowplus.meituan.net",
-    "youtubei.googleapis.com", "*.googlevideo.com", "www.youtube.com", "m.youtube.com", "music.youtube.com",
     "spclient.wg.spotify.com",
     "api.pwesports.cn", "app.pwesports.cn", "esports.wanmei.com", "api.esports.wanmei.com", "client.pwesports.cn", "ad.pwesports.cn", "advert.pwesports.cn", "*.pwesports.cn", "*.wanmei.com",
     "api.xiaoheihe.cn", "bbs.nga.cn", "nga.178.com", "api.dongqiudi.com", "god.game.163.com",
@@ -402,7 +395,7 @@ const UNIFIED_MITM_HOSTS = [
 ];
 
 function cleanRuleSection(ruleSectionText, isModule) {
-    // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT and strip all Twitter ad/UDP rules
+    // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT and strip all Twitter & YouTube ad/UDP rules
     let lines = ruleSectionText
         .split("\n")
         .map(line => {
@@ -414,8 +407,8 @@ function cleanRuleSection(ruleSectionText, isModule) {
         .filter(line => !REMOVED_BROKEN_TWITTER_RULES.has(line.trim()));
 
     // 2. Inject Overseas Streaming Ad Rules right after the Global & Domestic Top Ad Networks section if not already present
-    const hasYouTubeAds = lines.some(l => l.trim() === "DOMAIN-SUFFIX,ads.youtube.com,REJECT");
-    if (!hasYouTubeAds) {
+    const hasSpotifyAds = lines.some(l => l.trim() === "DOMAIN,ads-fa.spotify.com,REJECT");
+    if (!hasSpotifyAds) {
         let insertIdx = lines.findIndex(l => l.includes("DOMAIN-SUFFIX,adcolony.com,REJECT"));
         if (insertIdx === -1) {
             insertIdx = lines.findIndex(l => l.includes("IP-CIDR,182.254.118.0/24,REJECT,no-resolve"));

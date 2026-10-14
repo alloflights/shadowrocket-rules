@@ -114,7 +114,6 @@ DOMAIN,ads.servebom.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads.service.kugou.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads.tiktok.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads.v3mh.com,REJECT,extended-matching,pre-matching
-DOMAIN,ads.youtube.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads.zhinengxiyifang.cn,REJECT,extended-matching,pre-matching
 DOMAIN,ads3-normal-hl.zijieapi.com,REJECT,extended-matching,pre-matching
 DOMAIN,ads3-normal-lf.zijieapi.com,REJECT,extended-matching,pre-matching
