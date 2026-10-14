@@ -364,7 +364,11 @@ netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.mus
 # 12. YouTube 与 X (Twitter) 海外流媒体去广告 (Protobuf + GraphQL JSON 双引擎)
 youtube_proto = type=http-response,pattern=^https?:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(browse|next|player|search|reel\\/reel_watch_sequence),requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
 youtube_json = type=http-response,pattern=^https?:\\/\\/(www|m|music)\\.youtube\\.com\\/youtubei\\/v1\\/(player|browse|next|search|reel\\/reel_watch_sequence),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
-twitter_clean = type=http-response,pattern=^https?:\\/\\/(api\\.|mobile\\.|gql\\.)?(twitter|x)\\.com\\/(graphql\\/.+\\/(Home|Following|ForYou|Tweet|ThreadedConversation|Search|User|List|Communit|Explore|GenericTimeline|Timeline|Bookmark|Favorites).*|2\\/(timeline|guide|search|live_event)|1\\.1\\/timeline\\/),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0`;
+twitter_clean = type=http-response,pattern=^https?:\\/\\/(api\\.|mobile\\.|gql\\.)?(twitter|x)\\.com\\/(graphql\\/.+\\/(Home|Following|ForYou|Tweet|ThreadedConversation|Search|User|List|Communit|Explore|GenericTimeline|Timeline|Bookmark|Favorites).*|2\\/(timeline|guide|search|live_event)|1\\.1\\/timeline\\/),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
+
+# 13. 全网外链“零等待”302直跳与 Safari 移动端网页去流氓化 (自动展开全文/解除复制限制/防强跳App)
+全网外链直接跳转 = type=http-request,pattern=^https?:\\/\\/(link\\.(zhihu|csdn|juejin)\\.(com|net|cn)|(www\\.)?jianshu\\.com\\/go-wild|weibo\\.cn\\/sinaurl|jump2?\\.bdimg\\.com\\/safecheck|c\\.pc\\.qq\\.com\\/middlem|sspai\\.com\\/link|gitee\\.com\\/link|www\\.yuque\\.com\\/r\\/goto),requires-body=0,max-size=0,timeout=10,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/direct-link.js,script-update-interval=0
+safari_clean = type=http-response,pattern=^https?:\\/\\/(m\\.zhihu\\.com\\/(question\\/\\d+|p\\/\\d+)|blog\\.csdn\\.net\\/\\w+\\/article\\/details\\/\\d+|tieba\\.baidu\\.com\\/p\\/\\d+|m\\.weibo\\.cn\\/detail\\/\\d+),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/safari-clean.js,script-update-interval=0`;
 
 const UNIFIED_MITM_HOSTS = [
     "*.google.cn",
@@ -393,7 +397,9 @@ const UNIFIED_MITM_HOSTS = [
     "api.zhuanzhuan.com", "mobile.12306.cn", "app.qunar.com", "m.ctrip.com",
     "api.500px.com.cn", "api.tuchong.com", "www.icourse163.org", "*.zhihuishu.com",
     "*.10086.cn", "app.10086.cn", "content.95516.com",
-    "*.leigod.com", "*.biubiu001.com", "api.m.jd.com", "m.api.dianping.com", "*.zhangyuyidong.cn"
+    "*.leigod.com", "*.biubiu001.com", "api.m.jd.com", "m.api.dianping.com", "*.zhangyuyidong.cn",
+    "link.zhihu.com", "link.csdn.net", "link.juejin.cn", "*.jianshu.com", "weibo.cn", "jump2.bdimg.com", "jump.bdimg.com", "c.pc.qq.com", "sspai.com", "gitee.com", "www.yuque.com",
+    "m.zhihu.com", "blog.csdn.net", "tieba.baidu.com", "m.weibo.cn"
 ];
 
 function cleanRuleSection(ruleSectionText) {
