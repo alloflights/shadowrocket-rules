@@ -45,6 +45,12 @@ const UNIFIED_TUN_EXCLUDED = [
 
 const OVERSEAS_STREAM_AD_RULES = [
     "# ==================== 海外流媒体与社交平台去广告 (YouTube / X / Spotify / Twitch / Reddit / Pixiv) ====================",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP",
     "DOMAIN-SUFFIX,ads.youtube.com,REJECT",
     "DOMAIN,ad.youtube.com,REJECT",
     "DOMAIN,youtube.cleverads.vn,REJECT",
@@ -356,9 +362,9 @@ netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.mus
 喜马拉雅_净化 = type=http-response,pattern=^https?:\\/\\/.*\\.xima.*\\.com\\/(discovery-category\\/(customCategories|v\\d\\/category)|focus-mobile\\/focusPic|discovery-feed\\/v\\d\\/mix|mobile-user\\/v\\d\\/homePage),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
 
 # 12. YouTube 与 X (Twitter) 海外流媒体去广告 (Protobuf + GraphQL JSON 双引擎)
-youtube_proto = type=http-response,pattern=^https:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(browse|next),requires-body=1,binary-body-mode=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
+youtube_proto = type=http-response,pattern=^https?:\\/\\/youtubei\\.googleapis\\.com\\/youtubei\\/v1\\/(browse|next|player|search|reel\\/reel_watch_sequence),requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/youtube.js,script-update-interval=0
 youtube_json = type=http-response,pattern=^https?:\\/\\/(www|m|music)\\.youtube\\.com\\/youtubei\\/v1\\/(player|browse|next|search|reel\\/reel_watch_sequence),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0
-twitter_clean = type=http-response,pattern=^https?:\\/\\/(api\\.)?(twitter|x)\\.com\\/(graphql\\/.+\\/(HomeTimeline|HomeLatestTimeline|TweetDetail|SearchTimeline|UserTweets|UserTweetsAndReplies|ListLatestTweetsTimeline|CommunitiesMainDiscoveryModule|ExplorePage|GenericTimelineById)|2\\/(timeline|guide|search)\\/),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0`;
+twitter_clean = type=http-response,pattern=^https?:\\/\\/(api\\.|mobile\\.|gql\\.)?(twitter|x)\\.com\\/(graphql\\/.+\\/(Home|Following|ForYou|Tweet|ThreadedConversation|Search|User|List|Communit|Explore|GenericTimeline|Timeline|Bookmark|Favorites).*|2\\/(timeline|guide|search|live_event)|1\\.1\\/timeline\\/),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/twitter.js,script-update-interval=0`;
 
 const UNIFIED_MITM_HOSTS = [
     "*.google.cn",
@@ -379,7 +385,7 @@ const UNIFIED_MITM_HOSTS = [
     "acs.m.goofish.com", "g-acs.m.goofish.com",
     "img.meituan.net", "s3plus.meituan.net", "flowplus.meituan.net",
     "youtubei.googleapis.com", "*.googlevideo.com", "www.youtube.com", "m.youtube.com", "music.youtube.com",
-    "api.twitter.com", "api.x.com", "twitter.com", "x.com", "mobile.twitter.com", "mobile.x.com",
+    "api.twitter.com", "api.x.com", "gql.twitter.com", "gql.x.com", "twitter.com", "x.com", "mobile.twitter.com", "mobile.x.com",
     "spclient.wg.spotify.com",
     "api.pwesports.cn", "app.pwesports.cn", "esports.wanmei.com", "api.esports.wanmei.com", "client.pwesports.cn", "ad.pwesports.cn", "advert.pwesports.cn", "*.pwesports.cn", "*.wanmei.com",
     "api.xiaoheihe.cn", "bbs.nga.cn", "nga.178.com", "api.dongqiudi.com", "god.game.163.com",

@@ -405,11 +405,11 @@ runTest('Douyin JSON purifier removes explicit ad cards, strips commerce overlay
     assert.strictEqual(parsed.aweme_list.length, 1);
     const item = parsed.aweme_list[0];
     assert.strictEqual(item.video.play_addr.url_list[0], 'https://cdn.example.test/video/play/abc.mp4');
-    assert.strictEqual(item.video.download_addr.url_list[0], 'https://cdn.example.test/video/play/download.mp4');
+    assert.strictEqual(item.video.download_addr.url_list[0], 'https://cdn.example.test/video/play/abc-hd.mp4');
     assert.strictEqual(item.video.bit_rate[0].play_addr.url_list[0], 'https://cdn.example.test/video/play/abc-hd.mp4');
     assert.strictEqual(item.commerce_info, undefined);
-    assert.strictEqual(item.image_post_info.without_watermark, undefined);
-    assert.strictEqual(item.image_post_info.images[0].owner_watermark_image, undefined);
+    assert.strictEqual(item.image_post_info.without_watermark, true);
+    assert.strictEqual(item.image_post_info.images[0].owner_watermark_image.url_list[0], 'https://cdn.example.test/image/original.jpg');
 });
 
 runTest('Douyin web extractor injects a toolbar only when public page data contains media', () => {
@@ -440,21 +440,25 @@ runTest('Douyin web extractor accepts SIGI_STATE hydration data', () => {
     assert(res.body.includes('https://cdn.example.test/video/play/sigi.mp4'));
 });
 
-runTest('Douyin purifier does not forge download permissions or watermark metadata', () => {
+runTest('Douyin purifier unlocks prevent_download, disables local transcode watermark burning (transcode: 1), and replaces watermarked download_addr', () => {
     const payload = {
         aweme_list: [{
             aweme_id: 'permission-1',
             prevent_download: true,
-            aweme_acl: { download_general: { code: 2 } },
-            video: { play_addr: { url_list: ['https://cdn.example.test/video/playwm/fallback.mp4'] } }
+            aweme_acl: { download_general: { code: 2, transcode: 3 } },
+            video: {
+                play_addr: { url_list: ['https://cdn.example.test/video/playwm/clean.mp4?watermark=1&logo_name=aweme'] },
+                download_addr: { url_list: ['https://cdn.example.test/video/watermarked_dirty.mp4'] }
+            }
         }]
     };
     const res = executeScript(douyinScriptPath, { url: 'https://aweme.snssdk.com/aweme/v1/feed/' }, { status: 200, body: JSON.stringify(payload) });
     const item = JSON.parse(res.body).aweme_list[0];
-    assert.strictEqual(item.prevent_download, true);
-    assert.deepStrictEqual(item.aweme_acl, { download_general: { code: 2 } });
-    assert.strictEqual(item.video.download_addr.url_list[0], 'https://cdn.example.test/video/play/fallback.mp4');
-    assert.strictEqual(item.video.has_watermark, undefined);
+    assert.strictEqual(item.prevent_download, false);
+    assert.strictEqual(item.aweme_acl.download_general.code, 0);
+    assert.strictEqual(item.aweme_acl.download_general.transcode, 1);
+    assert.strictEqual(item.video.download_addr.url_list[0], 'https://cdn.example.test/video/play/clean.mp4?watermark=0');
+    assert.strictEqual(item.video.has_watermark, false);
 });
 
 runTest('Douyin web extractor parses nested _ROUTER_DATA without truncating inner braces', () => {
@@ -745,7 +749,7 @@ for (const relPath of allTargetFiles) {
             if (currentSection === 'Rule') {
                 const parts = line.split(',');
                 const ruleType = parts[0].trim();
-                const validTypes = ['DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'IP-CIDR', 'IP-CIDR6', 'IP-ASN', 'GEOIP', 'USER-AGENT', 'URL-REGEX', 'RULE-SET', 'FINAL', 'PROCESS-NAME', 'DST-PORT', 'DEST-PORT'];
+                const validTypes = ['DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD', 'IP-CIDR', 'IP-CIDR6', 'IP-ASN', 'GEOIP', 'USER-AGENT', 'URL-REGEX', 'RULE-SET', 'FINAL', 'PROCESS-NAME', 'DST-PORT', 'DEST-PORT', 'AND', 'OR', 'NOT'];
                 assert(validTypes.includes(ruleType), `Line ${lineNo} in ${relPath}: Unknown Rule type "${ruleType}"`);
                 assert(parts.length >= 2, `Line ${lineNo} in ${relPath}: Rule must have at least 2 comma-separated fields: "${line}"`);
                 if (ruleType === 'URL-REGEX') {

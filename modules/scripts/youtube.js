@@ -6,92 +6,154 @@ class nextRes$Type extends MessageType{constructor(){super("nextRes",[{no:7,name
 
 const url = $request.url;
 const isQuanX = typeof $task !== "undefined";
-const binaryBody = isQuanX ? new Uint8Array($response.bodyBytes) : $response.body;
-let needProcessFlag = false;
-let body;
-
-console.log(`youtube:2024-04-28`);
-if($request.method !== 'POST'){
-    /* silent */
-}
-
-if(url.includes("/v1/browse")){
-    console.log('browse');
-    let browseMessage = browseRes.fromBinary(binaryBody,{readUnknownField: true});
-    console.log(`n1F10`)
-    removeAds(browseMessage.n1F10?.n2F49399797?.n3F1);
-    console.log(`n1F9`)
-    removeAds(browseMessage.n1F9?.m2F58173949?.m3F1?.m4F58174010?.n1F10?.n2F49399797?.n3F1);
-    if(needProcessFlag){
-        body = browseRes.toBinary(browseMessage);
-    }
-} else if(url.includes("/v1/next")){
-    console.log('next');
-    let nextMessage = nextRes.fromBinary(binaryBody,{readUnknownField: true});
-    removeAds(nextMessage.a1F7?.a2F51779735?.a3F1?.n2F49399797?.n3F1);
-    if(needProcessFlag){
-        body = nextRes.toBinary(nextMessage);
-    }
-} else {
-    /* silent */
-}
-if(needProcessFlag){
-    console.log(`${body.byteLength}---${body.buffer.byteLength}`);
-    if(isQuanX){
-        $done({bodyBytes: body.buffer.slice(body.byteOffset, body.byteLength + body.byteOffset)});
-    } else {
-        $done({body});
-    }
-} else {
-    console.log('无需处理');
+const rawBody = isQuanX ? $response.bodyBytes : $response.body;
+if (!rawBody) {
     $done({});
-}
+} else {
+    try {
+        const binaryBody = rawBody instanceof Uint8Array ? rawBody : new Uint8Array(rawBody);
+        let needProcessFlag = false;
+        let body = binaryBody;
 
-function removeAds(itemList){
-    itemList?.forEach?.(item => {
-        if(item.n4F50195462?.n5F1?.length){
-            item.n4F50195462.n5F1 = item.n4F50195462.n5F1.filter(el => {
-                let flag = true;
-                if(el.n6F153515154?.n7F172660663?.n8F1?.n9F168777401){
-                    const f5Value = el.n6F153515154.n7F172660663.n8F1.n9F168777401.n10F5;
-                    const adStr = f5Value?.n11F454362329?.n12F8?.n13F4?.s;
-                    const adStr0 = f5Value?.n11F224457493?.n12Ff2?.s;
-                    const adStr1 = f5Value?.n11F461080918?.n12F7?.n13F4?.s;
-                    const adStr11 = f5Value?.n11F472329933?.n12F7?.n13F4?.s;
-                    const adStr12 = f5Value?.n11F478840678?.n12F7?.n13F4?.s;
-                    const adStr2 = f5Value?.n11F224590612?.n12F2?.s3;
-                    const adStr22 = f5Value?.n11F224590612?.n12F2?.s9;
-                    const adStr3 = f5Value?.n11F394770629?.a12F8?.a13F4?.s;
-                    const adStr33 = f5Value?.n11F491441836?.a12F8?.a13F4?.s;
-                    const adStr4 = f5Value?.n11F232954548?.n12F19?.s;
-                    const adStr5 = f5Value?.n11F456430508?.n12F7?.n13F4?.s;
-                    const existAdStr = adStr || adStr0 || adStr1 || adStr11 || adStr12 || adStr2 || adStr22 || adStr3 || adStr33 || adStr4 || adStr5;
-                    if(existAdStr){
-                        console.log(`广告:${existAdStr}`);
-                        needProcessFlag = true;
-                        flag = false;
-                    }
+        if (url.includes("/v1/player")) {
+            // PlayerResponse: strip top-level field 7 (adPlacements), 15 (playerAds), 59 (paidContentOverlay), 68 (adSlots)
+            const stripped = stripProtobufTopFields(binaryBody, [7, 15, 59, 68]);
+            if (stripped.modified) {
+                needProcessFlag = true;
+                body = stripped.data;
+            }
+        } else if (url.includes("/v1/browse") || url.includes("/v1/search")) {
+            let browseMessage = browseRes.fromBinary(binaryBody, { readUnknownField: true });
+            removeAds(browseMessage.n1F10?.n2F49399797?.n3F1);
+            removeAds(browseMessage.n1F9?.m2F58173949?.m3F1?.m4F58174010?.n1F10?.n2F49399797?.n3F1);
+            if (needProcessFlag) {
+                body = browseRes.toBinary(browseMessage);
+            }
+        } else if (url.includes("/v1/next")) {
+            let nextMessage = nextRes.fromBinary(binaryBody, { readUnknownField: true });
+            removeAds(nextMessage.a1F7?.a2F51779735?.a3F1?.n2F49399797?.n3F1);
+            if (needProcessFlag) {
+                body = nextRes.toBinary(nextMessage);
+            }
+        }
+
+        if (needProcessFlag && body) {
+            if (isQuanX) {
+                $done({ bodyBytes: body.buffer.slice(body.byteOffset, body.byteLength + body.byteOffset) });
+            } else {
+                $done({ body });
+            }
+        } else {
+            $done({});
+        }
+
+        function stripProtobufTopFields(buf, dropFields) {
+            const dropSet = new Set(dropFields);
+            const chunks = [];
+            let pos = 0;
+            let modified = false;
+            const len = buf.length;
+
+            function readVarint() {
+                let result = 0;
+                let shift = 0;
+                while (pos < len) {
+                    const b = buf[pos++];
+                    result |= (b & 0x7f) << shift;
+                    if ((b & 0x80) === 0) return result >>> 0;
+                    shift += 7;
+                    if (shift > 35) return null;
                 }
-                const adStr = el.n6F166487981?.n7F1?.n8F83537025?.n91F3?.n10F83784541?.n11F1?.n12F1?.s;
-                if(adStr){
-                    console.log(`广告2:${adStr}`);
-                    needProcessFlag = true;
-                    flag = false;
+                return null;
+            }
+
+            while (pos < len) {
+                const startPos = pos;
+                const tag = readVarint();
+                if (tag === null || tag === 0) return { modified: false, data: buf };
+                const fieldNo = tag >>> 3;
+                const wireType = tag & 7;
+
+                if (wireType === 0) {
+                    if (readVarint() === null) return { modified: false, data: buf };
+                } else if (wireType === 1) {
+                    pos += 8;
+                } else if (wireType === 2) {
+                    const subLen = readVarint();
+                    if (subLen === null || pos + subLen > len) return { modified: false, data: buf };
+                    pos += subLen;
+                } else if (wireType === 5) {
+                    pos += 4;
+                } else {
+                    return { modified: false, data: buf };
                 }
-                el.n6F153515154?.n7F172660663?.n8F3?.n9F3?.n10F3?.forEach?.(ell => {
-                    ell.n11F3?.forEach?.(v => {
-                        v.n12F3?.forEach?.(vv => {
-                            const tempStr = vv.n13F1?.n14F158796380?.n15F1.s;
-                            if(tempStr){
-                                console.log(`列表中间的多图广告:${tempStr}`);
+
+                if (pos > len) return { modified: false, data: buf };
+                if (dropSet.has(fieldNo)) {
+                    modified = true;
+                } else {
+                    chunks.push(buf.subarray(startPos, pos));
+                }
+            }
+
+            if (!modified) return { modified: false, data: buf };
+            let total = 0;
+            for (const c of chunks) total += c.length;
+            const out = new Uint8Array(total);
+            let offset = 0;
+            for (const c of chunks) {
+                out.set(c, offset);
+                offset += c.length;
+            }
+            return { modified: true, data: out };
+        }
+
+        function removeAds(itemList) {
+            itemList?.forEach?.(item => {
+                if (item.n4F50195462?.n5F1?.length) {
+                    item.n4F50195462.n5F1 = item.n4F50195462.n5F1.filter(el => {
+                        let flag = true;
+                        if (el.n6F153515154?.n7F172660663?.n8F1?.n9F168777401) {
+                            const f5Value = el.n6F153515154.n7F172660663.n8F1.n9F168777401.n10F5;
+                            const adStr = f5Value?.n11F454362329?.n12F8?.n13F4?.s;
+                            const adStr0 = f5Value?.n11F224457493?.n12Ff2?.s;
+                            const adStr1 = f5Value?.n11F461080918?.n12F7?.n13F4?.s;
+                            const adStr11 = f5Value?.n11F472329933?.n12F7?.n13F4?.s;
+                            const adStr12 = f5Value?.n11F478840678?.n12F7?.n13F4?.s;
+                            const adStr2 = f5Value?.n11F224590612?.n12F2?.s3;
+                            const adStr22 = f5Value?.n11F224590612?.n12F2?.s9;
+                            const adStr3 = f5Value?.n11F394770629?.a12F8?.a13F4?.s;
+                            const adStr33 = f5Value?.n11F491441836?.a12F8?.a13F4?.s;
+                            const adStr4 = f5Value?.n11F232954548?.n12F19?.s;
+                            const adStr5 = f5Value?.n11F456430508?.n12F7?.n13F4?.s;
+                            const existAdStr = adStr || adStr0 || adStr1 || adStr11 || adStr12 || adStr2 || adStr22 || adStr3 || adStr33 || adStr4 || adStr5;
+                            if (existAdStr) {
                                 needProcessFlag = true;
                                 flag = false;
                             }
+                        }
+                        const adStr = el.n6F166487981?.n7F1?.n8F83537025?.n91F3?.n10F83784541?.n11F1?.n12F1?.s;
+                        if (adStr) {
+                            needProcessFlag = true;
+                            flag = false;
+                        }
+                        el.n6F153515154?.n7F172660663?.n8F3?.n9F3?.n10F3?.forEach?.(ell => {
+                            ell.n11F3?.forEach?.(v => {
+                                v.n12F3?.forEach?.(vv => {
+                                    const tempStr = vv.n13F1?.n14F158796380?.n15F1?.s;
+                                    if (tempStr) {
+                                        needProcessFlag = true;
+                                        flag = false;
+                                    }
+                                });
+                            });
                         });
+                        return flag;
                     });
-                });
-                return flag;
+                }
             });
         }
-    });
+    } catch (e) {
+        $done({});
+    }
 }

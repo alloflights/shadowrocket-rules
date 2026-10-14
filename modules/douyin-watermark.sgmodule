@@ -1,9 +1,37 @@
-#!name=抖音无水印直存说明与保护 (Douyin Safe Guard)
-#!desc=安全保护模块：已全面撤销对抖音核心域名(*.amemv.com / *.snssdk.com)的 MITM 解密，彻底保障评论区、直播与交互功能正常加载。抖音无水印下载请使用官方原生的免解密快捷指令方案。
+#!name=抖音全能无水印保存与深度去广告 (Douyin Watermark-Free & AdBlock Pro)
+#!desc=【独立挂载模块】解除抖音视频、图文图集与实况(LivePhoto)保存水印及作者禁下载限制，禁用客户端本地二次烧录片尾水印，同时拦截推荐流广告与带货小黄车
 #!author=allofights
 #!system=ios
 #!category=应用增强
 
+[Rule]
+# 阻断抖音 QUIC (UDP 443) 与 HTTPDNS，强制回退标准 HTTPS 以确保无水印脚本 100% 命中
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,snssdk.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,amemv.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,iesdouyin.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,douyin.com)),REJECT-NO-DROP
+DOMAIN,dig.bdurl.net,REJECT
+DOMAIN-SUFFIX,httpdns.volcengineapi.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
+DOMAIN-SUFFIX,pangle-ads.com,REJECT
+DOMAIN-SUFFIX,ecombdapi.com,REJECT
+DOMAIN-SUFFIX,ecombdpage.com,REJECT
+
+[URL Rewrite]
+# 拦截抖音开屏、商业广告接口与片尾水印合成请求
+^https?:\/\/.*\.snssdk\.com\/v\d\/splash\/ - reject-dict
+^https?:\/\/(api.*\.amemv|aweme\.snssdk)\.com\/api\/ad\/ - reject-200
+^https?:\/\/.*\.snssdk\.com\/api\/ad\/v\d\/ - reject-200
+^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/yellow_cart\/ - reject-dict
+^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/commerce\/ - reject-dict
+
+[Script]
+# 1. 抖音 App 推荐流、作品详情、个人主页、收藏、合集与搜索视频/图文无水印保存
+抖音_App无水印与去广告 = type=http-response,pattern=^https?:\/\/[\w.-]*\.(snssdk|amemv|iesdouyin|douyin)\.com\/(aweme\/v[12]\/(feed|aweme\/(detail|post|favorite|series)|mix\/aweme|search\/item|General\/search|nearby\/feed|follow\/feed|familiar\/feed|story)|web\/api\/v2\/aweme\/iteminfo),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin.js,script-update-interval=0
+
+# 2. 抖音网页版与分享链接无水印原画提取栏
+抖音_网页无水印提取 = type=http-response,pattern=^https?:\/\/(www\.douyin|v\.douyin|www\.iesdouyin)\.com\/(video|note|share\/(video|note|slides))\/,requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=0
+
 [MITM]
-# 显式解除中间人解密，避免底层 SSL Pinning 破坏评论区与通信
-hostname = %APPEND% -*.amemv.com, -*.snssdk.com, -*.douyin.com
+hostname = %APPEND% *.snssdk.com, *.amemv.com, *.iesdouyin.com, www.douyin.com, v.douyin.com
+h2 = true
