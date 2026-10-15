@@ -1,5 +1,5 @@
 #!name=百度网盘净化 (Baidu Netdisk Pro)
-#!desc=彻底去除百度网盘开屏广告、杜绝白屏与5秒倒计时、拦截横幅推广、福利弹窗、短剧与信息流推广
+#!desc=彻底去除百度网盘开屏广告、杜绝白屏与5秒倒计时、深度清洗getsyscfg系统配置、拦截横幅推广、福利弹窗、短剧与信息流推广及京东JAD/阿里妈妈Tanx/百青藤/穿山甲SDK
 #!author=allofights
 #!system=ios
 #!category=应用净化
@@ -27,6 +27,53 @@ DOMAIN,rp.hpplay.cn,REJECT
 DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
 DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
 IP-CIDR,180.76.76.200/32,REJECT,no-resolve
+
+# 京东京媒 (JAD) / 京东玄武 DSP / 京东联盟防绕过
+DOMAIN-SUFFIX,janapi.jd.com,REJECT
+DOMAIN-SUFFIX,jadyun.com,REJECT
+DOMAIN-SUFFIX,jad.jd.com,REJECT
+DOMAIN-SUFFIX,dsp-x.jd.com,REJECT
+DOMAIN-SUFFIX,ccc-x.jd.com,REJECT
+DOMAIN-SUFFIX,x.jd.com,REJECT
+DOMAIN-SUFFIX,img-x.jd.com,REJECT
+DOMAIN-SUFFIX,ad.jd.com,REJECT
+DOMAIN-SUFFIX,jzt.jd.com,REJECT
+DOMAIN-SUFFIX,c-nfa.jd.com,REJECT
+DOMAIN-SUFFIX,knicks.jd.com,REJECT
+DOMAIN-SUFFIX,u.jd.com,REJECT
+DOMAIN-SUFFIX,union-click.jd.com,REJECT
+DOMAIN-SUFFIX,click.union.jd.com,REJECT
+
+# 阿里妈妈 Tanx / 阿里百川 / 淘宝联盟与阿里系移动解析 HTTPDNS 阻断
+DOMAIN-SUFFIX,tanx.com,REJECT
+DOMAIN-SUFFIX,alimama.com,REJECT
+DOMAIN-SUFFIX,alimama.cn,REJECT
+DOMAIN-SUFFIX,alimama.net,REJECT
+DOMAIN-SUFFIX,alimama.alicdn.com,REJECT
+DOMAIN-SUFFIX,atanx.alicdn.com,REJECT
+DOMAIN-SUFFIX,atanx2.alicdn.com,REJECT
+DOMAIN-SUFFIX,alimm.com,REJECT
+DOMAIN-SUFFIX,strip.taobaocdn.com,REJECT
+DOMAIN-SUFFIX,mmstat.com,REJECT
+DOMAIN-SUFFIX,afp.alicdn.com,REJECT
+DOMAIN-SUFFIX,aecpm.alicdn.com,REJECT
+DOMAIN-SUFFIX,baichuan-sdk.alicdn.com,REJECT
+DOMAIN-SUFFIX,nbsdk-baichuan.alicdn.com,REJECT
+DOMAIN-SUFFIX,tns.simba.taobao.com,REJECT
+DOMAIN-SUFFIX,simba.taobao.com,REJECT
+DOMAIN-SUFFIX,re.taobao.com,REJECT
+DOMAIN-SUFFIX,s.click.taobao.com,REJECT
+DOMAIN-SUFFIX,uland.taobao.com,REJECT
+DOMAIN,adashx.ut.taobao.com,REJECT
+DOMAIN,adashxgc.ut.taobao.com,REJECT
+DOMAIN,adash-c.ut.taobao.com,REJECT
+DOMAIN,h-adashx.ut.taobao.com,REJECT
+DOMAIN,adash.man.aliyuncs.com,REJECT
+DOMAIN-SUFFIX,httpdns.alicdn.com,REJECT
+DOMAIN-SUFFIX,httpdns-api.aliyuncs.com,REJECT
+DOMAIN-SUFFIX,httpdns-sc.aliyuncs.com,REJECT
+IP-CIDR,203.107.1.0/24,REJECT,no-resolve
+
 # 穿山甲 / 巨量引擎 (Pangle / CSJ SDK - 彻底封杀摇一摇开屏广告)
 DOMAIN,pangolin.snssdk.com,REJECT
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
@@ -97,8 +144,8 @@ DOMAIN-SUFFIX,checktrustworthiness.com,REJECT
 [Script]
 # 百度网盘急速开屏净化 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
 baidunetdisk_splash = type=http-request,pattern=^https?:\/\/pan\.baidu\.com\/.*(pcs\/adx?|membership\/advertise|splash|buy\/ad\/(conf|get)|api\/ad\/|act\/(api\/activityentry|v\d\/(bchannel|welfare)\/list)|feed\/cardinfos|recommend\/shortseries\/list),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
-# 百度网盘响应流数据净化 (剥离 GroMore/穿山甲瀑布流配置、横幅、推广与信息流卡片)
-baidunetdisk_clean = type=http-response,pattern=^https?:\/\/pan\.baidu\.com\/.*(feed|card|membership|activity|config|user|welfare),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
+# 百度网盘响应流数据净化 (涵盖 getsyscfg/getconfig 系统配置、GroMore/穿山甲/JAD/Tanx瀑布流、横幅、推广与信息流卡片)
+baidunetdisk_clean = type=http-response,pattern=^https?:\/\/pan\.baidu\.com\/.*(getsyscfg|getconfig|feed|card|membership|activity|config|user|welfare|bchannel|pmall|splash|pcs\/ad),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
 
 [MITM]
 hostname = %APPEND% pan.baidu.com, afd.baidu.com, ndstatic.cdn.bcebos.com, staticsns.cdn.bcebos.com, issuecdn.baidupcs.com

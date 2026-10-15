@@ -40,10 +40,20 @@ DOMAIN-SUFFIX,tmead.y.qq.com,REJECT
 DOMAIN-SUFFIX,tmeadquic.y.qq.com,REJECT
 DOMAIN-SUFFIX,ad.tencentmusic.com,REJECT
 DOMAIN-SUFFIX,adstats.tencentmusic.com,REJECT
+DOMAIN-SUFFIX,janapi.jd.com,REJECT
 DOMAIN-SUFFIX,jadyun.com,REJECT
 DOMAIN-SUFFIX,jad.jd.com,REJECT
 DOMAIN-SUFFIX,dsp-x.jd.com,REJECT
+DOMAIN-SUFFIX,ccc-x.jd.com,REJECT
+DOMAIN-SUFFIX,x.jd.com,REJECT
+DOMAIN-SUFFIX,img-x.jd.com,REJECT
 DOMAIN-SUFFIX,ad.jd.com,REJECT
+DOMAIN-SUFFIX,jzt.jd.com,REJECT
+DOMAIN-SUFFIX,c-nfa.jd.com,REJECT
+DOMAIN-SUFFIX,knicks.jd.com,REJECT
+DOMAIN-SUFFIX,u.jd.com,REJECT
+DOMAIN-SUFFIX,union-click.jd.com,REJECT
+DOMAIN-SUFFIX,click.union.jd.com,REJECT
 IP-CIDR,119.29.29.98/32,REJECT,no-resolve
 IP-CIDR,119.29.29.90/32,REJECT,no-resolve
 IP-CIDR,119.29.29.88/32,REJECT,no-resolve
@@ -107,6 +117,21 @@ DOMAIN-SUFFIX,atanx.alicdn.com,REJECT
 DOMAIN-SUFFIX,atanx2.alicdn.com,REJECT
 DOMAIN-SUFFIX,alimm.com,REJECT
 DOMAIN-SUFFIX,strip.taobaocdn.com,REJECT
+DOMAIN-SUFFIX,mmstat.com,REJECT
+DOMAIN-SUFFIX,afp.alicdn.com,REJECT
+DOMAIN-SUFFIX,aecpm.alicdn.com,REJECT
+DOMAIN-SUFFIX,baichuan-sdk.alicdn.com,REJECT
+DOMAIN-SUFFIX,nbsdk-baichuan.alicdn.com,REJECT
+DOMAIN-SUFFIX,tns.simba.taobao.com,REJECT
+DOMAIN-SUFFIX,simba.taobao.com,REJECT
+DOMAIN-SUFFIX,re.taobao.com,REJECT
+DOMAIN-SUFFIX,s.click.taobao.com,REJECT
+DOMAIN-SUFFIX,uland.taobao.com,REJECT
+DOMAIN,adashx.ut.taobao.com,REJECT
+DOMAIN,adashxgc.ut.taobao.com,REJECT
+DOMAIN,adash-c.ut.taobao.com,REJECT
+DOMAIN,h-adashx.ut.taobao.com,REJECT
+DOMAIN,adash.man.aliyuncs.com,REJECT
 DOMAIN-SUFFIX,umeng.com,REJECT
 DOMAIN-SUFFIX,umengcloud.com,REJECT
 DOMAIN-SUFFIX,neptune-api.volces.com,REJECT
@@ -114,6 +139,10 @@ DOMAIN-SUFFIX,neptune-api.volces.com,REJECT
 # 封死移动解析 HTTPDNS (防止广告 SDK 直连 IP 绕过域名规则偷跑开屏广告)
 DOMAIN-SUFFIX,httpdns.baidubce.com,REJECT
 DOMAIN-SUFFIX,httpdns.baidu.com,REJECT
+DOMAIN-SUFFIX,httpdns.alicdn.com,REJECT
+DOMAIN-SUFFIX,httpdns-api.aliyuncs.com,REJECT
+DOMAIN-SUFFIX,httpdns-sc.aliyuncs.com,REJECT
+IP-CIDR,203.107.1.0/24,REJECT,no-resolve
 
 [URL Rewrite]
 ^https?:\/\/api\d*\.coolapk\.com\/v6\/search\?.*type=hotSearch - reject-200
