@@ -1502,6 +1502,97 @@ runTest("Twitter & Foreign Services Guarantee: No adblock scripts/rules, explici
     }
 });
 
+runTest("Coolapk home feed refresh protection: preserves picArr, picSizeArr, tags, home tab configs, and extraDataArr=[] without corruption", () => {
+    const initPayload = {
+        data: [
+            {
+                entityType: "card",
+                entityTemplate: "configCard",
+                title: "首页导航",
+                extraData: "",
+                extraDataArr: [],
+                entities: [
+                    {
+                        entityType: "card",
+                        entityTemplate: "",
+                        title: "头条",
+                        url: "/main/indexV8",
+                        extraData: "",
+                        extraDataArr: [],
+                        entities: [
+                            { entityId: 944, title: "酷安热搜" }
+                        ]
+                    }
+                ]
+            }
+        ]
+    };
+    const initRes = executeScript(coolapkScriptPath, { url: "https://api.coolapk.com/v6/main/init" }, { status: 200, body: JSON.stringify(initPayload) });
+    const parsedInit = JSON.parse(initRes.body);
+    assert.strictEqual(parsedInit.data.length, 1, "Home nav card must be preserved");
+    assert.strictEqual(parsedInit.data[0].entities.length, 1, "Headline tab (/main/indexV8) must not be deleted as empty shell");
+    assert.strictEqual(parsedInit.data[0].entities[0].extraData, "", "extraData must remain empty string instead of '[]'");
+
+    const feedPayload = {
+        data: [
+            {
+                id: 58392019,
+                uid: 10086,
+                username: "机友A",
+                entityType: "feed",
+                entityTemplate: "feed",
+                title: "讨论一下酷安开屏广告和摇一摇跳转第三方的问题",
+                message: "为什么现在的开屏广告和广点通这么多？",
+                description: "为什么现在的开屏广告和广点通这么多？",
+                pic: "https://image.coolapk.com/feed/1.jpg",
+                picArr: ["https://image.coolapk.com/feed/1.jpg", "https://image.coolapk.com/feed/2.jpg"],
+                picSizeArr: ["1080x2400", "1080x2400"],
+                tags: ["#酷安#", "#数码#"],
+                recent_reply_ids: [111, 222]
+            }
+        ]
+    };
+    const feedRes = executeScript(coolapkScriptPath, { url: "https://api.coolapk.com/v6/main/indexV8?page=1" }, { status: 200, body: JSON.stringify(feedPayload) });
+    const parsedFeed = JSON.parse(feedRes.body);
+    assert.strictEqual(parsedFeed.data.length, 1, "Genuine user feed discussing ads must not be falsely deleted");
+    assert.deepStrictEqual(parsedFeed.data[0].picArr, ["https://image.coolapk.com/feed/1.jpg", "https://image.coolapk.com/feed/2.jpg"], "picArr strings must be preserved");
+    assert.deepStrictEqual(parsedFeed.data[0].picSizeArr, ["1080x2400", "1080x2400"], "picSizeArr must be preserved");
+    assert.deepStrictEqual(parsedFeed.data[0].tags, ["#酷安#", "#数码#"], "tags must be preserved");
+    assert.deepStrictEqual(parsedFeed.data[0].recent_reply_ids, [111, 222], "recent_reply_ids numbers must be preserved");
+});
+
+runTest("Zhihu deep ad removal: strips stringified extra/brief ads, common_card ads, answer inline attachments, and comment_v5 ads", () => {
+    const recPayload = {
+        data: [
+            { id: 1, type: "feed", title: "正常回答", target: { id: 10, attachment: { type: "goods" }, relevant_query: { word: "推广词" } } },
+            { id: 2, type: "feed", extra: JSON.stringify({ is_ad: true, ad_id: "99" }), title: "字符串extra伪装广告" },
+            { id: 3, type: "feed", brief: JSON.stringify({ source: "ad", type: "commercial" }), title: "字符串brief伪装广告" },
+            { id: 4, type: "common_card", common_card: { footline: { elements: [{ text: "商业推广" }] } }, title: "common_card商业卡片" }
+        ]
+    };
+    const recRes = executeScript(zhihuScriptPath, { url: "https://api.zhihu.com/topstory/recommend" }, { status: 200, body: JSON.stringify(recPayload) });
+    const parsedRec = JSON.parse(recRes.body);
+    assert.strictEqual(parsedRec.data.length, 1, "All stringified extra/brief and common_card ads must be stripped");
+    assert.strictEqual(parsedRec.data[0].id, 1);
+    assert.strictEqual(parsedRec.data[0].target.attachment, undefined, "Inline goods attachment must be stripped");
+    assert.strictEqual(parsedRec.data[0].target.relevant_query, undefined, "Inline relevant_query must be stripped");
+
+    const commentRes = executeScript(zhihuScriptPath, { url: "https://api.zhihu.com/comment_v5/answers/12345/root_comment" }, {
+        status: 200,
+        body: JSON.stringify({
+            ad_plugin: { id: 1 },
+            data: [
+                { id: 1, content: "真实评论" },
+                { id: 2, type: "ad", content: "评论区广告" }
+            ]
+        })
+    });
+    const parsedComment = JSON.parse(commentRes.body);
+    assert.strictEqual(parsedComment.ad_plugin, undefined);
+    assert.strictEqual(parsedComment.data.length, 1);
+    assert.strictEqual(parsedComment.data[0].id, 1);
+});
+
 console.log(`\n================================================================`);
 console.log(`FINAL RESULTS: ${passedTests} / ${totalTests} tests passed.`);
 console.log('================================================================\n');

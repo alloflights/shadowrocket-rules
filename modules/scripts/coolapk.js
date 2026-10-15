@@ -1,14 +1,16 @@
 /**
- * 酷安 (Coolapk) 深度无感净化脚本 (全链路防空白广告容器版)
+ * 酷安 (Coolapk) 深度无感净化脚本 (全链路防空白广告容器 & 首页信息流无损刷新版)
  *
  * 核心能力：
  * 1. 开屏与唤醒接口 0.1ms 本地 Mock 返回 200 + 合规空结构，杜绝回退沙盒缓存广告；
- * 2. 拦截 /main/init 的 304 缓存校验头并递归抹平 V8_APP_EXTRA 中全部 SplashAd.* / Ad.* 参数，
- *    从根源阻止客户端实例化开屏广告 Activity 与后台切回热启动广告页（彻底解决“去掉广告但空白广告页还在”）；
+ * 2. 拦截 /main/init 的 304 缓存校验头并精准抹平 V8_APP_EXTRA 中全部 SplashAd.* / Ad.* 参数，
+ *    保护首页 Tab 导航树与空数组型 extraDataArr: [] 不被污染或误删；
  * 3. 双轨解析 extraData（JSON 字符串）与 extraDataArr（字典对象），精准识别并整卡剥离 GDT、JAD、
  *    GroMore、Pangle、Tanx、Alimama、百青藤、快手等 SDK 占位容器卡片；
- * 4. 自底向上（Bottom-Up）递归清理：当容器卡片的子节点（entities/rows/items）全部为广告被清空后，
- *    自动连同外层空壳容器一并移除，彻底消灭信息流、详情页、评论区残留的空白广告框与半屏弹窗壳。
+ * 4. 严格保护普通用户动态中的字符串/数值数组（如 picArr、picSizeArr、tags、recent_reply_ids），
+ *    避免因清空 picArr 引发客户端列表适配器越界崩溃导致首页信息流无法刷新；
+ * 5. 自底向上（Bottom-Up）空壳容器剥离：仅当纯卡片容器的子节点（entities/rows/items）全部为广告被清空后，
+ *    连同外层空壳容器一并移除，绝不误删首页导航 Tab 与正常用户动态。
  *
  * 兼容 Shadowrocket / Surge / Loon / Quantumult X：纯 ES5/ES2015 语法，零外部依赖，零弹窗打扰。
  */
@@ -29,7 +31,6 @@
         "openscreen": true,
         "startupad": true,
         "bootad": true,
-        "ad": true,
         "ads": true,
         "adlist": true,
         "adconfig": true,
@@ -128,6 +129,19 @@
         "mintegral": true
     };
 
+    // 保护数组字段名：包含图片 URL、尺寸、标签或 ID 的原始值数组，绝不可清空或当作实体卡片过滤
+    var PRIMITIVE_ARRAY_KEYS = {
+        "picarr": true,
+        "picsizearr": true,
+        "imagesizearray": true,
+        "tags": true,
+        "recentreplyids": true,
+        "recentlikelist": true,
+        "atns": true,
+        "coverarr": true,
+        "videothumbarr": true
+    };
+
     // 1. 请求阶段：开屏/广告接口直接返回 200 空数据；/main/init 剥离缓存校验头强制拉取全量 JSON 以便脱敏
     if (!hasResponse) {
         if (isSplashOrAdRequest(url)) {
@@ -155,13 +169,21 @@
         if (url.toLowerCase().indexOf("/main/init") !== -1 && request && request.headers && typeof request.headers === "object") {
             var reqHeaders = {};
             var hKeys = Object.keys(request.headers);
+            var strippedCacheHeader = false;
             for (var h = 0; h < hKeys.length; h++) {
                 var hk = hKeys[h];
                 var hkl = hk.toLowerCase();
-                if (hkl === "if-none-match" || hkl === "if-modified-since") continue;
+                if (hkl === "if-none-match" || hkl === "if-modified-since") {
+                    strippedCacheHeader = true;
+                    continue;
+                }
                 reqHeaders[hk] = request.headers[hk];
             }
-            $done({ headers: reqHeaders });
+            if (strippedCacheHeader) {
+                $done({ headers: reqHeaders });
+            } else {
+                $done({});
+            }
             return;
         }
         $done({});
@@ -176,13 +198,9 @@
     try {
         var obj = JSON.parse($response.body);
         var lowerUrl = url.toLowerCase();
+        var isInitEndpoint = lowerUrl.indexOf("/main/init") !== -1;
 
-        // /main/init 专项处理：递归清洗开屏配置，禁止客户端实例化开屏容器或热启动广告页
-        if (lowerUrl.indexOf("/main/init") !== -1) {
-            neutralizeCoolapkSplashTree(obj);
-            if (Array.isArray(obj.data)) {
-                obj.data = filterCoolapkList(obj.data);
-            }
+        if (isInitEndpoint) {
             if (obj.config && typeof obj.config === "object") {
                 delete obj.config.splash;
                 delete obj.config.splash_config;
@@ -193,31 +211,13 @@
                 delete obj.config.openScreen;
                 delete obj.config.ad_config;
                 delete obj.config.adConfig;
-                scrubObject(obj.config);
+                scrubObject(obj.config, true);
             }
-        } else if (
-            lowerUrl.indexOf("/main/index") !== -1 ||
-            lowerUrl.indexOf("datalist") !== -1 ||
-            lowerUrl.indexOf("/feed/index") !== -1 ||
-            lowerUrl.indexOf("/feed/list") !== -1 ||
-            lowerUrl.indexOf("/feed/stream") !== -1 ||
-            lowerUrl.indexOf("feedlist") !== -1 ||
-            lowerUrl.indexOf("/page/") !== -1 ||
-            lowerUrl.indexOf("/topic/") !== -1 ||
-            lowerUrl.indexOf("/product/") !== -1 ||
-            lowerUrl.indexOf("/apk/") !== -1 ||
-            lowerUrl.indexOf("/search") !== -1
-        ) {
             if (Array.isArray(obj.data)) {
-                obj.data = filterCoolapkList(obj.data);
-            } else if (obj.data && typeof obj.data === "object") {
-                if (Array.isArray(obj.data.entities)) obj.data.entities = filterCoolapkList(obj.data.entities);
-                if (Array.isArray(obj.data.rows)) obj.data.rows = filterCoolapkList(obj.data.rows);
-                if (Array.isArray(obj.data.list)) obj.data.list = filterCoolapkList(obj.data.list);
+                obj.data = filterCoolapkList(obj.data, true);
             }
-        }
-
-        if (lowerUrl.indexOf("/feed/detail") !== -1) {
+            neutralizeCoolapkSplashTree(obj);
+        } else if (lowerUrl.indexOf("/feed/detail") !== -1) {
             if (obj.data && typeof obj.data === "object") {
                 clearArrayOrObjectField(obj.data, "detailSponsorCard");
                 clearArrayOrObjectField(obj.data, "hotSponsorCard");
@@ -246,6 +246,7 @@
                         return !isCoolapkReplyAd(item);
                     });
                 }
+                scrubObject(obj.data, false);
             }
         } else if (lowerUrl.indexOf("/feed/replylist") !== -1) {
             if (Array.isArray(obj.data)) {
@@ -253,16 +254,9 @@
                     return !isCoolapkReplyAd(item);
                 });
             }
-        } else if (lowerUrl.indexOf("/account/profile") !== -1 || lowerUrl.indexOf("/user/") !== -1) {
-            if (obj.data && Array.isArray(obj.data.entities)) {
-                obj.data.entities = filterCoolapkList(obj.data.entities);
-            }
-        }
-
-        // 全局自底向上深度清洗
-        scrubObject(obj);
-        if (lowerUrl.indexOf("/main/init") !== -1) {
-            neutralizeCoolapkSplashTree(obj);
+        } else {
+            // 首页信息流 (/main/indexV8, /feed/index)、数据列表 (/page/dataList) 及其他通用接口单次递归净化
+            scrubObject(obj, false);
         }
 
         $done({ body: JSON.stringify(obj) });
@@ -280,34 +274,58 @@
 
     function clearArrayOrObjectField(object, field) {
         if (!object || !Object.prototype.hasOwnProperty.call(object, field)) return;
-        if (Array.isArray(object[field])) {
-            object[field] = [];
-        } else {
-            object[field] = [];
-        }
+        object[field] = [];
     }
 
     function isProtectedConfigCard(item) {
-        if (!item || typeof item !== "object") return false;
-        return item.cardId === 6390 || item.cardPageName === "V8_APP_EXTRA" || item.entityTemplate === "configCard";
+        if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+        if (item.cardId === 6390 || item.cardPageName === "V8_APP_EXTRA" || item.entityTemplate === "configCard") {
+            return true;
+        }
+        if (typeof item.cardPageName === "string" && item.cardPageName.length > 0) {
+            return true;
+        }
+        var u = String(item.url || "");
+        if (u.indexOf("/main/index") === 0 || u.indexOf("/page/dataList") === 0 || u.indexOf("/main/headline") === 0) {
+            return true;
+        }
+        return false;
     }
 
-    function filterCoolapkList(list) {
+    function isGenuineUserFeed(item) {
+        if (!item || typeof item !== "object") return false;
+        var type = String(item.entityType || "").toLowerCase();
+        var tpl = String(item.entityTemplate || "").toLowerCase();
+        if (type !== "feed" && type !== "article" && type !== "question" && type !== "answer") return false;
+        if (/(?:ad|advert|sponsor|goods|promo|commercial|market)/i.test(tpl)) return false;
+        return Boolean(item.message || item.uid || item.username || (item.userInfo && typeof item.userInfo === "object"));
+    }
+
+    function filterCoolapkList(list, isInit) {
         if (!Array.isArray(list)) return list;
         var result = [];
         for (var i = 0; i < list.length; i++) {
             var item = list[i];
-            if (!item || typeof item !== "object") continue;
+            if (item === null || item === undefined) continue;
+            // 保留字符串、数字、布尔等原始数组元素（如 picArr、picSizeArr、tags 等）
+            if (typeof item !== "object") {
+                result.push(item);
+                continue;
+            }
+            if (Array.isArray(item)) {
+                result.push(filterCoolapkList(item, isInit));
+                continue;
+            }
             if (isCoolapkAd(item)) continue;
 
             var hadChildEntities = (Array.isArray(item.entities) && item.entities.length > 0) ||
                 (Array.isArray(item.rows) && item.rows.length > 0) ||
                 (Array.isArray(item.items) && item.items.length > 0);
 
-            scrubObject(item);
+            scrubObject(item, isInit);
 
-            // 自底向上空壳剔除：如果某卡片容器原本有子项，过滤广告后子项全部为空，则连同空壳容器一起剔除，杜绝空白广告框残留
-            if (hadChildEntities && !isProtectedConfigCard(item) && isNowEmptyShell(item)) {
+            // 自底向上空壳剔除：非 /main/init 且非受保护卡片/非用户动态时，若原本有子项且过滤后子项全空，连同外层空壳容器移除
+            if (!isInit && hadChildEntities && !isProtectedConfigCard(item) && !isGenuineUserFeed(item) && isNowEmptyShell(item)) {
                 continue;
             }
             if (!isProtectedConfigCard(item) && isCoolapkAd(item)) {
@@ -320,39 +338,28 @@
 
     function isNowEmptyShell(item) {
         if (!item || typeof item !== "object") return false;
+        if (isGenuineUserFeed(item) || isProtectedConfigCard(item)) return false;
         var eEmpty = !Array.isArray(item.entities) || item.entities.length === 0;
         var rEmpty = !Array.isArray(item.rows) || item.rows.length === 0;
         var iEmpty = !Array.isArray(item.items) || item.items.length === 0;
         if (eEmpty && rEmpty && iEmpty) {
             var type = String(item.entityType || "").toLowerCase();
             var tpl = String(item.entityTemplate || "").toLowerCase();
-            // 普通单条用户动态 (feed) 本身不靠 entities 承载正文（有 message），但如果原本有 entities 且无 message 则是容器卡片
-            if (type === "card" || tpl.indexOf("card") !== -1 || (!item.message && !item.username)) {
+            if (type === "card" || tpl.indexOf("card") !== -1 || (!item.message && !item.username && !item.uid)) {
                 return true;
             }
         }
         return false;
     }
 
-    function scrubObject(object) {
+    function scrubObject(object, isInit) {
         if (!object || typeof object !== "object") return object;
 
         if (Array.isArray(object)) {
-            var filtered = filterCoolapkList(object);
+            var filtered = filterCoolapkList(object, isInit);
             object.length = 0;
             for (var j = 0; j < filtered.length; j++) object.push(filtered[j]);
             return object;
-        }
-
-        // 若 extraData 是 JSON 字符串且非 V8_APP_EXTRA，同步清理内部广告字段
-        if (!isProtectedConfigCard(object) && typeof object.extraData === "string" && object.extraData.charAt(0) === "{") {
-            try {
-                var parsedExtra = JSON.parse(object.extraData);
-                if (parsedExtra && typeof parsedExtra === "object") {
-                    scrubObject(parsedExtra);
-                    object.extraData = JSON.stringify(parsedExtra);
-                }
-            } catch (e) {}
         }
 
         var keys = Object.keys(object);
@@ -371,7 +378,19 @@
                 continue;
             }
 
+            // 保护原始值数组（如 picArr、picSizeArr、tags 等）与用户基础信息对象不被误改
+            if (PRIMITIVE_ARRAY_KEYS[normalizedKey]) {
+                continue;
+            }
+            if (key === "userInfo" || key === "userAction") {
+                continue;
+            }
+
             if (AD_KEYS[normalizedKey]) {
+                delete object[key];
+                continue;
+            }
+            if (normalizedKey === "ad" && value && value !== 0 && value !== "0" && value !== false && value !== "false") {
                 delete object[key];
                 continue;
             }
@@ -382,7 +401,10 @@
             }
 
             if (Array.isArray(value)) {
-                object[key] = filterCoolapkList(value);
+                // 空数组或纯原始类型数组直接跳过，仅过滤包含对象的实体数组
+                if (value.length > 0 && hasObjectElement(value)) {
+                    object[key] = filterCoolapkList(value, isInit);
+                }
             } else if (value && typeof value === "object") {
                 var hasEntityShape = value.entityId !== undefined || value.entityType !== undefined ||
                     value.entityTemplate !== undefined || value.is_ad === true || value.isAd === true ||
@@ -394,13 +416,20 @@
                 var childHadEntities = (Array.isArray(value.entities) && value.entities.length > 0) ||
                     (Array.isArray(value.rows) && value.rows.length > 0) ||
                     (Array.isArray(value.items) && value.items.length > 0);
-                scrubObject(value);
-                if (hasEntityShape && childHadEntities && !isProtectedConfigCard(value) && isNowEmptyShell(value)) {
+                scrubObject(value, isInit);
+                if (!isInit && hasEntityShape && childHadEntities && !isProtectedConfigCard(value) && !isGenuineUserFeed(value) && isNowEmptyShell(value)) {
                     delete object[key];
                 }
             }
         }
         return object;
+    }
+
+    function hasObjectElement(arr) {
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] && typeof arr[i] === "object") return true;
+        }
+        return false;
     }
 
     function isLinkKey(normalizedKey) {
@@ -416,6 +445,8 @@
     function isCommercialLink(value) {
         var link = String(value || "").toLowerCase();
         if (!link) return false;
+        // 内部相对路由（如 /feed/123, /main/indexV8, /page/dataList）绝非商业外链
+        if (link.charAt(0) === "/") return false;
         for (var i = 0; i < 2; i++) {
             try {
                 var decoded = decodeURIComponent(link);
@@ -432,25 +463,25 @@
     function extractExtraObjects(item) {
         var list = [];
         if (!item || typeof item !== "object") return list;
-        if (item.extraData && typeof item.extraData === "object") {
+        if (item.extraData && typeof item.extraData === "object" && !Array.isArray(item.extraData)) {
             list.push(item.extraData);
-        } else if (typeof item.extraData === "string" && item.extraData) {
+        } else if (typeof item.extraData === "string" && item.extraData.charAt(0) === "{") {
             try {
                 var parsed = JSON.parse(item.extraData);
-                if (parsed && typeof parsed === "object") list.push(parsed);
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) list.push(parsed);
             } catch (e) {}
         }
-        if (item.extraDataArr && typeof item.extraDataArr === "object") {
+        if (item.extraDataArr && typeof item.extraDataArr === "object" && !Array.isArray(item.extraDataArr)) {
             list.push(item.extraDataArr);
         }
-        if (item.extra_data && typeof item.extra_data === "object") {
+        if (item.extra_data && typeof item.extra_data === "object" && !Array.isArray(item.extra_data)) {
             list.push(item.extra_data);
         }
         return list;
     }
 
     function isCoolapkAd(item) {
-        if (!item || typeof item !== "object") return false;
+        if (!item || typeof item !== "object" || Array.isArray(item)) return false;
 
         if (isProtectedConfigCard(item)) {
             return false;
@@ -491,17 +522,14 @@
         for (var i = 0; i < flags.length; i++) {
             var fVal = item[flags[i]];
             if (isEnabled(fVal) || (typeof fVal === "string" && fVal.length > 0 && fVal !== "0" && fVal !== "false") ||
-                (fVal && typeof fVal === "object" && Object.keys(fVal).length > 0)) {
+                (fVal && typeof fVal === "object" && !Array.isArray(fVal) && Object.keys(fVal).length > 0)) {
                 if (!hasChildren) return true;
             }
         }
 
-        var text = [
-            item.title, item.subTitle, item.subtitle, item.description, item.buttonText,
-            item.actionText, item.label, item.tag, item.extra_title
-        ].filter(Boolean).join(" ");
-        var hasStrongCommercialText = /广告|开屏|赞助|七鲜|优量汇|广点通|京媒|穿山甲|阿里妈妈|tanx|摇一摇|摇动|点击了解更多|自动关闭|扭一扭|前倾|跳转第三方/i.test(text);
-        var hasWeakCommercialText = /推广|带货|好物|礼盒|领券|补贴|大促/i.test(text);
+        // 同时支持解析对象型与字符串型 extraData / extraDataArr
+        var extraObjects = extractExtraObjects(item);
+        var hasSdkAdMeta = false;
         var hasCommercialLink = false;
         var linkKeys = [
             "url", "link", "jump_url", "jumpUrl", "deepLink", "deeplink",
@@ -516,11 +544,8 @@
             }
         }
 
-        // 同时支持解析对象型与字符串型 extraData / extraDataArr
-        var extraObjects = extractExtraObjects(item);
-        var hasSdkAdMeta = false;
         var extraKeys = [
-            "gdt", "gdt_ad", "gdt_token", "gdtdata", "adnet", "jad", "jad_ad", "jaddata",
+            "gdt", "gdt_ad", "gdt_token", "gdt_pos_id", "gdtdata", "adnet", "jad", "jad_ad", "jaddata",
             "gromore", "pangle", "csj", "mobads", "baidu_ad", "tencent_ad", "kuaishou", "sigmob", "topon",
             "mintegral", "tanx", "tanx_ad", "tanxdata", "alimama", "alimama_ad", "alimamadata", "alimm",
             "beizi", "ubix", "vlion",
@@ -552,30 +577,40 @@
             if (hasSdkAdMeta) break;
         }
 
-        // 兜底检查字符串型 extraData 是否包含显式 SDK 广告槽位或商业跳转
+        // 兜底检查字符串型 extraData 是否包含显式 SDK 广告槽位
         if (!hasSdkAdMeta && typeof item.extraData === "string" && item.extraData.length > 2) {
-            if (/"(?:gdt|jad|adnet|gromore|pangle|csj|tanx|alimama|mobads|sigmob|topon|mintegral|beizi|ubix|vlion|ad_id|pos_id|slot_id|placement_id|code_id|rit_id|is_ad|sdk_ad|native_ad)"\s*:\s*(?:true|1|"[1-9a-zA-Z])/i.test(item.extraData)) {
+            if (/"(?:gdt|gdt_pos_id|jad|adnet|gromore|pangle|csj|tanx|alimama|mobads|sigmob|topon|mintegral|beizi|ubix|vlion|ad_id|pos_id|slot_id|placement_id|code_id|rit_id|is_ad|sdk_ad|native_ad)"\s*:\s*(?:true|[1-9]|"[1-9a-zA-Z])/i.test(item.extraData)) {
                 hasSdkAdMeta = true;
             }
-            if (isCommercialLink(item.extraData)) {
-                hasCommercialLink = true;
-            }
         }
+
+        if (hasSdkAdMeta && !hasChildren) return true;
+
+        var cleanTitle = String(item.title || "").trim();
+        if (cleanTitle === "酷安热搜" || cleanTitle === "酷品好物" || cleanTitle === "赞助" || cleanTitle === "广告") {
+            return true;
+        }
+
+        // 若是具有真实用户正文或 UID 的普通酷友动态（且无任何 SDK 广告标记），绝不因正文讨论关键词误杀
+        if (isGenuineUserFeed(item)) {
+            return false;
+        }
+
+        var text = [
+            item.title, item.subTitle, item.subtitle, item.description, item.buttonText,
+            item.actionText, item.label, item.tag, item.extra_title
+        ].filter(Boolean).join(" ");
+        var hasStrongCommercialText = /广告|开屏|赞助|七鲜|优量汇|广点通|京媒|穿山甲|阿里妈妈|tanx|摇一摇|摇动|点击了解更多|自动关闭|扭一扭|前倾|跳转第三方/i.test(text);
+        var hasWeakCommercialText = /推广|带货|好物|礼盒|领券|补贴|大促/i.test(text);
 
         var isCardLike = template === "card" || type === "card" || type === "feed" ||
             template.indexOf("card") !== -1 || item.entityId !== undefined;
         var isAdLikeType = /(?:ad|advert|sponsor|popup|interstitial|floating|goods|promo|commercial)/i.test(combinedType);
 
-        if (hasSdkAdMeta && !hasChildren) return true;
-
-        if (isCardLike) {
+        if (isCardLike && !hasChildren) {
             if (hasStrongCommercialText || hasCommercialLink) return true;
             if (hasWeakCommercialText && (isAdLikeType || hasSdkAdMeta)) return true;
             if (hasSdkAdMeta && isAdLikeType) return true;
-        }
-        var cleanTitle = String(item.title || "").trim();
-        if (cleanTitle === "酷安热搜" || cleanTitle === "酷品好物" || cleanTitle === "赞助" || cleanTitle === "广告") {
-            return true;
         }
         return false;
     }
@@ -590,28 +625,30 @@
             for (var i = 0; i < node.length; i++) neutralizeCoolapkSplashTree(node[i]);
             return;
         }
-        neutralizeCoolapkSplash(node);
+        if (node.cardId === 6390 || node.cardPageName === "V8_APP_EXTRA") {
+            neutralizeCoolapkSplash(node);
+        }
         if (Array.isArray(node.data)) neutralizeCoolapkSplashTree(node.data);
         if (Array.isArray(node.entities)) neutralizeCoolapkSplashTree(node.entities);
     }
 
     function neutralizeCoolapkSplash(item) {
-        if (!item || typeof item !== "object") return;
+        if (!item || typeof item !== "object" || Array.isArray(item)) return;
 
-        if (item.extraDataArr && typeof item.extraDataArr === "object") {
+        if (item.extraDataArr && typeof item.extraDataArr === "object" && !Array.isArray(item.extraDataArr)) {
             sanitizeSplashMap(item.extraDataArr);
             try {
                 item.extraData = JSON.stringify(item.extraDataArr);
             } catch (e) {}
         }
 
-        if (typeof item.extraData === "string" && item.extraData) {
+        if (typeof item.extraData === "string" && item.extraData.charAt(0) === "{") {
             try {
                 var extraObj = JSON.parse(item.extraData);
-                if (extraObj && typeof extraObj === "object") {
+                if (extraObj && typeof extraObj === "object" && !Array.isArray(extraObj)) {
                     sanitizeSplashMap(extraObj);
                     item.extraData = JSON.stringify(extraObj);
-                    if (!item.extraDataArr || typeof item.extraDataArr !== "object") {
+                    if (!item.extraDataArr || typeof item.extraDataArr !== "object" || Array.isArray(item.extraDataArr)) {
                         item.extraDataArr = extraObj;
                     } else {
                         sanitizeSplashMap(item.extraDataArr);
@@ -622,7 +659,7 @@
     }
 
     function sanitizeSplashMap(map) {
-        if (!map || typeof map !== "object") return;
+        if (!map || typeof map !== "object" || Array.isArray(map)) return;
         map["SplashAd.Type"] = "";
         map["SplashAd.hType"] = "";
         map["SplashAd.resumeType"] = "";
@@ -679,7 +716,7 @@
         if (!item || !item.id) return true;
         return isCoolapkAd(item) || item.entityType === "ad" || item.entityTemplate === "reply_ad" ||
             item.entityTemplate === "replySponsorCard" ||
-            (item.extraData && typeof item.extraData === "object" && (
+            (item.extraData && typeof item.extraData === "object" && !Array.isArray(item.extraData) && (
                 item.extraData.ad || item.extraData.gdt || item.extraData.jad ||
                 item.extraData.adnet || item.extraData.tanx || item.extraData.alimama
             ));

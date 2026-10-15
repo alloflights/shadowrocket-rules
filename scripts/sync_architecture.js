@@ -310,8 +310,8 @@ pwesports_clean = type=http-response,pattern=^https?:\\/\\/.*(pwesports\\.cn|wan
 酷安_评论区 = type=http-response,pattern=^https?:\\/\\/api\\d*\\.coolapk\\.com\\/v6\\/feed\\/replyList,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 酷安_个人中心 = type=http-response,pattern=^https?:\\/\\/api\\d*\\.coolapk\\.com\\/v6\\/account\\/profile,requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/coolapk.js,script-update-interval=0
 
-# 3. 知乎全量推荐流、关注流、热榜、回答页与新版聚合根接口深度净化 (2026真机抓包对齐)
-zhihu_clean = type=http-response,pattern=^https?:\\/\\/(api|www|appcloud2|appcloud2\\.in)\\.zhihu\\.com\\/(feed-root\\/|topstory\\/recommend|v4\\/topstory\\/recommend|topstory\\/hot-lists|moments|v4\\/questions\\/\\d+\\/answers|questions\\/\\d+\\/(answers|feeds)|api\\/v4\\/answers\\/\\d+\\/recommendations|api\\/v4\\/articles\\/\\d+\\/recommendation|ad-style-service\\/|commercial_api\\/(real_time_launch|app_float_layer)|v3\\/resource|v3\\/config),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/zhihu.js,script-update-interval=0
+# 3. 知乎全量推荐流、关注流、热榜、回答页、评论区、搜索与新版聚合根接口深度净化 (2026真机抓包对齐)
+zhihu_clean = type=http-response,pattern=^https?:\\/\\/(api|www|appcloud2|appcloud2\\.in|zhuanlan)\\.zhihu\\.com\\/(feed-root\\/|topstory\\/recommend|v4\\/topstory\\/recommend|topstory\\/hot-lists|moments|v4\\/questions\\/\\d+\\/(answers|feeds)|questions\\/\\d+\\/(answers|feeds)|api\\/v4\\/questions\\/\\d+\\/(answers|feeds)|(api\\/)?v4\\/answers\\/\\d+|answers\\/\\d+|(api\\/)?v4\\/articles\\/\\d+|articles\\/\\d+|next-data|next-render|prague\\/|comment_v5\\/|v4\\/comments|search\\/preset_words|search\\/tabs|(v4\\/)?search_v3|ad-style-service\\/|commercial_api\\/(real_time_launch|launch_v2|app_float_layer|feed_float_layer|banners_v3)|v3\\/resource|v3\\/config),requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/zhihu.js,script-update-interval=0
 
 # 4. 百度贴吧去广告 (JSON + Protobuf 双引擎，100% 静默无弹窗)
 tieba_json = type=http-response,pattern=^https?:\\/\\/(tiebac|c\\.tieba)\\.baidu\\.com\\/(c\\/(s\\/sync|f\\/(ad\\/getSplashAd|frs\\/(page|threadlist|generalTabList)|pb\\/(pic)?page|excellent\\/personalized))$|tiebaads\\/commonbatch\\?),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,script-update-interval=0
@@ -424,6 +424,25 @@ function cleanRuleSection(ruleSectionText, isModule, relPath) {
         const insertIdx = lines.findIndex(l => l.includes("DOMAIN,mpad.weixin.qq.com,REJECT"));
         if (insertIdx !== -1) {
             lines.splice(insertIdx + 1, 0, "URL-REGEX,^https?:\\/\\/.*\\.bilivideo\\.com\\/.*-SPLA,REJECT-IMG");
+        }
+    }
+
+    const zhihuRejectRules = [
+        "DOMAIN,sugar.zhihu.com,REJECT",
+        "DOMAIN,zhihu-web-analytics.zhihu.com,REJECT",
+        "DOMAIN,datahub.zhihu.com,REJECT",
+        "DOMAIN,appcloud.zhihu.com,REJECT",
+        "DOMAIN,crash2.zhihu.com,REJECT",
+        "DOMAIN,apm.zhihu.com,REJECT",
+        "IP-CIDR,118.89.204.198/32,REJECT,no-resolve"
+    ];
+    const missingZhihuRules = zhihuRejectRules.filter(r => !lines.some(l => l.trim() === r));
+    if (missingZhihuRules.length > 0) {
+        const anchorIdx = lines.findIndex(l => l.trim() === "DOMAIN,ad.api.coolapk.com,REJECT");
+        if (anchorIdx !== -1) {
+            lines.splice(anchorIdx + 1, 0, ...missingZhihuRules);
+        } else {
+            lines.unshift(...missingZhihuRules);
         }
     }
 
