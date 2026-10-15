@@ -365,6 +365,8 @@ netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.mus
 safari_clean = type=http-response,pattern=^https?:\\/\\/(m\\.zhihu\\.com\\/(question\\/\\d+|p\\/\\d+)|blog\\.csdn\\.net\\/\\w+\\/article\\/details\\/\\d+|tieba\\.baidu\\.com\\/p\\/\\d+|m\\.weibo\\.cn\\/detail\\/\\d+),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/safari-clean.js,script-update-interval=0`;
 
 const UNIFIED_MITM_HOSTS = [
+    "-*.x.com", "-*.twitter.com", "-x.com", "-twitter.com", "-api.x.com", "-api.twitter.com", "-gql.x.com", "-gql.twitter.com", "-mobile.x.com", "-mobile.twitter.com", "-*.twimg.com", "-t.co",
+    "-*.amemv.com", "-*.snssdk.com",
     "*.google.cn",
     "hermes.hupu.com", "goblin.hupu.com", "*.mobileapi.hupu.com", "*.hupu.com", "*.hupucdn.com",
     "umestartup.umetrip.com", "bda.umetrip.com", "startup.umetrip.com", "discardrp.umetrip.com", "oss.umetrip.com", "home.umetrip.com", "umerp.umetrip.com",
@@ -394,6 +396,16 @@ const UNIFIED_MITM_HOSTS = [
     "m.zhihu.com", "blog.csdn.net", "tieba.baidu.com", "m.weibo.cn"
 ];
 
+const TWITTER_BYPASS_PROTECTION_RULES = [
+    "# --- X (Twitter) 最高优先级直通代理保护（防止任何底模或旧缓存规则阻断刷新） ---",
+    "DOMAIN-SUFFIX,x.com,PROXY",
+    "DOMAIN-SUFFIX,twitter.com,PROXY",
+    "DOMAIN-SUFFIX,twimg.com,PROXY",
+    "DOMAIN-SUFFIX,t.co,PROXY",
+    "DOMAIN-SUFFIX,pscp.tv,PROXY",
+    "DOMAIN-SUFFIX,periscope.tv,PROXY"
+];
+
 function cleanRuleSection(ruleSectionText, isModule) {
     // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT and strip all Twitter & YouTube ad/UDP rules
     let lines = ruleSectionText
@@ -405,6 +417,11 @@ function cleanRuleSection(ruleSectionText, isModule) {
             return line;
         })
         .filter(line => !REMOVED_BROKEN_TWITTER_RULES.has(line.trim()));
+
+    // 1b. Inject X (Twitter) high-priority PROXY protection right at the top of [Rule]
+    if (!lines.some(l => l.includes("X (Twitter) 最高优先级直通代理保护"))) {
+        lines.unshift(...TWITTER_BYPASS_PROTECTION_RULES, "");
+    }
 
     // 2. Inject Overseas Streaming Ad Rules right after the Global & Domestic Top Ad Networks section if not already present
     const hasSpotifyAds = lines.some(l => l.trim() === "DOMAIN,ads-fa.spotify.com,REJECT");
