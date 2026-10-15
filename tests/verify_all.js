@@ -1452,8 +1452,9 @@ runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT, and T
     for (const relPath of coreFiles) {
         const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
         assert(content.includes("酷安_初始化请求 = type=http-request"), `Missing 酷安_初始化请求 304-bypass script in ${relPath}`);
-        assert(content.includes("-*.x.com") && content.includes("-*.twitter.com") && content.includes("tiebac.baidu.com"), `Missing explicit X MITM exclusion or synchronized MITM hostnames in ${relPath}`);
-        assert(content.includes("DOMAIN-SUFFIX,x.com,PROXY") && content.includes("DOMAIN-SUFFIX,twimg.com,PROXY"), `Missing explicit X PROXY protection rules in ${relPath}`);
+        assert(content.includes("tiebac.baidu.com"), `Missing synchronized MITM hostnames in ${relPath}`);
+        assert(!content.includes("DOMAIN,imasdk.googleapis.com,REJECT") && !content.includes("DOMAIN-SUFFIX,doubleclick.net,REJECT"), `Forbidden overseas ad rule in ${relPath}`);
+        assert(!content.includes("h2 = true"), `h2 = true must be removed to prevent HTTP/2 MITM connection pool freeze in ${relPath}`);
     }
 });
 

@@ -5,16 +5,6 @@ const ROOT = path.resolve(__dirname, "..");
 
 /**
  * Shadowrocket Rules Single-Source-of-Truth Build & Sync Engine
- *
- * Responsibilities:
- * 1. Synchronizes [General], [Host], [URL Rewrite], [Script], and [MITM] across:
- *    - Shadowrocket_LazyGroup_Merged.conf
- *    - Shadowrocket_AllInOne_Ultimate.conf
- *    - modules/adblock-ultimate.sgmodule
- * 2. Injects complete domestic & overseas streaming adblock rules (GDT/AdNet, JAD, Tanx/Alimama,
- *    Pangle/CSJ/GroMore, MobAds, Kwai, Sigmob, TopOn, YouTube, X/Twitter, Spotify, Twitch, Reddit, Pixiv).
- * 3. Excludes SSL-pinned native app domains (api.x.com / api.twitter.com / *.amemv.com / *.snssdk.com) from [MITM]
- *    so native iOS X (Twitter) and Douyin clients never fail TLS handshakes or timeline/comment refreshes.
  */
 
 const UNIFIED_SKIP_PROXY = [
@@ -43,8 +33,39 @@ const UNIFIED_TUN_EXCLUDED = [
     "239.255.255.250/32", "fe80::/10", "ff00::/8", "ff02::fb/128"
 ].join(", ");
 
-const OVERSEAS_STREAM_AD_RULES = [
+const REMOVED_BROKEN_RULES = new Set([
+    "# --- X (Twitter) 最高优先级直通代理保护（防止任何底模或旧缓存规则阻断刷新） ---",
+    "# ==================== 海外流媒体与社交平台去广告 (YouTube / X / Spotify / Twitch / Reddit / Pixiv) ====================",
     "# ==================== 海外流媒体与社交平台去广告 (Spotify / Twitch / Reddit / Pixiv) ====================",
+    "DOMAIN-SUFFIX,x.com,PROXY",
+    "DOMAIN-SUFFIX,twitter.com,PROXY",
+    "DOMAIN-SUFFIX,twimg.com,PROXY",
+    "DOMAIN-SUFFIX,t.co,PROXY",
+    "DOMAIN-SUFFIX,pscp.tv,PROXY",
+    "DOMAIN-SUFFIX,periscope.tv,PROXY",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP",
+    "DOMAIN-SUFFIX,ads.youtube.com,REJECT",
+    "DOMAIN,ad.youtube.com,REJECT",
+    "DOMAIN,youtube.cleverads.vn,REJECT",
+    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/initplayback.+&oad,REJECT-200",
+    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/videoplayback.*(&ctier=L&|&oad=|&adformat=),REJECT-200",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP",
+    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP",
+    "DOMAIN,ads-api.twitter.com,REJECT",
+    "DOMAIN,ads-api.x.com,REJECT",
+    "DOMAIN,ads.twitter.com,REJECT",
+    "DOMAIN,ads.x.com,REJECT",
+    "DOMAIN,analytics.twitter.com,REJECT",
+    "DOMAIN,analytics.x.com,REJECT",
+    "DOMAIN,static.ads-twitter.com,REJECT",
+    "DOMAIN,scribe.twitter.com,REJECT",
+    "DOMAIN,scribe.x.com,REJECT",
+    "DOMAIN,p.twitter.com,REJECT",
+    "DOMAIN,syndication.twitter.com,REJECT",
+    "DOMAIN,syndication-oembed.twitter.com,REJECT",
     "DOMAIN-SUFFIX,doubleclick.net,REJECT",
     "DOMAIN-SUFFIX,googleadservices.com,REJECT",
     "DOMAIN-SUFFIX,googlesyndication.com,REJECT",
@@ -71,32 +92,6 @@ const OVERSEAS_STREAM_AD_RULES = [
     "DOMAIN,analytics.pixiv.net,REJECT",
     "DOMAIN,imasdk.googleapis.com,REJECT",
     "DOMAIN-SUFFIX,scorecardresearch.com,REJECT"
-];
-
-const REMOVED_BROKEN_TWITTER_RULES = new Set([
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP",
-    "DOMAIN-SUFFIX,ads.youtube.com,REJECT",
-    "DOMAIN,ad.youtube.com,REJECT",
-    "DOMAIN,youtube.cleverads.vn,REJECT",
-    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/initplayback.+&oad,REJECT-200",
-    "URL-REGEX,^https?:\\/\\/[\\w-]+\\.googlevideo\\.com\\/videoplayback.*(&ctier=L&|&oad=|&adformat=),REJECT-200",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,x.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twitter.com)),REJECT-NO-DROP",
-    "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,twimg.com)),REJECT-NO-DROP",
-    "DOMAIN,ads-api.twitter.com,REJECT",
-    "DOMAIN,ads-api.x.com,REJECT",
-    "DOMAIN,ads.twitter.com,REJECT",
-    "DOMAIN,ads.x.com,REJECT",
-    "DOMAIN,analytics.twitter.com,REJECT",
-    "DOMAIN,analytics.x.com,REJECT",
-    "DOMAIN,static.ads-twitter.com,REJECT",
-    "DOMAIN,scribe.twitter.com,REJECT",
-    "DOMAIN,scribe.x.com,REJECT",
-    "DOMAIN,p.twitter.com,REJECT",
-    "DOMAIN,syndication.twitter.com,REJECT",
-    "DOMAIN,syndication-oembed.twitter.com,REJECT"
 ]);
 
 const UNIFIED_HOST_SECTION = `[Host]
@@ -113,9 +108,6 @@ localhost = 127.0.0.1`;
 const UNIFIED_URL_REWRITE_BODY = `# --- Google 搜索引擎防跳转重写 ---
 ^https?://(www.)?g.cn https://www.google.com 302
 ^https?://(www.)?google.cn https://www.google.com 302
-
-# --- Spotify 海外流媒体广告重写 ---
-^https?:\\/\\/spclient\\.wg\\.spotify\\.com\\/(ads|ad-logic)\\/ - reject-200
 
 # --- 完美世界电竞广告接口拦截 ---
 ^https?:\\/\\/.*(pwesports\\.cn|wanmei\\.com)\\/.*(feed\\/ad|promote|popup|banner_ad) - reject-dict
@@ -329,44 +321,42 @@ zhihu_clean = type=http-response,pattern=^https?:\\/\\/(api|www|appcloud2|appclo
 
 # 4. 百度贴吧去广告 (JSON + Protobuf 双引擎，100% 静默无弹窗)
 tieba_json = type=http-response,pattern=^https?:\\/\\/(tiebac|c\\.tieba)\\.baidu\\.com\\/(c\\/(s\\/sync|f\\/(ad\\/getSplashAd|frs\\/(page|threadlist|generalTabList)|pb\\/(pic)?page|excellent\\/personalized))$|tiebaads\\/commonbatch\\?),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,script-update-interval=0
-tieba_proto = type=http-response,pattern=^https?:\\/\\/(tiebac|c\\.tieba)\\.baidu\\.com\\/c\\/(b\\/ad\\/adBid|f\\/(frs\\/(page|threadlist|generalTabList)|ad\\/getFeedAd|pb\\/page|excellent\\/personalized))\\?cmd,requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,script-update-interval=0
+tieba_proto = type=http-response,pattern=^https?:\\/\\/(tiebac|c\\.tieba)\\.baidu\\.com\\/c\\/(b\\/ad\\/adBid|f\\/(frs\\/(page|threadlist|generalTabList)|ad\\/getFeedAd|pb\\/page|excellent\\/personalized))\\?cmd,requires-body=1,binary-body-mode=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,script-update-interval=0
 
 # 5. 小红书去广告与无水印原图/实况保存
 xiaohongshu_purify = type=http-response,pattern=^https?:\\/\\/edith\\.xiaohongshu\\.com\\/api\\/sns\\/v\\d\\/(note\\/(imagefeed|feed|videofeed|widgets|live_photo\\/save|detail)|homefeed|system_service\\/(splash_config|config)|search\\/(banner|hot)_list|search\\/notes|followfeed),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/xiaohongshu.js,script-update-interval=0
 
 # 6. 哔哩哔哩 (JSON开屏推荐 + Protobuf视频播放页净化，100% 静默无弹窗)
-bili_json = type=http-response,pattern=^https:\\/\\/app\\.bilibili\\.com\\/x\\/(v2\\/(splash\\/(list|show|brand\\/list|event\\/list2)|feed\\/index\\?)|resource\\/show\\/tab\\/v2),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-json.js,script-update-interval=0
-bili_proto = type=http-response,pattern=^https:\\/\\/(grpc\\.biliapi\\.net|app\\.bilibili\\.com)\\/bilibili\\.app\\.viewunite\\.v1\\.View\\/View$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-proto.js,script-update-interval=0
+bili_json = type=http-response,pattern=^https:\\/\\/app\\.bilibili\\.com\\/x\\/(v2\\/(splash\\/(list|show|brand\\/list|event\\/list2)|feed\\/index\\?)|resource\\/show\\/tab\\/v2),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-json.js,script-update-interval=0
+bili_proto = type=http-response,pattern=^https:\\/\\/(grpc\\.biliapi\\.net|app\\.bilibili\\.com)\\/bilibili\\.app\\.viewunite\\.v1\\.View\\/View$,requires-body=1,binary-body-mode=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-proto.js,script-update-interval=0
 
 # 7. 微博多维度去广告
-weibo_main = type=http-response,pattern=^https?:\\/\\/api\\.weibo\\.cn\\/2\\/(cardlist|page|statuses\\/(container_timeline|extend|show)|checkin\\/show|client\\/publisher_list|push\\/active|groups\\/allgroups\\/v2|comments\\/build_comments|profile\\/(container_timeline|me|userinfo)|search\\/(container_timeline|finder)|video\\/tiny_stream_video_list),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
-weibo_preload = type=http-response,pattern=^https?:\\/\\/(sdkapp|bootpreload|wbapp)\\.uve\\.weibo\\.com\\/(interface\\/sdk\\/sdkad\\.php|v[12]\\/ad\\/preload|wbapplua\\/wbpullad\\.lua|preload\\/get_ad),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+weibo_main = type=http-response,pattern=^https?:\\/\\/api\\.weibo\\.cn\\/2\\/(cardlist|page|statuses\\/(container_timeline|extend|show)|checkin\\/show|client\\/publisher_list|push\\/active|groups\\/allgroups\\/v2|comments\\/build_comments|profile\\/(container_timeline|me|userinfo)|search\\/(container_timeline|finder)|video\\/tiny_stream_video_list),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=2097152,timeout=60,script-update-interval=0
+weibo_preload = type=http-response,pattern=^https?:\\/\\/(sdkapp|bootpreload|wbapp)\\.uve\\.weibo\\.com\\/(interface\\/sdk\\/sdkad\\.php|v[12]\\/ad\\/preload|wbapplua\\/wbpullad\\.lua|preload\\/get_ad),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=1048576,timeout=60,script-update-interval=0
 
 # 8. 高德地图净化 (首页、路线规划、搜索建议与AMDC调度)
 amap_header = type=http-response,pattern=^http:\\/\\/amdc\\.m\\.taobao\\.com\\/amdc\\/mobileDispatch$,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/header.js,timeout=60,script-update-interval=0
-amap_drive = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/perception\\/drive\\/(routeInfo|routePlan)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
-amap_poi = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/search\\/(common\\/coupon\\/info|poi\\/detail)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
-amap_market = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/search_business\\/process\\/marketingOperationStructured\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
-amap_search = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/search_poi\\/(homepage|mps|search\\/sp|sug|tips_operation_location)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
-amap_home = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/faas\\/amap-navigation\\/(card-service-plan-home|main-page)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
-amap_frog = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/frogserver\\/aocs\\/updatable\\/1\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+amap_drive = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/perception\\/drive\\/(routeInfo|routePlan)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=1048576,timeout=60,script-update-interval=0
+amap_poi = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/search\\/(common\\/coupon\\/info|poi\\/detail)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=1048576,timeout=60,script-update-interval=0
+amap_market = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/search_business\\/process\\/marketingOperationStructured\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=1048576,timeout=60,script-update-interval=0
+amap_search = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/search_poi\\/(homepage|mps|search\\/sp|sug|tips_operation_location)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=1048576,timeout=60,script-update-interval=0
+amap_home = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/faas\\/amap-navigation\\/(card-service-plan-home|main-page)\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=1048576,timeout=60,script-update-interval=0
+amap_frog = type=http-response,pattern=^https:\\/\\/m5\\.amap\\.com\\/ws\\/shield\\/frogserver\\/aocs\\/updatable\\/1\\?,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/amap.js,requires-body=1,max-size=1048576,timeout=60,script-update-interval=0
 
 # 9. 网易云音乐净化 (框架、发现页、推荐页、搜索与广告过滤)
-netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.music\\.163\\.com\\/e?api\\/(link\\/(home\\/framework\\/tab|page\\/(discovery|rcmd)\\/resource\\/show|position\\/show\\/resource|scene\\/show\\/resource)|ios\\/upgrade\\/get|search\\/(default\\/keyword\\/list|rcmd\\/keyword\\/get|chart\\/(list|detail)|suggest\\/keyword\\/get|specialkeyword\\/get)|ad\\/(loading\\/(get|current)|get)|vip\\/cashier\\/tspopup\\/get|vipnewcenter\\/app\\/resource\\/newaccountpage|side-bar\\/mini-program\\/music-service\\/account|delivery\\/(deliver|batch-deliver)|yunbei\\/account\\/entrance\\/get|creator\\/musician\\/reminder\\/message\\/get|batch),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/netease.adblock.js,script-update-interval=0
+netease_adblock = type=http-response,pattern=^https?:\\/\\/interface(\\d)?\\.music\\.163\\.com\\/e?api\\/(link\\/(home\\/framework\\/tab|page\\/(discovery|rcmd)\\/resource\\/show|position\\/show\\/resource|scene\\/show\\/resource)|ios\\/upgrade\\/get|search\\/(default\\/keyword\\/list|rcmd\\/keyword\\/get|chart\\/(list|detail)|suggest\\/keyword\\/get|specialkeyword\\/get)|ad\\/(loading\\/(get|current)|get)|vip\\/cashier\\/tspopup\\/get|vipnewcenter\\/app\\/resource\\/newaccountpage|side-bar\\/mini-program\\/music-service\\/account|delivery\\/(deliver|batch-deliver)|yunbei\\/account\\/entrance\\/get|creator\\/musician\\/reminder\\/message\\/get|batch),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/netease.adblock.js,script-update-interval=0
 
 # 10. 起点读书净化 (开屏广告、每日导读、活动弹窗、悬浮广告)
-起点_广告净化 = type=http-response,pattern=^https:\\/\\/magev6\\.if\\.qidian\\.com\\/argus\\/api\\/(v4\\/client\\/getsplashscreen|v2\\/(deeplink\\/geturl|dailyrecommend\\/getdailyrecommend)|v1\\/(client\\/getconf$|bookshelf\\/getHoverAdv|adv\\/getadvlistbatch\\?positions=iOS_tab)),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/qidian.js,script-update-interval=0
+起点_广告净化 = type=http-response,pattern=^https:\\/\\/magev6\\.if\\.qidian\\.com\\/argus\\/api\\/(v4\\/client\\/getsplashscreen|v2\\/(deeplink\\/geturl|dailyrecommend\\/getdailyrecommend)|v1\\/(client\\/getconf$|bookshelf\\/getHoverAdv|adv\\/getadvlistbatch\\?positions=iOS_tab)),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/qidian.js,script-update-interval=0
 
 # 11. 喜马拉雅净化 (首页动态、顶部直播、横幅、分类Tab)
-喜马拉雅_净化 = type=http-response,pattern=^https?:\\/\\/.*\\.xima.*\\.com\\/(discovery-category\\/(customCategories|v\\d\\/category)|focus-mobile\\/focusPic|discovery-feed\\/v\\d\\/mix|mobile-user\\/v\\d\\/homePage),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
+喜马拉雅_净化 = type=http-response,pattern=^https?:\\/\\/.*\\.xima.*\\.com\\/(discovery-category\\/(customCategories|v\\d\\/category)|focus-mobile\\/focusPic|discovery-feed\\/v\\d\\/mix|mobile-user\\/v\\d\\/homePage),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ximalaya_json.js,script-update-interval=0
 
 # 12. 全网外链“零等待”302直跳与 Safari 移动端网页去流氓化 (自动展开全文/解除复制限制/防强跳App)
 全网外链直接跳转 = type=http-request,pattern=^https?:\\/\\/(link\\.(zhihu|csdn|juejin)\\.(com|net|cn)|(www\\.)?jianshu\\.com\\/go-wild|weibo\\.cn\\/sinaurl|jump2?\\.bdimg\\.com\\/safecheck|c\\.pc\\.qq\\.com\\/middlem|sspai\\.com\\/link|gitee\\.com\\/link|www\\.yuque\\.com\\/r\\/goto),requires-body=0,max-size=0,timeout=10,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/direct-link.js,script-update-interval=0
 safari_clean = type=http-response,pattern=^https?:\\/\\/(m\\.zhihu\\.com\\/(question\\/\\d+|p\\/\\d+)|blog\\.csdn\\.net\\/\\w+\\/article\\/details\\/\\d+|tieba\\.baidu\\.com\\/p\\/\\d+|m\\.weibo\\.cn\\/detail\\/\\d+),requires-body=1,max-size=1048576,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/safari-clean.js,script-update-interval=0`;
 
 const UNIFIED_MITM_HOSTS = [
-    "-*.x.com", "-*.twitter.com", "-x.com", "-twitter.com", "-api.x.com", "-api.twitter.com", "-gql.x.com", "-gql.twitter.com", "-mobile.x.com", "-mobile.twitter.com", "-*.twimg.com", "-t.co",
-    "-*.amemv.com", "-*.snssdk.com",
     "*.google.cn",
     "hermes.hupu.com", "goblin.hupu.com", "*.mobileapi.hupu.com", "*.hupu.com", "*.hupucdn.com",
     "umestartup.umetrip.com", "bda.umetrip.com", "startup.umetrip.com", "discardrp.umetrip.com", "oss.umetrip.com", "home.umetrip.com", "umerp.umetrip.com",
@@ -384,7 +374,6 @@ const UNIFIED_MITM_HOSTS = [
     "*.ximalaya.com", "*.xmcdn.com", "*.wsa.ximalaya.com", "adse.ximalaya.com", "adse.wsa.ximalaya.com", "mobile.ximalaya.com", "passport.ximalaya.com",
     "acs.m.goofish.com", "g-acs.m.goofish.com",
     "img.meituan.net", "s3plus.meituan.net", "flowplus.meituan.net",
-    "spclient.wg.spotify.com",
     "api.pwesports.cn", "app.pwesports.cn", "esports.wanmei.com", "api.esports.wanmei.com", "client.pwesports.cn", "ad.pwesports.cn", "advert.pwesports.cn", "*.pwesports.cn", "*.wanmei.com",
     "api.xiaoheihe.cn", "bbs.nga.cn", "nga.178.com", "api.dongqiudi.com", "god.game.163.com",
     "capi.douyucdn.cn", "apiv2.douyucdn.cn", "hdads.huya.com", "business.msorpack.huya.com",
@@ -396,18 +385,7 @@ const UNIFIED_MITM_HOSTS = [
     "m.zhihu.com", "blog.csdn.net", "tieba.baidu.com", "m.weibo.cn"
 ];
 
-const TWITTER_BYPASS_PROTECTION_RULES = [
-    "# --- X (Twitter) 最高优先级直通代理保护（防止任何底模或旧缓存规则阻断刷新） ---",
-    "DOMAIN-SUFFIX,x.com,PROXY",
-    "DOMAIN-SUFFIX,twitter.com,PROXY",
-    "DOMAIN-SUFFIX,twimg.com,PROXY",
-    "DOMAIN-SUFFIX,t.co,PROXY",
-    "DOMAIN-SUFFIX,pscp.tv,PROXY",
-    "DOMAIN-SUFFIX,periscope.tv,PROXY"
-];
-
-function cleanRuleSection(ruleSectionText, isModule) {
-    // 1. Replace forbidden volces.com REJECT with neptune-api.volces.com REJECT and strip all Twitter & YouTube ad/UDP rules
+function cleanRuleSection(ruleSectionText) {
     let lines = ruleSectionText
         .split("\n")
         .map(line => {
@@ -416,43 +394,8 @@ function cleanRuleSection(ruleSectionText, isModule) {
             }
             return line;
         })
-        .filter(line => !REMOVED_BROKEN_TWITTER_RULES.has(line.trim()));
+        .filter(line => !REMOVED_BROKEN_RULES.has(line.trim()));
 
-    // 1b. Inject X (Twitter) high-priority PROXY protection right at the top of [Rule]
-    if (!lines.some(l => l.includes("X (Twitter) 最高优先级直通代理保护"))) {
-        lines.unshift(...TWITTER_BYPASS_PROTECTION_RULES, "");
-    }
-
-    // 2. Inject Overseas Streaming Ad Rules right after the Global & Domestic Top Ad Networks section if not already present
-    const hasSpotifyAds = lines.some(l => l.trim() === "DOMAIN,ads-fa.spotify.com,REJECT");
-    if (!hasSpotifyAds) {
-        let insertIdx = lines.findIndex(l => l.includes("DOMAIN-SUFFIX,adcolony.com,REJECT"));
-        if (insertIdx === -1) {
-            insertIdx = lines.findIndex(l => l.includes("IP-CIDR,182.254.118.0/24,REJECT,no-resolve"));
-        }
-        if (insertIdx !== -1) {
-            lines.splice(insertIdx + 1, 0, "", ...OVERSEAS_STREAM_AD_RULES);
-        }
-    }
-
-    // 2b. For main .conf files, ensure X (Twitter) core domains are explicitly routed to PROXY
-    if (!isModule && !lines.some(l => l.trim() === "DOMAIN-SUFFIX,x.com,PROXY")) {
-        const redditIdx = lines.findIndex(l => l.trim() === "DOMAIN-SUFFIX,reddit.com,PROXY");
-        if (redditIdx !== -1) {
-            lines.splice(
-                redditIdx,
-                0,
-                "DOMAIN-SUFFIX,x.com,PROXY",
-                "DOMAIN-SUFFIX,twitter.com,PROXY",
-                "DOMAIN-SUFFIX,twimg.com,PROXY",
-                "DOMAIN-SUFFIX,t.co,PROXY",
-                "DOMAIN-SUFFIX,pscp.tv,PROXY",
-                "DOMAIN-SUFFIX,periscope.tv,PROXY"
-            );
-        }
-    }
-
-    // 3. Ensure Bilibili splash image regex is present in [Rule]
     if (!lines.some(l => l.includes("bilivideo.com\\/.*-SPLA"))) {
         const insertIdx = lines.findIndex(l => l.includes("DOMAIN,mpad.weixin.qq.com,REJECT"));
         if (insertIdx !== -1) {
@@ -460,7 +403,6 @@ function cleanRuleSection(ruleSectionText, isModule) {
         }
     }
 
-    // 4. Deduplicate exact rules and remove shadowed conflicting DIRECT rules for explicitly REJECTed ad/tracker domains
     const seenExact = new Set();
     const rejectedDomainKeys = new Set();
     const cleaned = [];
@@ -513,12 +455,12 @@ function rebuildConfFile(relPath, isModule) {
 
     const ruleMatch = content.match(/\[Rule\]([\s\S]*?)(?=\n\[(Host|URL Rewrite|Script|MITM)\]|$)/);
     if (!ruleMatch) throw new Error(`Missing [Rule] in ${relPath}`);
-    const cleanedRuleBody = cleanRuleSection(ruleMatch[1], isModule);
+    const cleanedRuleBody = cleanRuleSection(ruleMatch[1]);
 
     if (isModule) {
         const headerMatch = content.match(/^([\s\S]*?)(?=\[Rule\])/);
         const header = headerMatch ? headerMatch[1].trimEnd() : "";
-        const mitmLine = `hostname = %APPEND% ${UNIFIED_MITM_HOSTS.filter(h => h !== "*.google.cn").join(", ")}\nh2 = true`;
+        const mitmLine = `hostname = %APPEND% ${UNIFIED_MITM_HOSTS.filter(h => h !== "*.google.cn").join(", ")}`;
         const newModule = `${header}
 
 [Rule]
@@ -543,9 +485,8 @@ ${mitmLine}
     beforeRule = updateGeneralSection(beforeRule);
 
     const mitmSection = `[MITM]
-# Shadowrocket 仅会解密 hostname 指定的域名的请求；开启 h2 = true 支持 HTTP/2 MITM 解密
-hostname = ${UNIFIED_MITM_HOSTS.join(", ")}
-h2 = true`;
+# Shadowrocket 仅会解密 hostname 指定的域名的请求
+hostname = ${UNIFIED_MITM_HOSTS.join(", ")}`;
 
     const newConf = `${beforeRule.trimEnd()}
 

@@ -13,9 +13,8 @@ DOMAIN-SUFFIX,ecombdpage.com,REJECT
 
 [Script]
 # 拦截 Safari 打开的抖音分享短链落地页 (iesdouyin.com / m.douyin.com / www.douyin.com)，自动注入顶部无水印视频与原图直存面板
-抖音_分享页无水印直存 = type=http-response,pattern=^https?:\/\/(www\.iesdouyin|m\.douyin|www\.douyin)\.com\/(share\/(video|note|slides)|video|note)\/,requires-body=1,max-size=5242880,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=0
+抖音_分享页无水印直存 = type=http-response,pattern=^https?:\/\/(www\.iesdouyin|m\.douyin|www\.douyin)\.com\/(share\/(video|note|slides)|video|note)\/,requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=0
 
 [MITM]
-# 关键：显式排除 -*.amemv.com 与 -*.snssdk.com 严防触发抖音 App Cronet 证书校验导致评论区打不开；仅解密网页分享端域名
-hostname = %APPEND% -*.amemv.com, -*.snssdk.com, www.iesdouyin.com, m.douyin.com, www.douyin.com
-h2 = true
+# 仅解密网页分享端域名，绝不触碰 amemv.com / snssdk.com
+hostname = %APPEND% www.iesdouyin.com, m.douyin.com, www.douyin.com
