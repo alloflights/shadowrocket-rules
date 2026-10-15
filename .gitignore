@@ -2,3 +2,5 @@
 .DS_Store
 *.log
 *.bak
+*_副本/
+

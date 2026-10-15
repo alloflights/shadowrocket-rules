@@ -37,12 +37,6 @@ const REMOVED_BROKEN_RULES = new Set([
     "# --- X (Twitter) 最高优先级直通代理保护（防止任何底模或旧缓存规则阻断刷新） ---",
     "# ==================== 海外流媒体与社交平台去广告 (YouTube / X / Spotify / Twitch / Reddit / Pixiv) ====================",
     "# ==================== 海外流媒体与社交平台去广告 (Spotify / Twitch / Reddit / Pixiv) ====================",
-    "DOMAIN-SUFFIX,x.com,PROXY",
-    "DOMAIN-SUFFIX,twitter.com,PROXY",
-    "DOMAIN-SUFFIX,twimg.com,PROXY",
-    "DOMAIN-SUFFIX,t.co,PROXY",
-    "DOMAIN-SUFFIX,pscp.tv,PROXY",
-    "DOMAIN-SUFFIX,periscope.tv,PROXY",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,youtubei.googleapis.com)),REJECT-NO-DROP",
     "AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,youtube.com)),REJECT-NO-DROP",
@@ -385,7 +379,21 @@ const UNIFIED_MITM_HOSTS = [
     "m.zhihu.com", "blog.csdn.net", "tieba.baidu.com", "m.weibo.cn"
 ];
 
-function cleanRuleSection(ruleSectionText) {
+const POLICY_CASING_FIXES = {
+    "YOUTUBE": "YouTube",
+    "NETFLIX": "Netflix",
+    "DISNEY+": "Disney+",
+    "MAX": "Max",
+    "SPOTIFY": "Spotify",
+    "TELEGRAM": "Telegram",
+    "PAYPAL": "PayPal",
+    "TWITTER": "Twitter",
+    "FACEBOOK": "Facebook",
+    "AMAZON": "Amazon",
+    "TIKTOK": "TikTok"
+};
+
+function cleanRuleSection(ruleSectionText, isModule, relPath) {
     let lines = ruleSectionText
         .split("\n")
         .map(line => {
@@ -396,10 +404,64 @@ function cleanRuleSection(ruleSectionText) {
         })
         .filter(line => !REMOVED_BROKEN_RULES.has(line.trim()));
 
+    if (isModule) {
+        lines = lines.filter(line => {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("# --- X (Twitter)")) return false;
+            if (trimmed.startsWith("DOMAIN-SUFFIX,x.com") ||
+                trimmed.startsWith("DOMAIN-SUFFIX,twitter.com") ||
+                trimmed.startsWith("DOMAIN-SUFFIX,twimg.com") ||
+                trimmed.startsWith("DOMAIN-SUFFIX,t.co") ||
+                trimmed.startsWith("DOMAIN-SUFFIX,pscp.tv") ||
+                trimmed.startsWith("DOMAIN-SUFFIX,periscope.tv")) {
+                return false;
+            }
+            return true;
+        });
+    }
+
     if (!lines.some(l => l.includes("bilivideo.com\\/.*-SPLA"))) {
         const insertIdx = lines.findIndex(l => l.includes("DOMAIN,mpad.weixin.qq.com,REJECT"));
         if (insertIdx !== -1) {
             lines.splice(insertIdx + 1, 0, "URL-REGEX,^https?:\\/\\/.*\\.bilivideo\\.com\\/.*-SPLA,REJECT-IMG");
+        }
+    }
+
+    if (relPath === "Shadowrocket_LazyGroup_Merged.conf") {
+        if (!lines.some(l => l.trim() === "DOMAIN-SUFFIX,x.com,Twitter")) {
+            const targetIdx = lines.findIndex(l => l.trim() === "DOMAIN-SUFFIX,reddit.com,PROXY");
+            if (targetIdx !== -1) {
+                lines.splice(
+                    targetIdx,
+                    0,
+                    "# --- X (Twitter) 代理直通（杜绝任何阻断，确保原生秒开） ---",
+                    "DOMAIN-SUFFIX,x.com,Twitter",
+                    "DOMAIN-SUFFIX,twitter.com,Twitter",
+                    "DOMAIN-SUFFIX,twimg.com,Twitter",
+                    "DOMAIN-SUFFIX,t.co,Twitter",
+                    "DOMAIN-SUFFIX,pscp.tv,Twitter",
+                    "DOMAIN-SUFFIX,periscope.tv,Twitter",
+                    ""
+                );
+            }
+        }
+    } else if (relPath === "Shadowrocket_AllInOne_Ultimate.conf") {
+        if (!lines.some(l => l.trim() === "DOMAIN-SUFFIX,x.com,PROXY")) {
+            const targetIdx = lines.findIndex(l => l.trim() === "DOMAIN-SUFFIX,reddit.com,PROXY");
+            if (targetIdx !== -1) {
+                lines.splice(
+                    targetIdx,
+                    0,
+                    "# --- X (Twitter) 代理直通（杜绝任何阻断，确保原生秒开） ---",
+                    "DOMAIN-SUFFIX,x.com,PROXY",
+                    "DOMAIN-SUFFIX,twitter.com,PROXY",
+                    "DOMAIN-SUFFIX,twimg.com,PROXY",
+                    "DOMAIN-SUFFIX,t.co,PROXY",
+                    "DOMAIN-SUFFIX,pscp.tv,PROXY",
+                    "DOMAIN-SUFFIX,periscope.tv,PROXY",
+                    ""
+                );
+            }
         }
     }
 
@@ -408,12 +470,17 @@ function cleanRuleSection(ruleSectionText) {
     const cleaned = [];
 
     for (const rawLine of lines) {
-        const trimmed = rawLine.trim();
+        let trimmed = rawLine.trim();
         if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith(";")) {
             cleaned.push(rawLine);
             continue;
         }
         const parts = trimmed.split(",").map(s => s.trim());
+        if (relPath === "Shadowrocket_LazyGroup_Merged.conf" && parts.length >= 3 && POLICY_CASING_FIXES[parts[2]]) {
+            parts[2] = POLICY_CASING_FIXES[parts[2]];
+            trimmed = parts.join(",");
+        }
+
         const ruleType = parts[0];
         const target = parts[1] || "";
         const policy = parts[2] || "";
@@ -455,7 +522,7 @@ function rebuildConfFile(relPath, isModule) {
 
     const ruleMatch = content.match(/\[Rule\]([\s\S]*?)(?=\n\[(Host|URL Rewrite|Script|MITM)\]|$)/);
     if (!ruleMatch) throw new Error(`Missing [Rule] in ${relPath}`);
-    const cleanedRuleBody = cleanRuleSection(ruleMatch[1]);
+    const cleanedRuleBody = cleanRuleSection(ruleMatch[1], isModule, relPath);
 
     if (isModule) {
         const headerMatch = content.match(/^([\s\S]*?)(?=\[Rule\])/);

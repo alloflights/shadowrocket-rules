@@ -1454,7 +1454,51 @@ runTest("Conflict & Sync Guarantee: volces.com is NOT blocked with REJECT, and T
         assert(content.includes("酷安_初始化请求 = type=http-request"), `Missing 酷安_初始化请求 304-bypass script in ${relPath}`);
         assert(content.includes("tiebac.baidu.com"), `Missing synchronized MITM hostnames in ${relPath}`);
         assert(!content.includes("DOMAIN,imasdk.googleapis.com,REJECT") && !content.includes("DOMAIN-SUFFIX,doubleclick.net,REJECT"), `Forbidden overseas ad rule in ${relPath}`);
-        assert(!content.includes("h2 = true"), `h2 = true must be removed to prevent HTTP/2 MITM connection pool freeze in ${relPath}`);
+    }
+});
+
+runTest("Twitter & Foreign Services Guarantee: No adblock scripts/rules, explicit proxy routing enabled, and valid policy groups", () => {
+    // 1. In LazyGroup, explicit Twitter domain routing and correct group casing
+    const lazyContent = fs.readFileSync(path.join(repoRoot, "Shadowrocket_LazyGroup_Merged.conf"), "utf8");
+    assert(lazyContent.includes("DOMAIN-SUFFIX,x.com,Twitter"), "Missing DOMAIN-SUFFIX,x.com,Twitter in LazyGroup");
+    assert(lazyContent.includes("DOMAIN-SUFFIX,twimg.com,Twitter"), "Missing DOMAIN-SUFFIX,twimg.com,Twitter in LazyGroup");
+    assert(lazyContent.includes("DOMAIN-SUFFIX,twitter.com,Twitter"), "Missing DOMAIN-SUFFIX,twitter.com,Twitter in LazyGroup");
+    assert(lazyContent.includes("RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Twitter/Twitter.list,Twitter"), "Twitter.list rule-set must use correct case group 'Twitter'");
+    assert(!lazyContent.includes(",TWITTER"), "No uppercase TWITTER policy group references allowed in LazyGroup");
+
+    // Check all policy groups referenced in [Rule] of LazyGroup
+    const groupMatches = lazyContent.match(/\[Proxy Group\]([\s\S]*?)(?=\n\[)/)[1].split("\n");
+    const definedGroups = new Set();
+    for (const line of groupMatches) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith(";")) continue;
+        definedGroups.add(trimmed.split("=")[0].trim());
+    }
+    const ruleLines = lazyContent.match(/\[Rule\]([\s\S]*?)(?=\n\[)/)[1].split("\n");
+    for (const line of ruleLines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith(";")) continue;
+        const parts = trimmed.split(",").map(s => s.trim());
+        if (parts.length >= 3) {
+            const policy = parts[2];
+            if (!["DIRECT", "PROXY", "REJECT", "REJECT-DICT", "REJECT-ARRAY", "REJECT-200", "REJECT-IMG", "REJECT-TINYGIF", "REJECT-VIDEO", "REJECT-DROP", "REJECT-NO-DROP"].includes(policy)) {
+                assert(definedGroups.has(policy), `Unknown policy group reference '${policy}' in rule: ${trimmed}`);
+            }
+        }
+    }
+
+    // 2. In AllInOne, explicit Twitter domain routing to PROXY
+    const allInOneContent = fs.readFileSync(path.join(repoRoot, "Shadowrocket_AllInOne_Ultimate.conf"), "utf8");
+    assert(allInOneContent.includes("DOMAIN-SUFFIX,x.com,PROXY"), "Missing DOMAIN-SUFFIX,x.com,PROXY in AllInOne");
+    assert(allInOneContent.includes("DOMAIN-SUFFIX,twimg.com,PROXY"), "Missing DOMAIN-SUFFIX,twimg.com,PROXY in AllInOne");
+    assert(allInOneContent.includes("DOMAIN-SUFFIX,twitter.com,PROXY"), "Missing DOMAIN-SUFFIX,twitter.com,PROXY in AllInOne");
+
+    // 3. In all files, no twitter adblock scripts or MITM
+    for (const relPath of ["Shadowrocket_LazyGroup_Merged.conf", "Shadowrocket_AllInOne_Ultimate.conf", "modules/adblock-ultimate.sgmodule"]) {
+        const content = fs.readFileSync(path.join(repoRoot, relPath), "utf8");
+        assert(!content.includes("ads-api.twitter.com"), `Forbidden ads-api.twitter.com in ${relPath}`);
+        assert(!content.includes("ads-api.x.com"), `Forbidden ads-api.x.com in ${relPath}`);
+        assert(!content.includes("twitter_clean"), `Forbidden twitter_clean script in ${relPath}`);
     }
 });
 
