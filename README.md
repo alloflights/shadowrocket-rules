@@ -1,8 +1,8 @@
 # Shadowrocket 分流 + 去广告
 
-iPhone 用 Shadowrocket 配置：国内直连低延迟、海外精确分流、App 开屏与信息流去广告，不碰 Apple 原生服务。
+iPhone 用 Shadowrocket 配置：精确分流，App 开屏与信息流去广告。
 
-## 使用方式：分流配置 + 去广告模块（两部分独立）
+## 使用方式：分流配置 + 去广告模块
 
 **1. 分流配置（二选一，纯分流，不含任何去广告）**
 
@@ -16,11 +16,11 @@ iPhone 用 Shadowrocket 配置：国内直连低延迟、海外精确分流、Ap
 | 模块 | 地址 |
 | :--- | :--- |
 | **全量去广告（推荐，已含下面所有单 App 模块）** | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock-ultimate.sgmodule` |
-| 仅广告联盟拦截（纯分流层，无需证书，零额外延迟） | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock.sgmodule` |
+| 仅广告联盟拦截 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock.sgmodule` |
 
 全量去广告需要 HTTPS 解密：配置文件 ⓘ → HTTPS 解密 → 生成并安装 CA 证书 → 系统设置 → 通用 → 关于本机 → 证书信任设置 中信任证书。
 
-> 从 v2 升级后，请把 **酷安、闲鱼** 各删除重装一次（或清除缓存）：它们会缓存旧的开屏素材 / 调度结果。
+
 > 全量模块与单 App 模块不要同时开启（内容重复）。
 
 ## 单 App / 其它模块（只想净化个别 App 时用，与全量模块二选一）
