@@ -1,12 +1,18 @@
 // [General] / [Proxy Group] / [Host] 的唯一数据源
+const fs = require('fs');
+const path = require('path');
+
+// 关键服务域名：唯一来源 src/rules/05-critical.list
+const CRITICAL = fs.readFileSync(path.join(__dirname, 'rules', '05-critical.list'), 'utf8')
+  .split(/\r?\n/).map((l) => l.trim()).filter((l) => /^DOMAIN(-SUFFIX)?,/.test(l))
+  .map((l) => { const [type, domain] = l.split(','); return { type, domain }; });
+// skip-proxy / MITM 排除用的通配写法
+const criticalPatterns = () => CRITICAL.flatMap((c) => (c.type === 'DOMAIN' ? [c.domain] : [`*.${c.domain}`]));
 const SKIP_PROXY = [
   '192.168.0.0/16', '10.0.0.0/8', '17.0.0.0/8', '172.16.0.0/12', '100.64.0.0/10', 'localhost', '*.local', 'captive.apple.com',
   '*.apple.com', '*.apple.com.cn', '*.icloud.com', '*.icloud.com.cn', '*.icloud-content.com', '*.push.apple.com', '*.mzstatic.com',
   '*.aaplimg.com', '*.cdn-apple.com', '*.itunes.com', '*.apple-cloudkit.com', '*.apple-dns.net', 'identity.apple.com', 'gsa.apple.com',
-  // 银行 / 支付 / 政务：不经过代理与解密
-  '*.icbc.com.cn', '*.ccb.com', '*.abchina.com.cn', '*.abchina.com', '*.boc.cn', '*.bankofchina.com', '*.bankcomm.com', '*.psbc.com',
-  '*.cmbchina.com', '*.zj96596.com', '*.zjrc.com', '*.alipay.com', '*.unionpay.com', '*.95516.com', '*.pbccrc.org.cn',
-  '*.chsi.com.cn', '*.122.gov.cn', '*.gffunds.com.cn', '*.nffund.com', '*.antfortune.com', '*.ecny.cn',
+  // 05-critical.list 里的 12306 / 政务 / 银行 / 支付 / 运营商 / Wi-Fi 通话 / 游戏反作弊域名自动追加（见 CRITICAL）
 ];
 
 const ALWAYS_REAL_IP = [
@@ -14,6 +20,12 @@ const ALWAYS_REAL_IP = [
   '*.cdn-apple.com', '*.aaplimg.com', '*.itunes.com', '*.apple-dns.net', 'identity.apple.com', 'gsa.apple.com', 'captive.apple.com',
   '*.outlook.com', '*.office365.com', '*.office.com', '*.msftconnecttest.com', '*.msftncsi.com', 'time.*.com', 'ntp.*.com',
   'stun.*.*', 'stun.*.*.*', '*.local', 'localhost',
+  // QQ / 微信 / TIM 网页快捷登录：这些域名解析到 127.0.0.1，拿到虚拟 IP 会导致「一键登录」失效
+  'localhost.ptlogin2.qq.com', 'localhost.sec.qq.com', 'localhost.work.weixin.qq.com',
+  // Wi-Fi 通话 ePDG
+  '*.3gppnetwork.org',
+  // 游戏联机：真实 IP 才能正确打洞，NAT 类型不降级（含热点共享给主机时）
+  '*.srv.nintendo.net', '*.stun.playstation.net', 'xbox.*.microsoft.com', '*.xboxlive.com', '*.battlenet.com.cn', '*.battle.net',
 ];
 
 const TUN_EXCLUDED = [
@@ -26,8 +38,8 @@ function general(updateUrl) {
   return `[General]
 bypass-system = true
 
-# 跳过代理：Apple 核心服务、局域网、银行 / 支付 / 政务，直接由系统处理，最低延迟、最少干扰。
-skip-proxy = ${SKIP_PROXY.join(', ')}
+# 跳过代理：Apple 核心服务、局域网、12306 / 政务 / 银行 / 支付 / 运营商等关键服务，直接由系统处理，最低延迟、最少干扰。
+skip-proxy = ${[...SKIP_PROXY, ...criticalPatterns()].join(', ')}
 
 # 真实 IP：Apple 认证 / 推送、微软邮件、NTP / STUN 不使用虚拟 IP，避免握手失败与时间同步异常。
 always-real-ip = ${ALWAYS_REAL_IP.join(', ')}
@@ -138,4 +150,4 @@ const host = `[Host]
 localhost = 127.0.0.1
 `;
 
-module.exports = { general, proxyGroups, AIO_POLICY, host };
+module.exports = { general, proxyGroups, AIO_POLICY, host, CRITICAL, criticalPatterns };

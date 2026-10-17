@@ -101,7 +101,9 @@ const NEVER_REJECT = ['gtimg.cn', 'qzs.qq.com', 'u.jd.com', 'union-click.jd.com'
 
 for (const [rel, text] of allTexts) {
   const mitmLine = body(sectionOf(text, 'MITM')).find((l) => l.startsWith('hostname')) || '';
-  const hosts = mitmLine.replace(/^hostname\s*=\s*(%APPEND%|%INSERT%)?/, '').split(',').map((h) => h.trim()).filter(Boolean);
+  const allHosts = mitmLine.replace(/^hostname\s*=\s*(%APPEND%|%INSERT%)?/, '').split(',').map((h) => h.trim()).filter(Boolean);
+  const hosts = allHosts.filter((h) => !h.startsWith('-'));
+  const excludes = allHosts.filter((h) => h.startsWith('-'));
   const rules = body(sectionOf(text, 'Rule'));
   test(`${rel}: MITM 不包含 Apple / 银行 / 运营商 / 大 CDN 通配`, () => {
     for (const h of hosts) {
@@ -269,6 +271,57 @@ test('去广告总模块包含全部 App 的重写 / 脚本 / MITM', () => {
     for (const r of u.rewrites || []) assert(text.includes(r), `${u.id} 重写缺失: ${r}`);
     for (const sc of u.scripts || []) assert(text.includes(`${sc.name} = `), `${u.id} 脚本缺失: ${sc.name}`);
     for (const h of u.mitm || []) assert(text.includes(h), `${u.id} MITM 缺失: ${h}`);
+  }
+});
+
+// ---------------------------------------------------------------- 关键服务保护
+const CRITICAL_MUST = ['12306.cn', 'gov.cn', 'alipay.com', 'tenpay.com', 'unionpay.com', 'icbc.com.cn', 'ccb.com', 'cmbchina.com', '10086.cn', '3gppnetwork.org', 'anticheatexpert.com'];
+test('关键服务：主配置在 Apple 规则之后、任何分流规则之前直连', () => {
+  for (const rel of ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf']) {
+    const rules = body(sectionOf(files[rel], 'Rule'));
+    const firstRouting = rules.findIndex((l) => l.startsWith('DOMAIN-SUFFIX,jsdelivr.net'));
+    for (const d of CRITICAL_MUST) {
+      const i = rules.indexOf(`DOMAIN-SUFFIX,${d},DIRECT`);
+      assert(i >= 0 && i < firstRouting + 80, `${rel} 缺少或过晚: ${d}`);
+    }
+    assert(rules.includes('DOMAIN,pay.weixin.qq.com,DIRECT'), `${rel} 缺少微信支付`);
+  }
+});
+test('关键服务：写入 skip-proxy，QQ 快捷登录 / Wi-Fi 通话 / 游戏使用真实 IP', () => {
+  for (const rel of ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf']) {
+    const skip = (files[rel].match(/^skip-proxy = (.*)$/m) || [])[1].split(', ');
+    const real = (files[rel].match(/^always-real-ip = (.*)$/m) || [])[1].split(', ');
+    for (const d of CRITICAL_MUST) assert(skip.includes(`*.${d}`), `${rel} skip-proxy 缺少 *.${d}`);
+    for (const d of ['localhost.ptlogin2.qq.com', '*.3gppnetwork.org', '*.xboxlive.com', 'stun.*.*']) assert(real.includes(d), `${rel} always-real-ip 缺少 ${d}`);
+  }
+});
+test('关键服务：去广告模块中保护段先于 AWAvenue，且之后不再有针对关键域名的拒绝规则', () => {
+  for (const rel of ['modules/adblock-ultimate.sgmodule', 'modules/adblock.sgmodule', 'modules/awavenue.sgmodule']) {
+    const rules = body(sectionOf(files[rel], 'Rule'));
+    const aw = rules.findIndex((l) => l.startsWith('RULE-SET,') && l.includes('AWAvenue'));
+    const guard = rules.indexOf('DOMAIN-SUFFIX,12306.cn,DIRECT');
+    assert(guard >= 0 && guard < aw, `${rel} 保护段不在 AWAvenue 之前`);
+    const suffixes = rules.slice(0, aw).filter((l) => /,DIRECT$/.test(l)).map((l) => l.split(','));
+    for (const l of rules.slice(guard)) {
+      const p = l.split(',');
+      if (!/^DOMAIN(-SUFFIX)?$/.test(p[0]) || !/^REJECT/.test(p[2] || '')) continue;
+      const hit = suffixes.some(([t, d]) => (t === 'DOMAIN' ? p[1] === d : p[1] === d || p[1].endsWith(`.${d}`)));
+      assert(!hit, `${rel} 拒绝规则被保护段遮蔽（应提前）: ${l}`);
+    }
+  }
+  const ult = body(sectionOf(files['modules/adblock-ultimate.sgmodule'], 'Rule'));
+  assert(ult.indexOf('DOMAIN,ad.12306.cn,REJECT') >= 0 && ult.indexOf('DOMAIN,ad.12306.cn,REJECT') < ult.indexOf('DOMAIN-SUFFIX,12306.cn,DIRECT'), '12306 广告拒绝应在保护段之前');
+});
+test('关键服务：去广告总模块 MITM 排除关键域名，且解密列表不与之冲突', () => {
+  const line = body(sectionOf(files['modules/adblock-ultimate.sgmodule'], 'MITM')).find((l) => l.startsWith('hostname'));
+  const all = line.replace(/^hostname\s*=\s*%APPEND%\s*/, '').split(', ');
+  const ex = all.filter((h) => h.startsWith('-')).map((h) => h.slice(1));
+  for (const d of CRITICAL_MUST) assert(ex.includes(`*.${d}`), `缺少 MITM 排除: -*.${d}`);
+  assert(ex.includes('pay.weixin.qq.com'), '缺少 MITM 排除: -pay.weixin.qq.com');
+  const toRe = (h) => new RegExp('^' + h.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+  for (const h of all.filter((x) => !x.startsWith('-'))) {
+    const sample = h.replace(/\*/g, 'x');
+    assert(!ex.some((e) => toRe(e).test(sample)), `解密主机落入排除范围: ${h}`);
   }
 });
 
