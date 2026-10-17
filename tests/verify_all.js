@@ -717,6 +717,111 @@ runTest('Pwesports edge case: handles malformed JSON response gracefully', () =>
     assert(res && typeof res === 'object');
 });
 
+// ---------------------------------------------------------
+// Goofish (闲鱼) Tests
+// ---------------------------------------------------------
+console.log('\n--- Testing goofish.js ---');
+const goofishScriptPath = path.join(__dirname, '../modules/scripts/goofish.js');
+
+runTest('Goofish http-request mock (/gw/mtop.taobao.idlecommerce.splash.async.ads): returns status 200, ret SUCCESS, and empty adMap', () => {
+    const res = executeScript(goofishScriptPath, { url: 'https://acs.m.goofish.com/gw/mtop.taobao.idlecommerce.splash.async.ads/1.0/' }, undefined);
+    assert(res && res.response, 'Expected response object');
+    assert.strictEqual(res.response.status, 200);
+    const body = JSON.parse(res.response.body);
+    assert(Array.isArray(body.ret) && body.ret[0].includes('SUCCESS'));
+    assert(body.data && typeof body.data === 'object');
+    assert.deepStrictEqual(body.data.adMap, {});
+    assert.deepStrictEqual(body.data.splashList, []);
+});
+
+runTest('Goofish http-request mock (/gw/mtop.idle.idleadv.app.launch.report): returns status 200 and attributeSuccess false', () => {
+    const res = executeScript(goofishScriptPath, { url: 'https://acs.m.goofish.com/gw/mtop.idle.idleadv.app.launch.report/1.0/' }, undefined);
+    assert(res && res.response, 'Expected response object');
+    assert.strictEqual(res.response.status, 200);
+    const body = JSON.parse(res.response.body);
+    assert.strictEqual(body.data.attributeSuccess, 'false');
+});
+
+runTest('Goofish http-response (/gw/mtop.taobao.idle.user.strategy.list): filters POPUP / FLOAT_LAYER / BANNER while preserving BIZ_PUBLISH_BALL', () => {
+    const mockStrategyPayload = {
+        api: "mtop.taobao.idle.user.strategy.list",
+        ret: ["SUCCESS::调用成功"],
+        data: {
+            strategies: [
+                { id: "strat_1", type: "BIZ_PUBLISH_BALL", title: "发布闲置" },
+                { id: "strat_2", type: "POPUP", title: "双11营销弹窗" },
+                { id: "strat_3", type: "FLOAT_LAYER", title: "悬浮领红包" },
+                { id: "strat_4", type: "BANNER", title: "横幅推广" }
+            ],
+            popupStrategies: [{ id: "p1" }],
+            floatStrategies: [{ id: "f1" }]
+        }
+    };
+    const res = executeScript(goofishScriptPath, { url: 'https://acs.m.goofish.com/gw/mtop.taobao.idle.user.strategy.list/1.0/' }, { status: 200, body: JSON.stringify(mockStrategyPayload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.strategies.length, 1);
+    assert.strictEqual(parsed.data.strategies[0].type, 'BIZ_PUBLISH_BALL');
+    assert.deepStrictEqual(parsed.data.popupStrategies, []);
+    assert.deepStrictEqual(parsed.data.floatStrategies, []);
+});
+
+runTest('Goofish http-response (/gw/mtop.taobao.idlehome.home.circle.list): strips idleAds tracking parameters from circleList', () => {
+    const mockCirclePayload = {
+        api: "mtop.taobao.idlehome.home.circle.list",
+        ret: ["SUCCESS::调用成功"],
+        data: {
+            circleList: [
+                {
+                    title: "数码圈",
+                    trackParams: {
+                        args: {
+                            idleAdsPositionId: "123",
+                            idleAdsMaterialId: "456",
+                            circleId: "normal_circle"
+                        }
+                    }
+                }
+            ]
+        }
+    };
+    const res = executeScript(goofishScriptPath, { url: 'https://acs.m.goofish.com/gw/mtop.taobao.idlehome.home.circle.list/1.0/' }, { status: 200, body: JSON.stringify(mockCirclePayload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    const args = parsed.data.circleList[0].trackParams.args;
+    assert.strictEqual(args.idleAdsPositionId, undefined);
+    assert.strictEqual(args.idleAdsMaterialId, undefined);
+    assert.strictEqual(args.circleId, 'normal_circle');
+});
+
+runTest('Goofish http-response (/gw/mtop.taobao.idle.home.recommend): filters feed cards with adSign, isAd, or cardType === ad', () => {
+    const mockFeedPayload = {
+        api: "mtop.taobao.idle.home.recommend",
+        ret: ["SUCCESS::调用成功"],
+        data: {
+            items: [
+                { id: "item_1", title: "自用二手 iPhone 15", price: 4200 },
+                { id: "item_2", title: "商业推广手机", adSign: true, cardType: "ad" },
+                { id: "item_3", title: "自用 Mac mini M4", price: 3500 },
+                { id: "item_4", title: "赞助广告商品", promotionType: "cpm" }
+            ],
+            bannerList: [{ title: "首页大促轮播广告" }]
+        }
+    };
+    const res = executeScript(goofishScriptPath, { url: 'https://acs.m.goofish.com/gw/mtop.taobao.idle.home.recommend/1.0/' }, { status: 200, body: JSON.stringify(mockFeedPayload) });
+    assert(res && res.body);
+    const parsed = JSON.parse(res.body);
+    assert.strictEqual(parsed.data.items.length, 2);
+    assert.strictEqual(parsed.data.items[0].id, 'item_1');
+    assert.strictEqual(parsed.data.items[1].id, 'item_3');
+    assert.deepStrictEqual(parsed.data.bannerList, []);
+});
+
+runTest('Goofish edge case: handles malformed JSON response gracefully without throwing', () => {
+    const res = executeScript(goofishScriptPath, { url: 'https://acs.m.goofish.com/gw/mtop.taobao.idle.home.feed' }, { status: 200, body: 'MALFORMED_{JSON' });
+    assert(res && typeof res === 'object');
+});
+
 console.log('\n================================================================');
 console.log('2. DEEP VERIFICATION: Universal Syntax & Regex Check Across All Files');
 console.log('================================================================\n');
@@ -1591,6 +1696,50 @@ runTest("Zhihu deep ad removal: strips stringified extra/brief ads, common_card 
     assert.strictEqual(parsedComment.ad_plugin, undefined);
     assert.strictEqual(parsedComment.data.length, 1);
     assert.strictEqual(parsedComment.data[0].id, 1);
+});
+
+console.log('\n--- Testing Goofish Consistency & Architecture Guarantee ---');
+runTest('Check that goofish_splash and goofish_clean exist across core configs and module', () => {
+    const requiredFiles = [
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of requiredFiles) {
+        const fullPath = path.join(repoRoot, relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert(content.includes('goofish_splash = type=http-request'), `Missing goofish_splash in ${relPath}`);
+        assert(content.includes('goofish_clean = type=http-response'), `Missing goofish_clean in ${relPath}`);
+        assert(content.includes('modules/scripts/goofish.js'), `Missing goofish.js script path in ${relPath}`);
+    }
+});
+
+runTest('Check that acs.m.goofish.com, g-acs.m.goofish.com and *.m.goofish.com are in MITM hostnames across core configs', () => {
+    const requiredFiles = [
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of requiredFiles) {
+        const fullPath = path.join(repoRoot, relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert(content.includes('acs.m.goofish.com'), `Missing acs.m.goofish.com in MITM in ${relPath}`);
+        assert(content.includes('g-acs.m.goofish.com'), `Missing g-acs.m.goofish.com in MITM in ${relPath}`);
+        assert(content.includes('*.m.goofish.com'), `Missing *.m.goofish.com in MITM in ${relPath}`);
+    }
+});
+
+runTest('Check that iyes.youku.com is rejected across core configs to prevent Alibaba video splash ads', () => {
+    const requiredFiles = [
+        'modules/adblock-ultimate.sgmodule',
+        'Shadowrocket_LazyGroup_Merged.conf',
+        'Shadowrocket_AllInOne_Ultimate.conf'
+    ];
+    for (const relPath of requiredFiles) {
+        const fullPath = path.join(repoRoot, relPath);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        assert(content.includes('DOMAIN-SUFFIX,iyes.youku.com,REJECT'), `Missing iyes.youku.com REJECT rule in ${relPath}`);
+    }
 });
 
 console.log(`\n================================================================`);

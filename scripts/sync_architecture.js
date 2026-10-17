@@ -181,11 +181,15 @@ const UNIFIED_URL_REWRITE_BODY = `# --- Google 搜索引擎防跳转重写 ---
 ^https?:\\/\\/api\\.m\\.jd\\.com\\/client\\.action\\?functionId=(start|getAd) - reject-dict
 ^https?:\\/\\/m\\.api\\.dianping\\.com\\/(advert|splash)\\/ - reject-dict
 
-# --- 闲鱼开屏与首页广告拦截 ---
-^https?:\\/\\/(acs|g-acs)\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.local\\.splash\\.ads\\/ - reject-dict
-^https?:\\/\\/(acs|g-acs)\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.home\\.banner\\.feed\\/ - reject-dict
-^https?:\\/\\/(acs|g-acs)\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.popup\\.window\\/ - reject-dict
-^https?:\\/\\/(acs|g-acs)\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.float\\.window\\/ - reject-dict
+# --- 闲鱼开屏、弹窗、悬浮球与广告上报拦截 ---
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.local\\.splash\\.ads - reject-dict
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idlecommerce\\.splash - reject-dict
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.home\\.welcome - reject-dict
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.home\\.banner\\.feed - reject-dict
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.popup\\.window - reject-dict
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.idle\\.float\\.window - reject-dict
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.idle\\.ad\\.expose - reject-200
+^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.idle\\.idleadv - reject-200
 
 # --- 微博开屏与信息流推广拦截 ---
 ^https:\\/\\/api\\.weibo\\.cn\\/2\\/(ug\\/checkin\\/list|push\\/daily)\\? - reject-dict
@@ -293,7 +297,11 @@ const UNIFIED_URL_REWRITE_BODY = `# --- Google 搜索引擎防跳转重写 ---
 ^https?:\\/\\/res\\.kfc\\.com\\.cn\\/(advertisement|CRM\\/kfcad)\\/ - reject-200
 ^https?:\\/\\/dynamicad\\.kfc\\.com\\.cn\\/api\\/app5\\/homepage\\/ai\\/popup - reject-200`;
 
-const UNIFIED_SCRIPT_BODY = `# 0. 百度网盘急速开屏净化 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
+const UNIFIED_SCRIPT_BODY = `# 0. 闲鱼深度无感净化 (开屏Mock、悬浮球/弹窗策略过滤、首页Tab广告追踪清理、信息流净化)
+goofish_splash = type=http-request,pattern=^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.(taobao\\.idle(commerce)?\\.(splash|home\\.welcome)|idle\\.(ad|idleadv)),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/goofish.js,script-update-interval=0
+goofish_clean = type=http-response,pattern=^https?:\\/\\/(g-)?acs\\.m\\.goofish\\.com\\/gw\\/mtop\\.taobao\\.(idle\\.(user\\.strategy|home\\.(recommend|feed)|search)|idlehome\\.home\\.circle),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/goofish.js,script-update-interval=0
+
+# 1. 百度网盘急速开屏净化 (本地 0.1ms Mock 响应，彻底阻止开屏占位页与摇一摇监听实例化)
 baidunetdisk_splash = type=http-request,pattern=^https?:\\/\\/pan\\.baidu\\.com\\/.*(pcs\\/adx?|membership\\/advertise|splash|buy\\/ad\\/(conf|get)|api\\/ad\\/|act\\/(api\\/activityentry|v\\d\\/(bchannel|welfare)\\/list)|feed\\/cardinfos|recommend\\/shortseries\\/list),requires-body=0,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
 baidunetdisk_clean = type=http-response,pattern=^https?:\\/\\/pan\\.baidu\\.com\\/.*(getsyscfg|getconfig|feed|card|membership|activity|config|user|welfare|bchannel|pmall|splash|pcs\\/ad),requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/baidunetdisk.js,script-update-interval=0
 
@@ -368,7 +376,7 @@ const UNIFIED_MITM_HOSTS = [
     "interface*.music.163.com",
     "magev6.if.qidian.com",
     "*.ximalaya.com", "*.xmcdn.com", "*.wsa.ximalaya.com", "adse.ximalaya.com", "adse.wsa.ximalaya.com", "mobile.ximalaya.com", "passport.ximalaya.com",
-    "acs.m.goofish.com", "g-acs.m.goofish.com",
+    "acs.m.goofish.com", "g-acs.m.goofish.com", "*.m.goofish.com",
     "img.meituan.net", "s3plus.meituan.net", "flowplus.meituan.net",
     "api.pwesports.cn", "app.pwesports.cn", "esports.wanmei.com", "api.esports.wanmei.com", "client.pwesports.cn", "ad.pwesports.cn", "advert.pwesports.cn", "*.pwesports.cn", "*.wanmei.com",
     "api.xiaoheihe.cn", "bbs.nga.cn", "nga.178.com", "api.dongqiudi.com", "god.game.163.com",
@@ -465,6 +473,7 @@ function cleanRuleSection(ruleSectionText, isModule, relPath) {
         "DOMAIN-SUFFIX,httpdns.alicdn.com,REJECT",
         "DOMAIN-SUFFIX,httpdns-api.aliyuncs.com,REJECT",
         "DOMAIN-SUFFIX,httpdns-sc.aliyuncs.com,REJECT",
+        "DOMAIN-SUFFIX,iyes.youku.com,REJECT",
         "IP-CIDR,203.107.1.0/24,REJECT,no-resolve"
     ];
     const missingAdRules = enhancedAdRejectRules.filter(r => !lines.some(l => l.trim() === r));
