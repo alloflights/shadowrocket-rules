@@ -1,0 +1,33 @@
+# ==================== 明细属于国外的顶级域名与国际特征分流 ====================
+# 境外政府与机构 (排除国内 .gov.cn)
+DOMAIN-SUFFIX,gov,PROXY
+# 境外大学与科研高校 (排除国内 .edu.cn)
+DOMAIN-SUFFIX,edu,PROXY
+# 境外学术、军工与特定国家官方后缀
+DOMAIN-SUFFIX,ac.uk,PROXY
+DOMAIN-SUFFIX,org.uk,PROXY
+DOMAIN-SUFFIX,gov.uk,PROXY
+DOMAIN-SUFFIX,mil,PROXY
+DOMAIN-SUFFIX,ac.jp,PROXY
+DOMAIN-SUFFIX,go.jp,PROXY
+DOMAIN-SUFFIX,edu.au,PROXY
+DOMAIN-SUFFIX,gov.au,PROXY
+# 国际权威通用知识与科学类 TLD
+DOMAIN-SUFFIX,wiki,PROXY
+DOMAIN-SUFFIX,bio,PROXY
+DOMAIN-SUFFIX,science,PROXY
+# 国际权威组织与标准委员会
+DOMAIN-SUFFIX,who.int,PROXY
+DOMAIN-SUFFIX,un.org,PROXY
+DOMAIN-SUFFIX,w3.org,PROXY
+DOMAIN-SUFFIX,ietf.org,PROXY
+DOMAIN-SUFFIX,icann.org,PROXY
+DOMAIN-SUFFIX,iana.org,PROXY
+DOMAIN-SUFFIX,nato.int,PROXY
+DOMAIN-SUFFIX,imf.org,PROXY
+DOMAIN-SUFFIX,worldbank.org,PROXY
+DOMAIN-SUFFIX,oecd.org,PROXY
+DOMAIN-SUFFIX,unesco.org,PROXY
+DOMAIN-SUFFIX,cern.ch,PROXY
+
+

@@ -1,44 +1,12 @@
-#!name=全球 Top 500 常用海外应用与网站极速分流 (Global Top 500 Overseas Routing)
-#!desc=收录全球 Top 500 核心资讯、科技媒体、跨国出行、生命科学学术科研 (Rosalind)、开发者原生云生态及海外法定 TLD，彻底杜绝境外未知流量落入直连导致的超时白屏。
-#!author=allofights
+#!name=海外常用应用与网站分流
+#!desc=海外资讯、学术、开发者云服务、流媒体与常见海外 TLD 走代理。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=分流
 #!system=ios
-#!category=分流规则
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
-# ==================== Meta AI / Muse 智能体专线全链路 (全量代理) ====================
-DOMAIN-SUFFIX,muse.ai,PROXY
-DOMAIN-SUFFIX,muse-meta.com,PROXY
-DOMAIN-SUFFIX,metaaivm.com,PROXY
-DOMAIN-SUFFIX,meta.ai,PROXY
-DOMAIN,hatch.metaaivm.com,PROXY
-DOMAIN-KEYWORD,metaaivm,PROXY
-DOMAIN-KEYWORD,muse,PROXY
-DOMAIN-KEYWORD,metaclaw,PROXY
-DOMAIN,imagine.meta.com,PROXY
-DOMAIN,flow.meta.com,PROXY
-DOMAIN-SUFFIX,meta.com,PROXY
-DOMAIN-SUFFIX,facebook.com,PROXY
-DOMAIN-SUFFIX,fbcdn.net,PROXY
-DOMAIN-SUFFIX,fbsbx.com,PROXY
-DOMAIN-SUFFIX,internalfb.com,PROXY
-DOMAIN-SUFFIX,llama.com,PROXY
-DOMAIN,llama.meta.com,PROXY
-DOMAIN-SUFFIX,ai.meta.com,PROXY
-DOMAIN-SUFFIX,oculus.com,PROXY
-DOMAIN-SUFFIX,m.me,PROXY
-# Meta 官方 IP 范围与 ASN (含 2022-2026 最新 57.141.0.0/14 与 163.70.0.0/16)
-IP-CIDR,57.141.0.0/14,PROXY,no-resolve
-IP-CIDR,157.240.0.0/16,PROXY,no-resolve
-IP-CIDR,31.13.0.0/16,PROXY,no-resolve
-IP-CIDR,173.252.64.0/18,PROXY,no-resolve
-IP-CIDR,129.134.0.0/16,PROXY,no-resolve
-IP-CIDR,66.220.144.0/20,PROXY,no-resolve
-IP-CIDR,163.70.0.0/16,PROXY,no-resolve
-IP-CIDR,185.60.216.0/22,PROXY,no-resolve
-IP-CIDR,204.15.20.0/22,PROXY,no-resolve
-IP-ASN,32934,PROXY
-IP-ASN,63293,PROXY
-
 # ==================== 用户专属画像：生信科学、生物医学与学术科研 (Rosalind / Academic) ====================
 # 1. 国际核心生物科学与基因组学权威数据库
 DOMAIN-SUFFIX,ncbi.nlm.nih.gov,PROXY
@@ -218,6 +186,14 @@ DOMAIN-SUFFIX,fanbox.cc,PROXY
 DOMAIN-SUFFIX,quora.com,PROXY
 DOMAIN-SUFFIX,quoracdn.net,PROXY
 DOMAIN-SUFFIX,qr.ae,PROXY
+# --- X (Twitter) 代理直通（杜绝任何阻断，确保原生秒开） ---
+DOMAIN-SUFFIX,x.com,PROXY
+DOMAIN-SUFFIX,twitter.com,PROXY
+DOMAIN-SUFFIX,twimg.com,PROXY
+DOMAIN-SUFFIX,t.co,PROXY
+DOMAIN-SUFFIX,pscp.tv,PROXY
+DOMAIN-SUFFIX,periscope.tv,PROXY
+
 DOMAIN-SUFFIX,reddit.com,PROXY
 DOMAIN-SUFFIX,redd.it,PROXY
 DOMAIN-SUFFIX,redditstatic.com,PROXY

@@ -1,0 +1,30 @@
+# ==================== 00 · 系统与基础保护（最先匹配，任何去广告规则都碰不到） ====================
+# Apple 原生服务：APNs 推送、iCloud、App Store、Apple ID、系统更新、定位等。全部交给「苹果服务」组（默认直连），
+# 且不做 HTTPS 解密、不做 QUIC 阻断，保证推送 / iCloud 同步 / 隔空投送 / 接力等不受影响。
+DOMAIN,captive.apple.com,DIRECT
+DOMAIN-SUFFIX,push.apple.com,DIRECT
+DOMAIN,testflight.apple.com,PROXY
+DOMAIN-SUFFIX,apple.com,苹果服务
+DOMAIN-SUFFIX,apple.com.cn,苹果服务
+DOMAIN-SUFFIX,icloud.com,苹果服务
+DOMAIN-SUFFIX,icloud.com.cn,苹果服务
+DOMAIN-SUFFIX,icloud-content.com,苹果服务
+DOMAIN-SUFFIX,me.com,苹果服务
+DOMAIN-SUFFIX,mzstatic.com,苹果服务
+DOMAIN-SUFFIX,apple-cloudkit.com,苹果服务
+DOMAIN-SUFFIX,apple-dns.net,苹果服务
+DOMAIN-SUFFIX,cdn-apple.com,苹果服务
+DOMAIN-SUFFIX,aaplimg.com,苹果服务
+DOMAIN-SUFFIX,itunes.com,苹果服务
+DOMAIN-SUFFIX,apple-livephotoskit.com,苹果服务
+DOMAIN-SUFFIX,apple-mapkit.com,苹果服务
+# 局域网与本机
+DOMAIN-SUFFIX,local,DIRECT
+IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+IP-CIDR,17.0.0.0/8,DIRECT,no-resolve
+# 脚本 / 规则集分发 CDN：国内直连 jsDelivr 经常被干扰，走代理保证脚本与规则集能按时更新
+DOMAIN-SUFFIX,jsdelivr.net,PROXY

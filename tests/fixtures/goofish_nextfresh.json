@@ -1,0 +1,10 @@
+{"api":"mtop.taobao.idlehome.home.nextfresh","data":{
+ "bannerReturnDO":{"x":1},"widgetReturnDO":{"x":1},"homeTopList":[{"a":1}],
+ "sections":[
+  {"data":{"cardTypeValue":"Item","bizType":"item"},"template":{"name":"fish_home_feeds_item"}},
+  {"data":{"bizType":"AD"},"template":{"name":"x"}},
+  {"data":{"cardTypeValue":"Card"},"template":{"name":"fish_home_yunying_card_d3"}},
+  {"data":{"bizType":"homepage"},"template":{"name":"y"}},
+  {"data":{"cardTypeValue":"Item"},"template":{"name":"fish_home_feeds_item"}},
+  {"data":{"cardTypeValue":"Video"},"template":{"name":"z"}}
+ ]}}

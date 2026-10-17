@@ -1,724 +1,175 @@
 /**
- * 酷安 (Coolapk) 深度无感净化脚本 (全链路防空白广告容器 & 首页信息流无损刷新版)
+ * 酷安 (Coolapk) 去广告 v3
  *
- * 核心能力：
- * 1. 开屏与唤醒接口 0.1ms 本地 Mock 返回 200 + 合规空结构，杜绝回退沙盒缓存广告；
- * 2. 拦截 /main/init 的 304 缓存校验头并精准抹平 V8_APP_EXTRA 中全部 SplashAd.* / Ad.* 参数，
- *    保护首页 Tab 导航树与空数组型 extraDataArr: [] 不被污染或误删；
- * 3. 双轨解析 extraData（JSON 字符串）与 extraDataArr（字典对象），精准识别并整卡剥离 GDT、JAD、
- *    GroMore、Pangle、Tanx、Alimama、百青藤、快手等 SDK 占位容器卡片；
- * 4. 严格保护普通用户动态中的字符串/数值数组（如 picArr、picSizeArr、tags、recent_reply_ids），
- *    避免因清空 picArr 引发客户端列表适配器越界崩溃导致首页信息流无法刷新；
- * 5. 自底向上（Bottom-Up）空壳容器剥离：仅当纯卡片容器的子节点（entities/rows/items）全部为广告被清空后，
- *    连同外层空壳容器一并移除，绝不误删首页导航 Tab 与正常用户动态。
+ * 开屏根因（v2 的 “广告不加载但仍停在开屏页、要点跳过” 问题）：
+ *   酷安自营开屏不是第三方 SDK，而是 /v6/main/init 下发的第一张 entityTemplate=imageCard 卡片，
+ *   客户端拿到它就会画出带“跳过”按钮的开屏页；v2 只把图片 reject 掉，于是出现“空白开屏 + 跳过”。
+ *   v3 直接从 init 中删除 imageCard，并改写配置卡 (entityId 6390) 的 SplashAd.* 参数：
+ *     SplashAd.Type = ""        → 不启用任何开屏广告类型
+ *     SplashAd.timeout = "0"    → 开屏等待 0 秒
+ *     SplashAd.Expires = 9999999999 → 热启动(切回前台)开屏间隔拉满
+ *     SplashAd.onResume = "0"   → 关闭切回前台开屏
+ *   同时在请求阶段去掉 If-None-Match / If-Modified-Since，避免 304 让客户端继续用旧缓存。
  *
- * 兼容 Shadowrocket / Surge / Loon / Quantumult X：纯 ES5/ES2015 语法，零外部依赖，零弹窗打扰。
+ * 信息流：只依据明确的广告信号（模板名 / 已知广告位 entityId / 广告标记字段）删除卡片，
+ * 不做关键词猜测，避免误删正常动态与 Tab。
+ *
+ * 兼容 Shadowrocket / Surge / Loon / Stash；任何异常都原样放行。
  */
+(function () {
+    var url = (typeof $request !== "undefined" && $request && $request.url) ? String($request.url) : "";
+    var isResponse = typeof $response !== "undefined" && $response !== null && $response !== undefined;
 
-(function coolapkPro() {
-    var request = (typeof $request !== "undefined" && $request) ? $request : null;
-    var url = (request && request.url) ? String(request.url) : "";
-    var hasResponse = typeof $response !== "undefined" && $response;
-
-    var AD_KEYS = {
-        "splash": true,
-        "splashlist": true,
-        "splashconfig": true,
-        "splashdata": true,
-        "splashad": true,
-        "launchad": true,
-        "launchtime": true,
-        "openscreen": true,
-        "startupad": true,
-        "bootad": true,
-        "ads": true,
-        "adlist": true,
-        "adconfig": true,
-        "advertisement": true,
-        "advertising": true,
-        "popup": true,
-        "popups": true,
-        "popwindow": true,
-        "popupwindow": true,
-        "popupcard": true,
-        "dialogcard": true,
-        "interstitial": true,
-        "interstitialad": true,
-        "floatinglayer": true,
-        "floatingwindow": true,
-        "floatingad": true,
-        "floatcard": true,
-        "gdt": true,
-        "gdtconfig": true,
-        "gdtdata": true,
-        "gdtad": true,
-        "jad": true,
-        "jadconfig": true,
-        "jaddata": true,
-        "jadad": true,
-        "gromore": true,
-        "gromoreconfig": true,
-        "gromoredata": true,
-        "pangle": true,
-        "pangleconfig": true,
-        "pangledata": true,
-        "csj": true,
-        "csjconfig": true,
-        "mobads": true,
-        "mobadsconfig": true,
-        "thirdpartyad": true,
-        "sdkad": true,
-        "sdkconfig": true,
-        "adparams": true,
-        "addata": true,
-        "adcontainer": true,
-        "adslot": true,
-        "adslots": true,
-        "promocard": true,
-        "promotioncard": true,
-        "sponsorcard": true,
-        "feedsponsorcard": true,
-        "hotsponsorcard": true,
-        "replysponsorcard": true,
-        "commercialcard": true,
-        "commercialdata": true,
-        "goodscard": true,
-        "goodsgridcard": true,
-        "goodslistcard": true,
-        "splashvideo": true,
-        "splashimage": true,
-        "shakeconfig": true,
-        "shaketoload": true,
-        "shaketojump": true,
-        "shakeaction": true,
-        "adinfo": true,
-        "adtag": true,
-        "admetadata": true,
-        "feedad": true,
-        "feedadcard": true,
-        "nativead": true,
-        "nativeadcard": true,
-        "topadcard": true,
-        "banneradcard": true,
-        "marketingcard": true,
-        "giftbox": true,
-        "gift_box": true,
-        "redpacket": true,
-        "red_packet": true,
-        "activitypopup": true,
-        "marketingpopup": true,
-        "gdttoken": true,
-        "gdtslot": true,
-        "biddingslot": true,
-        "tencentad": true,
-        "adnet": true,
-        "tanx": true,
-        "tanxconfig": true,
-        "tanxdata": true,
-        "tanxad": true,
-        "alimama": true,
-        "alimamaconfig": true,
-        "alimamadata": true,
-        "alimamaad": true,
-        "alimm": true,
-        "beizi": true,
-        "ubix": true,
-        "vlion": true,
-        "sigmob": true,
-        "topon": true,
-        "mintegral": true
-    };
-
-    // 保护数组字段名：包含图片 URL、尺寸、标签或 ID 的原始值数组，绝不可清空或当作实体卡片过滤
-    var PRIMITIVE_ARRAY_KEYS = {
-        "picarr": true,
-        "picsizearr": true,
-        "imagesizearray": true,
-        "tags": true,
-        "recentreplyids": true,
-        "recentlikelist": true,
-        "atns": true,
-        "coverarr": true,
-        "videothumbarr": true
-    };
-
-    // 1. 请求阶段：开屏/广告接口直接返回 200 空数据；/main/init 剥离缓存校验头强制拉取全量 JSON 以便脱敏
-    if (!hasResponse) {
-        if (isSplashOrAdRequest(url)) {
-            $done({
-                response: {
-                    status: 200,
-                    headers: {
-                        "Content-Type": "application/json; charset=utf-8",
-                        "Cache-Control": "no-cache, no-store, must-revalidate"
-                    },
-                    body: JSON.stringify({
-                        code: 0,
-                        status: 0,
-                        message: "ok",
-                        splash: null,
-                        data: [],
-                        ads: [],
-                        ad_list: [],
-                        entities: []
-                    })
-                }
-            });
-            return;
-        }
-        if (url.toLowerCase().indexOf("/main/init") !== -1 && request && request.headers && typeof request.headers === "object") {
-            var reqHeaders = {};
-            var hKeys = Object.keys(request.headers);
-            var strippedCacheHeader = false;
-            for (var h = 0; h < hKeys.length; h++) {
-                var hk = hKeys[h];
-                var hkl = hk.toLowerCase();
-                if (hkl === "if-none-match" || hkl === "if-modified-since") {
-                    strippedCacheHeader = true;
-                    continue;
-                }
-                reqHeaders[hk] = request.headers[hk];
+    // ---------- 请求阶段：init 去缓存校验头 ----------
+    if (!isResponse) {
+        try {
+            if (/\/v6\/main\/init/i.test(url) && $request.headers) {
+                var headers = {};
+                var changed = false;
+                Object.keys($request.headers).forEach(function (k) {
+                    var lk = k.toLowerCase();
+                    if (lk === "if-none-match" || lk === "if-modified-since") {
+                        changed = true;
+                        return;
+                    }
+                    headers[k] = $request.headers[k];
+                });
+                return $done(changed ? { headers: headers } : {});
             }
-            if (strippedCacheHeader) {
-                $done({ headers: reqHeaders });
-            } else {
-                $done({});
-            }
-            return;
-        }
-        $done({});
-        return;
+        } catch (e) {}
+        return $done({});
     }
 
-    if (!$response.body) {
-        $done({});
-        return;
+    var body = $response.body;
+    if (!body || typeof body !== "string") return $done({});
+
+    var obj;
+    try {
+        obj = JSON.parse(body);
+    } catch (e) {
+        return $done({});
+    }
+    if (!obj || typeof obj !== "object") return $done({});
+
+    var AD_TEMPLATES = /^(?:sponsorCard|sponsorCardV\d+|feedSponsorCard|detailSponsorCard|replySponsorCard|hotSponsorCard|adCard|feedAd|nativeAd|sdkAd|goodsCard|goodsGridCard|goodsListCard|coolowCard)$/i;
+    // 社区长期验证的首页 / 列表广告位
+    var AD_ENTITY_IDS = { 8639: 1, 29349: 1, 33006: 1, 32557: 1, 13635: 1 };
+    var AD_TITLES = /^(?:酷安热搜|精选配件|酷品好物|赞助|广告)$/;
+    var AD_FLAGS = ["is_ad", "isAd", "is_feed_ad", "isFeedAd", "ad_id", "adId", "raw_ad_data", "sdk_ad"];
+
+    function truthy(v) {
+        return v === true || v === 1 || (typeof v === "string" && v !== "" && v !== "0" && v !== "false");
+    }
+
+    function isAdItem(item) {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+        if (item.entityTemplate === "configCard") return false;
+        if (AD_TEMPLATES.test(String(item.entityTemplate || ""))) return true;
+        if (String(item.entityType || "").toLowerCase() === "ad") return true;
+        if (AD_ENTITY_IDS[Number(item.entityId)]) return true;
+        var title = String(item.title || "").trim();
+        if (AD_TITLES.test(title)) return true;
+        if (/值得买|红包/.test(title) && String(item.entityType || "") === "card") return true;
+        if (item.tag === "广告" || item.label === "广告" || item.tag === "赞助" || item.label === "赞助") return true;
+        for (var i = 0; i < AD_FLAGS.length; i++) {
+            if (truthy(item[AD_FLAGS[i]])) return true;
+        }
+        return false;
+    }
+
+    function filterList(list) {
+        if (!Array.isArray(list)) return list;
+        var out = [];
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (isAdItem(item)) continue;
+            // 卡片里嵌套的广告子项
+            if (item && typeof item === "object" && Array.isArray(item.entities) && item.entityTemplate !== "configCard") {
+                var before = item.entities.length;
+                item.entities = item.entities.filter(function (e) { return !isAdItem(e); });
+                if (before > 0 && item.entities.length === 0 && String(item.entityType || "") === "card") continue;
+            }
+            out.push(item);
+        }
+        return out;
+    }
+
+    function patchSplashMap(map, force) {
+        if (!map || typeof map !== "object") return false;
+        var has = force;
+        Object.keys(map).forEach(function (k) {
+            if (k.indexOf("SplashAd.") === 0) has = true;
+        });
+        if (!has) return false;
+        map["SplashAd.Type"] = "";
+        map["SplashAd.timeout"] = "0";
+        map["SplashAd.Timeout"] = "0";
+        map["SplashAd.Expires"] = 9999999999;
+        map["SplashAd.onResume"] = "0";
+        return true;
+    }
+
+    function patchInit(data) {
+        if (!Array.isArray(data)) return data;
+        var out = [];
+        for (var i = 0; i < data.length; i++) {
+            var item = data[i];
+            if (!item || typeof item !== "object") {
+                out.push(item);
+                continue;
+            }
+            // 自营开屏卡：客户端取第一张 imageCard 作为开屏
+            if (item.entityTemplate === "imageCard") continue;
+            var isConfig = String(item.entityId) === "6390";
+            if (item.extraDataArr && typeof item.extraDataArr === "object" && !Array.isArray(item.extraDataArr)) {
+                patchSplashMap(item.extraDataArr, isConfig);
+            }
+            if (typeof item.extraData === "string" && item.extraData.indexOf("{") === 0) {
+                try {
+                    var extra = JSON.parse(item.extraData);
+                    if (patchSplashMap(extra, isConfig)) item.extraData = JSON.stringify(extra);
+                } catch (e) {}
+            }
+            out.push(item);
+        }
+        return out;
+    }
+
+    function clearFields(target, fields) {
+        if (!target || typeof target !== "object") return;
+        for (var i = 0; i < fields.length; i++) {
+            if (Object.prototype.hasOwnProperty.call(target, fields[i])) target[fields[i]] = [];
+        }
+    }
+
+    function filterReplies(list) {
+        if (!Array.isArray(list)) return list;
+        return list.filter(function (r) {
+            return r && typeof r === "object" && r.id && !isAdItem(r);
+        });
     }
 
     try {
-        var obj = JSON.parse($response.body);
-        var lowerUrl = url.toLowerCase();
-        var isInitEndpoint = lowerUrl.indexOf("/main/init") !== -1;
-
-        if (isInitEndpoint) {
-            if (obj.config && typeof obj.config === "object") {
-                delete obj.config.splash;
-                delete obj.config.splash_config;
-                delete obj.config.splashConfig;
-                delete obj.config.launch_ad;
-                delete obj.config.launchAd;
-                delete obj.config.open_screen;
-                delete obj.config.openScreen;
-                delete obj.config.ad_config;
-                delete obj.config.adConfig;
-                scrubObject(obj.config, true);
+        if (/\/v6\/main\/init/i.test(url)) {
+            obj.data = patchInit(obj.data);
+        } else if (/\/v6\/feed\/detail/i.test(url)) {
+            var d = obj.data;
+            if (d && typeof d === "object") {
+                clearFields(d, ["detailSponsorCard", "hotSponsorCard", "feedSponsorCard", "sponsorCard", "include_goods", "include_goods_ids", "goodsList"]);
+                d.hotReplyRows = filterReplies(d.hotReplyRows);
+                d.topReplyRows = filterReplies(d.topReplyRows);
+                d.replyRows = filterReplies(d.replyRows);
             }
-            if (Array.isArray(obj.data)) {
-                obj.data = filterCoolapkList(obj.data, true);
-            }
-            neutralizeCoolapkSplashTree(obj);
-        } else if (lowerUrl.indexOf("/feed/detail") !== -1) {
-            if (obj.data && typeof obj.data === "object") {
-                clearArrayOrObjectField(obj.data, "detailSponsorCard");
-                clearArrayOrObjectField(obj.data, "hotSponsorCard");
-                clearArrayOrObjectField(obj.data, "feedSponsorCard");
-                clearArrayOrObjectField(obj.data, "sponsorCard");
-                clearArrayOrObjectField(obj.data, "adCard");
-                clearArrayOrObjectField(obj.data, "include_goods");
-                clearArrayOrObjectField(obj.data, "include_goods_ids");
-                clearArrayOrObjectField(obj.data, "goodsList");
-                clearArrayOrObjectField(obj.data, "goodsRows");
-                if (obj.data.targetRow && isCoolapkAd(obj.data.targetRow)) {
-                    delete obj.data.targetRow;
-                }
-                if (Array.isArray(obj.data.hotReplyRows)) {
-                    obj.data.hotReplyRows = obj.data.hotReplyRows.filter(function (item) {
-                        return !isCoolapkReplyAd(item);
-                    });
-                }
-                if (Array.isArray(obj.data.topReplyRows)) {
-                    obj.data.topReplyRows = obj.data.topReplyRows.filter(function (item) {
-                        return !isCoolapkReplyAd(item);
-                    });
-                }
-                if (Array.isArray(obj.data.replyRows)) {
-                    obj.data.replyRows = obj.data.replyRows.filter(function (item) {
-                        return !isCoolapkReplyAd(item);
-                    });
-                }
-                scrubObject(obj.data, false);
-            }
-        } else if (lowerUrl.indexOf("/feed/replylist") !== -1) {
-            if (Array.isArray(obj.data)) {
-                obj.data = obj.data.filter(function (item) {
-                    return !isCoolapkReplyAd(item);
-                });
-            }
-        } else {
-            // 首页信息流 (/main/indexV8, /feed/index)、数据列表 (/page/dataList) 及其他通用接口单次递归净化
-            scrubObject(obj, false);
+        } else if (/\/v6\/feed\/replyList/i.test(url)) {
+            obj.data = filterReplies(obj.data);
+        } else if (/\/v6\/search\?.*type=hotSearch/i.test(url)) {
+            obj.data = [];
+        } else if (Array.isArray(obj.data)) {
+            // /main/indexV8、/page/dataList、/main/dataList、/feed/* 列表等
+            obj.data = filterList(obj.data);
         }
-
         $done({ body: JSON.stringify(obj) });
     } catch (e) {
         $done({});
-    }
-
-    function isSplashOrAdRequest(target) {
-        var path = String(target || "").toLowerCase().split("?")[0];
-        var full = String(target || "").toLowerCase();
-        return /\/(?:splash|launch(?:[_-]?ad)?|openscreen|open-screen|open_screen|startup(?:[_-]?ad)?|boot[_-]?ad)(?:\/|$)/i.test(path) ||
-            /\/(?:ad|ads|advert|advertise|gdt|jad|tanx|alimama|gromore|pangle)(?:\/|$)/i.test(path) ||
-            /(?:splash|open[_-]?screen|launch[_-]?ad|startup[_-]?ad|boot[_-]?ad|v8_splash)=/i.test(full);
-    }
-
-    function clearArrayOrObjectField(object, field) {
-        if (!object || !Object.prototype.hasOwnProperty.call(object, field)) return;
-        object[field] = [];
-    }
-
-    function isProtectedConfigCard(item) {
-        if (!item || typeof item !== "object" || Array.isArray(item)) return false;
-        if (item.cardId === 6390 || item.cardPageName === "V8_APP_EXTRA" || item.entityTemplate === "configCard") {
-            return true;
-        }
-        if (typeof item.cardPageName === "string" && item.cardPageName.length > 0) {
-            return true;
-        }
-        var u = String(item.url || "");
-        if (u.indexOf("/main/index") === 0 || u.indexOf("/page/dataList") === 0 || u.indexOf("/main/headline") === 0) {
-            return true;
-        }
-        return false;
-    }
-
-    function isGenuineUserFeed(item) {
-        if (!item || typeof item !== "object") return false;
-        var type = String(item.entityType || "").toLowerCase();
-        var tpl = String(item.entityTemplate || "").toLowerCase();
-        if (type !== "feed" && type !== "article" && type !== "question" && type !== "answer") return false;
-        if (/(?:ad|advert|sponsor|goods|promo|commercial|market)/i.test(tpl)) return false;
-        return Boolean(item.message || item.uid || item.username || (item.userInfo && typeof item.userInfo === "object"));
-    }
-
-    function filterCoolapkList(list, isInit) {
-        if (!Array.isArray(list)) return list;
-        var result = [];
-        for (var i = 0; i < list.length; i++) {
-            var item = list[i];
-            if (item === null || item === undefined) continue;
-            // 保留字符串、数字、布尔等原始数组元素（如 picArr、picSizeArr、tags 等）
-            if (typeof item !== "object") {
-                result.push(item);
-                continue;
-            }
-            if (Array.isArray(item)) {
-                result.push(filterCoolapkList(item, isInit));
-                continue;
-            }
-            if (isCoolapkAd(item)) continue;
-
-            var hadChildEntities = (Array.isArray(item.entities) && item.entities.length > 0) ||
-                (Array.isArray(item.rows) && item.rows.length > 0) ||
-                (Array.isArray(item.items) && item.items.length > 0);
-
-            scrubObject(item, isInit);
-
-            // 自底向上空壳剔除：非 /main/init 且非受保护卡片/非用户动态时，若原本有子项且过滤后子项全空，连同外层空壳容器移除
-            if (!isInit && hadChildEntities && !isProtectedConfigCard(item) && !isGenuineUserFeed(item) && isNowEmptyShell(item)) {
-                continue;
-            }
-            if (!isProtectedConfigCard(item) && isCoolapkAd(item)) {
-                continue;
-            }
-            result.push(item);
-        }
-        return result;
-    }
-
-    function isNowEmptyShell(item) {
-        if (!item || typeof item !== "object") return false;
-        if (isGenuineUserFeed(item) || isProtectedConfigCard(item)) return false;
-        var eEmpty = !Array.isArray(item.entities) || item.entities.length === 0;
-        var rEmpty = !Array.isArray(item.rows) || item.rows.length === 0;
-        var iEmpty = !Array.isArray(item.items) || item.items.length === 0;
-        if (eEmpty && rEmpty && iEmpty) {
-            var type = String(item.entityType || "").toLowerCase();
-            var tpl = String(item.entityTemplate || "").toLowerCase();
-            if (type === "card" || tpl.indexOf("card") !== -1 || (!item.message && !item.username && !item.uid)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function scrubObject(object, isInit) {
-        if (!object || typeof object !== "object") return object;
-
-        if (Array.isArray(object)) {
-            var filtered = filterCoolapkList(object, isInit);
-            object.length = 0;
-            for (var j = 0; j < filtered.length; j++) object.push(filtered[j]);
-            return object;
-        }
-
-        var keys = Object.keys(object);
-        for (var k = 0; k < keys.length; k++) {
-            var key = keys[k];
-            var value = object[key];
-            var normalizedKey = key.toLowerCase().replace(/[\-_]/g, "");
-
-            // detailSponsorCard 与 include_goods 保持空数组以兼容客户端及单元测试断言
-            if (key === "detailSponsorCard" || key === "include_goods") {
-                if (Array.isArray(value)) {
-                    object[key] = [];
-                } else {
-                    delete object[key];
-                }
-                continue;
-            }
-
-            // 保护原始值数组（如 picArr、picSizeArr、tags 等）与用户基础信息对象不被误改
-            if (PRIMITIVE_ARRAY_KEYS[normalizedKey]) {
-                continue;
-            }
-            if (key === "userInfo" || key === "userAction") {
-                continue;
-            }
-
-            if (AD_KEYS[normalizedKey]) {
-                delete object[key];
-                continue;
-            }
-            if (normalizedKey === "ad" && value && value !== 0 && value !== "0" && value !== false && value !== "false") {
-                delete object[key];
-                continue;
-            }
-
-            if (isLinkKey(normalizedKey) && typeof value === "string" && isCommercialLink(value)) {
-                delete object[key];
-                continue;
-            }
-
-            if (Array.isArray(value)) {
-                // 空数组或纯原始类型数组直接跳过，仅过滤包含对象的实体数组
-                if (value.length > 0 && hasObjectElement(value)) {
-                    object[key] = filterCoolapkList(value, isInit);
-                }
-            } else if (value && typeof value === "object") {
-                var hasEntityShape = value.entityId !== undefined || value.entityType !== undefined ||
-                    value.entityTemplate !== undefined || value.is_ad === true || value.isAd === true ||
-                    value.is_ad === 1 || value.isAd === 1;
-                if (hasEntityShape && isCoolapkAd(value)) {
-                    delete object[key];
-                    continue;
-                }
-                var childHadEntities = (Array.isArray(value.entities) && value.entities.length > 0) ||
-                    (Array.isArray(value.rows) && value.rows.length > 0) ||
-                    (Array.isArray(value.items) && value.items.length > 0);
-                scrubObject(value, isInit);
-                if (!isInit && hasEntityShape && childHadEntities && !isProtectedConfigCard(value) && !isGenuineUserFeed(value) && isNowEmptyShell(value)) {
-                    delete object[key];
-                }
-            }
-        }
-        return object;
-    }
-
-    function hasObjectElement(arr) {
-        for (var i = 0; i < arr.length; i++) {
-            if (arr[i] && typeof arr[i] === "object") return true;
-        }
-        return false;
-    }
-
-    function isLinkKey(normalizedKey) {
-        return normalizedKey === "url" || normalizedKey === "link" || normalizedKey === "jumpurl" ||
-            normalizedKey === "deeplink" || normalizedKey === "landingpage" || normalizedKey === "landingurl" ||
-            normalizedKey === "openurl" || normalizedKey === "redirecturl" || normalizedKey === "clickurl" ||
-            normalizedKey === "adurl" || normalizedKey === "schema" || normalizedKey === "targeturl" ||
-            normalizedKey === "appscheme" || normalizedKey === "appurl" || normalizedKey === "openapp" ||
-            normalizedKey === "intent" || normalizedKey === "downloadurl" || normalizedKey === "promourl" ||
-            normalizedKey === "actionurl" || normalizedKey === "actionlink";
-    }
-
-    function isCommercialLink(value) {
-        var link = String(value || "").toLowerCase();
-        if (!link) return false;
-        // 内部相对路由（如 /feed/123, /main/indexV8, /page/dataList）绝非商业外链
-        if (link.charAt(0) === "/") return false;
-        for (var i = 0; i < 2; i++) {
-            try {
-                var decoded = decodeURIComponent(link);
-                if (decoded === link) break;
-                link = decoded;
-            } catch (e) {
-                break;
-            }
-        }
-        return /(?:gdt\.qq\.com|adnet\.qq\.com|gdtimg\.com|ugdtimg\.com|pgdt\.gtimg\.cn|qzs\.qq\.com|qzs\.gdtimg\.com|e\.qq\.com|ad\.qq\.com|tmead(?:quic)?\.y\.qq\.com|ad(?:stats)?\.tencentmusic\.com|jad\.jd\.com|jadyun\.com|dsp-x\.jd\.com|(?:^|[./])ad\.jd\.com|jd\.com\/(?:[^?#]+\/)?(?:ad|ads|union|promotion)(?:[/?&#]|$)|u\.jd\.com|click\.union\.jd\.com|7fresh\.com|qixian\.com|pangolin-sdk|pangle|gromore|csjplatform|bytead\.net|mobads\.baidu\.com|cpro\.baidu\.com|pos\.baidu\.com|adukwai|kuaishouzt|e\.kuaishou|sigmob|toponad|tradplusad|mintegral|rayjump|tanx\.com|alimama\.(?:com|cn|net)|atanx\d?\.alicdn\.com|alimama\.alicdn\.com|alimm\.com|strip\.taobaocdn\.com|s\.click\.taobao\.com|uland\.taobao\.com|mobile\.yangkeduo\.com\/duo_cms_mall|beizi\.biz|ubixioe\.com|vlion\.cn)/i.test(link) ||
-            /^(?:jdmobile|jdapp|openapp\.jdmobile|jdpay|gdt|tbopen|taobao|tmall|pinduoduo|pddopen|alipays|snssdk1128|snssdk2329|kwai|vipshop|meituan|imeituan|dianping|suning):/i.test(link);
-    }
-
-    function extractExtraObjects(item) {
-        var list = [];
-        if (!item || typeof item !== "object") return list;
-        if (item.extraData && typeof item.extraData === "object" && !Array.isArray(item.extraData)) {
-            list.push(item.extraData);
-        } else if (typeof item.extraData === "string" && item.extraData.charAt(0) === "{") {
-            try {
-                var parsed = JSON.parse(item.extraData);
-                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) list.push(parsed);
-            } catch (e) {}
-        }
-        if (item.extraDataArr && typeof item.extraDataArr === "object" && !Array.isArray(item.extraDataArr)) {
-            list.push(item.extraDataArr);
-        }
-        if (item.extra_data && typeof item.extra_data === "object" && !Array.isArray(item.extra_data)) {
-            list.push(item.extra_data);
-        }
-        return list;
-    }
-
-    function isCoolapkAd(item) {
-        if (!item || typeof item !== "object" || Array.isArray(item)) return false;
-
-        if (isProtectedConfigCard(item)) {
-            return false;
-        }
-
-        var adEntityIds = [
-            944, 945, 1373, 6380, 8639, 12789, 16309, 20099, 20131, 21703,
-            24455, 28212, 29349, 31114, 32557, 33006, 36839, 39396, 43906, 45001
-        ];
-        if (adEntityIds.indexOf(Number(item.entityId)) !== -1) return true;
-
-        var type = String(item.entityType || "").toLowerCase();
-        var template = String(item.entityTemplate || "").toLowerCase();
-        var combinedType = type + " " + template;
-        if (/(?:splash|advert|adcard|feedad|nativead|sdkad|topad|bannerad|videoad|imagead|feed_ad|sponsor|popup|interstitial|floating|imagescalecard|goodscard|goodsgridcard|goodslistcard|commercial|marketing|promocard|pearcard|coolowcard)/i.test(combinedType)) {
-            return true;
-        }
-
-        if (item.tag === "广告" || item.label === "广告" || item.tag === "赞助" || item.label === "赞助" ||
-            item.tag === "推广" || item.label === "推广" || item.tag === "商业推广" ||
-            item.source_type === "ad" || item.sourceType === "ad") {
-            return true;
-        }
-
-        var hasChildren = (Array.isArray(item.entities) && item.entities.length > 0) ||
-            (Array.isArray(item.rows) && item.rows.length > 0) ||
-            (Array.isArray(item.items) && item.items.length > 0);
-
-        var flags = [
-            "is_ad", "isAd", "is_feed_ad", "isFeedAd", "advertisement", "raw_ad_data", "ad_info", "ad_tag",
-            "ad_id", "adId", "ad_type", "adType", "ad_source", "adSource", "ad_slot", "adSlot", "pos_id", "posId",
-            "slot_id", "slotId", "code_id", "codeId", "placement_id", "placementId", "rit_id", "ritId",
-            "sponsor", "gdt", "adnet", "jad", "gromore", "pangle", "csj",
-            "mobads", "sigmob", "topon", "mintegral", "tanx", "tanx_ad", "tanxAd",
-            "alimama", "alimama_ad", "alimamaAd", "alimm", "beizi", "ubix", "vlion",
-            "popup", "pop_window", "interstitial", "floating_layer"
-        ];
-        for (var i = 0; i < flags.length; i++) {
-            var fVal = item[flags[i]];
-            if (isEnabled(fVal) || (typeof fVal === "string" && fVal.length > 0 && fVal !== "0" && fVal !== "false") ||
-                (fVal && typeof fVal === "object" && !Array.isArray(fVal) && Object.keys(fVal).length > 0)) {
-                if (!hasChildren) return true;
-            }
-        }
-
-        // 同时支持解析对象型与字符串型 extraData / extraDataArr
-        var extraObjects = extractExtraObjects(item);
-        var hasSdkAdMeta = false;
-        var hasCommercialLink = false;
-        var linkKeys = [
-            "url", "link", "jump_url", "jumpUrl", "deepLink", "deeplink",
-            "landing_page", "landing_url", "open_url", "redirect_url", "redirectUrl",
-            "click_url", "clickUrl", "ad_url", "adUrl", "schema", "appScheme", "appUrl",
-            "openApp", "intent", "downloadUrl", "promoUrl", "actionUrl", "actionLink", "extra_url"
-        ];
-        for (var l = 0; l < linkKeys.length; l++) {
-            if (typeof item[linkKeys[l]] === "string" && isCommercialLink(item[linkKeys[l]])) {
-                hasCommercialLink = true;
-                break;
-            }
-        }
-
-        var extraKeys = [
-            "gdt", "gdt_ad", "gdt_token", "gdt_pos_id", "gdtdata", "adnet", "jad", "jad_ad", "jaddata",
-            "gromore", "pangle", "csj", "mobads", "baidu_ad", "tencent_ad", "kuaishou", "sigmob", "topon",
-            "mintegral", "tanx", "tanx_ad", "tanxdata", "alimama", "alimama_ad", "alimamadata", "alimm",
-            "beizi", "ubix", "vlion",
-            "popup", "pop_window", "popwindow", "interstitial", "floating_layer",
-            "floating_window", "shake", "shaketojump", "shake_config", "ad", "ads", "ad_id", "adId",
-            "ad_type", "adType", "ad_source", "adSource", "ad_tag", "pos_id", "posId",
-            "slot_id", "slotId", "ad_slot", "adSlot", "code_id", "codeId", "placement_id", "placementId",
-            "rit_id", "ritId", "is_ad", "isAd", "sdk_ad", "native_ad"
-        ];
-        for (var eo = 0; eo < extraObjects.length; eo++) {
-            var extra = extraObjects[eo];
-            for (var e = 0; e < extraKeys.length; e++) {
-                var eVal = extra[extraKeys[e]];
-                if (eVal && (typeof eVal !== "object" || Object.keys(eVal).length > 0)) {
-                    if (eVal !== "0" && eVal !== 0 && eVal !== false && eVal !== "false") {
-                        hasSdkAdMeta = true;
-                        break;
-                    }
-                }
-            }
-            if (!hasSdkAdMeta) {
-                for (var lk = 0; lk < linkKeys.length; lk++) {
-                    if (typeof extra[linkKeys[lk]] === "string" && isCommercialLink(extra[linkKeys[lk]])) {
-                        hasCommercialLink = true;
-                        break;
-                    }
-                }
-            }
-            if (hasSdkAdMeta) break;
-        }
-
-        // 兜底检查字符串型 extraData 是否包含显式 SDK 广告槽位
-        if (!hasSdkAdMeta && typeof item.extraData === "string" && item.extraData.length > 2) {
-            if (/"(?:gdt|gdt_pos_id|jad|adnet|gromore|pangle|csj|tanx|alimama|mobads|sigmob|topon|mintegral|beizi|ubix|vlion|ad_id|pos_id|slot_id|placement_id|code_id|rit_id|is_ad|sdk_ad|native_ad)"\s*:\s*(?:true|[1-9]|"[1-9a-zA-Z])/i.test(item.extraData)) {
-                hasSdkAdMeta = true;
-            }
-        }
-
-        if (hasSdkAdMeta && !hasChildren) return true;
-
-        var cleanTitle = String(item.title || "").trim();
-        if (cleanTitle === "酷安热搜" || cleanTitle === "酷品好物" || cleanTitle === "赞助" || cleanTitle === "广告") {
-            return true;
-        }
-
-        // 若是具有真实用户正文或 UID 的普通酷友动态（且无任何 SDK 广告标记），绝不因正文讨论关键词误杀
-        if (isGenuineUserFeed(item)) {
-            return false;
-        }
-
-        var text = [
-            item.title, item.subTitle, item.subtitle, item.description, item.buttonText,
-            item.actionText, item.label, item.tag, item.extra_title
-        ].filter(Boolean).join(" ");
-        var hasStrongCommercialText = /广告|开屏|赞助|七鲜|优量汇|广点通|京媒|穿山甲|阿里妈妈|tanx|摇一摇|摇动|点击了解更多|自动关闭|扭一扭|前倾|跳转第三方/i.test(text);
-        var hasWeakCommercialText = /推广|带货|好物|礼盒|领券|补贴|大促/i.test(text);
-
-        var isCardLike = template === "card" || type === "card" || type === "feed" ||
-            template.indexOf("card") !== -1 || item.entityId !== undefined;
-        var isAdLikeType = /(?:ad|advert|sponsor|popup|interstitial|floating|goods|promo|commercial)/i.test(combinedType);
-
-        if (isCardLike && !hasChildren) {
-            if (hasStrongCommercialText || hasCommercialLink) return true;
-            if (hasWeakCommercialText && (isAdLikeType || hasSdkAdMeta)) return true;
-            if (hasSdkAdMeta && isAdLikeType) return true;
-        }
-        return false;
-    }
-
-    function isEnabled(value) {
-        return value === true || value === 1 || value === "1" || value === "true";
-    }
-
-    function neutralizeCoolapkSplashTree(node) {
-        if (!node || typeof node !== "object") return;
-        if (Array.isArray(node)) {
-            for (var i = 0; i < node.length; i++) neutralizeCoolapkSplashTree(node[i]);
-            return;
-        }
-        if (node.cardId === 6390 || node.cardPageName === "V8_APP_EXTRA") {
-            neutralizeCoolapkSplash(node);
-        }
-        if (Array.isArray(node.data)) neutralizeCoolapkSplashTree(node.data);
-        if (Array.isArray(node.entities)) neutralizeCoolapkSplashTree(node.entities);
-    }
-
-    function neutralizeCoolapkSplash(item) {
-        if (!item || typeof item !== "object" || Array.isArray(item)) return;
-
-        if (item.extraDataArr && typeof item.extraDataArr === "object" && !Array.isArray(item.extraDataArr)) {
-            sanitizeSplashMap(item.extraDataArr);
-            try {
-                item.extraData = JSON.stringify(item.extraDataArr);
-            } catch (e) {}
-        }
-
-        if (typeof item.extraData === "string" && item.extraData.charAt(0) === "{") {
-            try {
-                var extraObj = JSON.parse(item.extraData);
-                if (extraObj && typeof extraObj === "object" && !Array.isArray(extraObj)) {
-                    sanitizeSplashMap(extraObj);
-                    item.extraData = JSON.stringify(extraObj);
-                    if (!item.extraDataArr || typeof item.extraDataArr !== "object" || Array.isArray(item.extraDataArr)) {
-                        item.extraDataArr = extraObj;
-                    } else {
-                        sanitizeSplashMap(item.extraDataArr);
-                    }
-                }
-            } catch (e) {}
-        }
-    }
-
-    function sanitizeSplashMap(map) {
-        if (!map || typeof map !== "object" || Array.isArray(map)) return;
-        map["SplashAd.Type"] = "";
-        map["SplashAd.hType"] = "";
-        map["SplashAd.resumeType"] = "";
-        map["SplashAd.Timeout"] = "0";
-        map["SplashAd.onResume"] = "0";
-        map["SplashAd.Expires"] = 2147483647;
-        map["SplashAd.loadType"] = "0";
-        map["SplashAd.isShow"] = "0";
-        map["SplashAd.show"] = "0";
-        map["SplashAd.enable"] = "0";
-        map["SplashAd.coldStart"] = "0";
-        map["SplashAd.hotStart"] = "0";
-        map["SplashAd.minInterval"] = "2147483647";
-        map["SplashAd.interval"] = "2147483647";
-        map["SplashAd.maxShowTimes"] = "0";
-        map["SplashAd.showTimes"] = "0";
-        map["SplashAd.skipTime"] = "0";
-        map["SplashAd.duration"] = "0";
-        map["SplashAd.shake"] = "0";
-        map["SplashAd.swipe"] = "0";
-        map["Ad.SPLASH_RETRY_PERIOD"] = "2147483647";
-        map["Ad.PRELOAD"] = "0";
-        map["Ad.PRELOAD_AFTER_USE"] = "0";
-        map["Ad.ENABLE"] = "0";
-        map["Ad.OPEN"] = "0";
-        map["Ad.SPLASH_OPEN"] = "0";
-        map["Ad.HOT_SPLASH_OPEN"] = "0";
-        map["Ad.FEED_OPEN"] = "0";
-        map["Ad.DETAIL_OPEN"] = "0";
-        map["Ad.REPLY_OPEN"] = "0";
-
-        var deleteKeys = [
-            "Ad.TT_APP_ID", "Ad.GDT_APP_ID", "Ad.KS_APP_ID", "Ad.BAIDU_APP_ID",
-            "Ad.SIGMOB_APP_ID", "Ad.JAD_APP_ID", "Ad.TANX_APP_ID", "Ad.ALIMAMA_APP_ID",
-            "Ad.MINT_APP_ID", "Ad.TOPON_APP_ID", "Ad.BEIZI_APP_ID", "Ad.GROMORE_APP_ID",
-            "SplashAd.AdSlot", "SplashAd.SlotId", "SplashAd.PosId", "SplashAd.CodeId"
-        ];
-        for (var i = 0; i < deleteKeys.length; i++) {
-            delete map[deleteKeys[i]];
-        }
-
-        // 动态扫描其他未知的 Ad.*_APP_ID 或 SplashAd.* 槽位配置
-        var allKeys = Object.keys(map);
-        for (var k = 0; k < allKeys.length; k++) {
-            var key = allKeys[k];
-            if (/^Ad\.[A-Z0-9_]+_(?:APP_ID|SLOT_ID|POS_ID|KEY|CONFIG)$/i.test(key) ||
-                /^SplashAd\.(?:.*Slot|.*Pos|.*Code|.*AppId|.*Config)$/i.test(key)) {
-                delete map[key];
-            }
-        }
-    }
-
-    function isCoolapkReplyAd(item) {
-        if (!item || !item.id) return true;
-        return isCoolapkAd(item) || item.entityType === "ad" || item.entityTemplate === "reply_ad" ||
-            item.entityTemplate === "replySponsorCard" ||
-            (item.extraData && typeof item.extraData === "object" && !Array.isArray(item.extraData) && (
-                item.extraData.ad || item.extraData.gdt || item.extraData.jad ||
-                item.extraData.adnet || item.extraData.tanx || item.extraData.alimama
-            ));
     }
 })();

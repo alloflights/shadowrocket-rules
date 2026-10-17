@@ -1,22 +1,22 @@
-#!name=航旅纵横净化 (Umetrip Pro)
-#!desc=去除航旅纵横开屏广告、摇一摇前倾跳转美团/第三方、首页弹窗营销推广与浮层
-#!author=allofights
+#!name=航旅纵横净化
+#!desc=去除航旅纵横开屏、摇一摇跳转第三方、首页弹窗营销与浮层。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
 #!system=ios
-#!category=应用净化
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,oss.umetrip.com)),REJECT
 DOMAIN,startup.umetrip.com,REJECT
 DOMAIN,umestartup.umetrip.com,REJECT
 DOMAIN,bda.umetrip.com,REJECT
 DOMAIN,opactivity.umetrip.com,REJECT
 DOMAIN,sensors.umetrip.com.cn,REJECT
 DOMAIN,discardrp.umetrip.com,REJECT
-DOMAIN,oss.umetrip.com,REJECT
 
 [URL Rewrite]
-^https?:\/\/umestartup\.umetrip\.com\/ - reject
-^https?:\/\/(discardrp|startup)\.umetrip\.com\/gateway\/api\/umetrip\/native - reject
 ^https?:\/\/oss\.umetrip\.com\/fs\/advert\/polite - reject-dict
 
 [MITM]
-hostname = %APPEND% umestartup.umetrip.com, bda.umetrip.com, startup.umetrip.com, discardrp.umetrip.com, oss.umetrip.com, home.umetrip.com, umerp.umetrip.com
+hostname = %APPEND% oss.umetrip.com

@@ -1,23 +1,23 @@
-#!name=虎扑净化 (Hupu Pro)
-#!desc=去除虎扑开屏广告、美团闪购等第三方落地页、下拉刷新推广、帖子详情商业推广卡片及广告图片
-#!author=yjqiang,allofights
+#!name=虎扑净化
+#!desc=去除虎扑开屏、信息流 / 帖子详情商业推广、下拉刷新推广与搜索热词。
+#!author=yjqiang,alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
 #!system=ios
-#!category=应用净化
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,mobileapi.hupu.com)),REJECT
 DOMAIN,goblin.hupu.com,REJECT
-DOMAIN,hermes.hupu.com,REJECT
 DOMAIN,themis.hupu.com,REJECT
 DOMAIN,collect.hupu.com,REJECT
 DOMAIN,adx.hupu.com,REJECT
 DOMAIN,adx-action.hupu.com,REJECT
 
 [URL Rewrite]
-^https?:\/\/goblin\.hupu\.com\/.* - reject
-^https?:\/\/.*\.mobileapi\.hupu\.com\/.+\/(interfaceAd|banners|search\/v2\/(hotkeylist|hintkeylist)) - reject
+^https?:\/\/[\w-]+\.mobileapi\.hupu\.com\/.+\/(interfaceAd|banners|search\/v2\/(hotkeylist|hintkeylist)) - reject
 ^https?:\/\/bbs\.mobileapi\.hupu\.com\/.+\/bbsallapi\/(lego\/data|tag\/v\d\/heatTag) - reject-dict
 ^https?:\/\/games\.mobileapi\.hupu\.com\/.+\/bplapi\/user\/v1\/more - reject-dict
-^https?:\/\/.*\.hupucdn\.com\/.*ad.* - reject-img
 
 [MITM]
-hostname = %APPEND% hermes.hupu.com, goblin.hupu.com, *.mobileapi.hupu.com, *.hupu.com
+hostname = %APPEND% *.mobileapi.hupu.com

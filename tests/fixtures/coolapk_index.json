@@ -1,0 +1,7 @@
+{"data":[
+ {"entityType":"feed","entityTemplate":"feed","id":1,"uid":1,"message":"正常动态，讨论了开屏广告"},
+ {"entityType":"card","entityTemplate":"sponsorCard","entityId":1,"title":"赞助"},
+ {"entityType":"card","entityTemplate":"imageCarouselCard_1","entityId":8639,"title":"轮播"},
+ {"entityType":"feed","entityTemplate":"feed","id":2,"uid":2,"message":"另一条"},
+ {"entityType":"card","entityTemplate":"listCard","entityId":555,"title":"商品","entities":[{"entityType":"card","entityTemplate":"goodsCard","title":"x"}]}
+]}

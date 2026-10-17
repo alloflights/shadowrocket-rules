@@ -1,13 +1,17 @@
-#!name=麦当劳净化 (McDonald's)
-#!desc=去除麦当劳App开屏广告、首页弹窗营销(richpop)与热门活动推广横幅
-#!author=allofights
+#!name=麦当劳净化
+#!desc=去除麦当劳 App 开屏、首页弹窗营销与热门活动横幅。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
 #!system=ios
-#!category=应用净化
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api.mcd.cn)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api2.mcd.cn)),REJECT
 
 [URL Rewrite]
-^https?:\/\/api(2)?\.mcd\.cn\/bff\/portal\/home\/splash - reject-200
-^https?:\/\/api(2)?\.mcd\.cn\/bff\/portal\/richpop - reject-200
-^https?:\/\/api(2)?\.mcd\.cn\/bff\/portal\/home\/hotActivity - reject-200
+^https?:\/\/api2?\.mcd\.cn\/bff\/portal\/(home\/(splash|hotActivity)|richpop) - reject-200
 
 [MITM]
 hostname = %APPEND% api.mcd.cn, api2.mcd.cn

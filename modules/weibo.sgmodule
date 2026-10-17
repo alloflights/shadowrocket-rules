@@ -1,8 +1,16 @@
-#!name=微博全能净化 (Weibo Pro)
-#!desc=去除微博开屏广告、时间线营销推广、关注流商业卡片、搜索发现流广告、浮窗与签到提醒
-#!author=RuCu6,zmqcherish
+#!name=微博净化
+#!desc=去除微博开屏、时间线 / 关注流 / 热搜 / 评论区推广、浮窗与签到提醒。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
 #!system=ios
-#!category=应用净化
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api.weibo.cn)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,uve.weibo.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,card.weibo.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,weibo.com)),REJECT
 
 [URL Rewrite]
 ^https:\/\/api\.weibo\.cn\/2\/(ug\/checkin\/list|push\/daily)\? - reject-dict
@@ -24,8 +32,8 @@
 ^https:\/\/weibo\.com\/ttarticle\/x\/m\/aj\/(reward|uvead)\? - reject-dict
 
 [Script]
-weibo_main = type=http-response,pattern=^https?:\/\/api\.weibo\.cn\/2\/(cardlist|page|statuses\/(container_timeline|extend|show)|checkin\/show|client\/publisher_list|push\/active|groups\/allgroups\/v2|comments\/build_comments|profile\/(container_timeline|me|userinfo)|search\/(container_timeline|finder)|video\/tiny_stream_video_list),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
-weibo_preload = type=http-response,pattern=^https?:\/\/(sdkapp|bootpreload|wbapp)\.uve\.weibo\.com\/(interface\/sdk\/sdkad\.php|v[12]\/ad\/preload|wbapplua\/wbpullad\.lua|preload\/get_ad),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=-1,timeout=60,script-update-interval=0
+weibo_main = type=http-response,pattern=^https?:\/\/api\.weibo\.cn\/2\/(cardlist|page|statuses\/(container_timeline|extend|show)|checkin\/show|client\/publisher_list|push\/active|groups\/allgroups\/v2|comments\/build_comments|profile\/(container_timeline|me|userinfo)|search\/(container_timeline|finder)|video\/tiny_stream_video_list),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=2097152,timeout=30,script-update-interval=86400
+weibo_preload = type=http-response,pattern=^https?:\/\/(sdkapp|bootpreload|wbapp)\.uve\.weibo\.com\/(interface\/sdk\/sdkad\.php|v[12]\/ad\/preload|wbapplua\/wbpullad\.lua|preload\/get_ad),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/weibo.js,requires-body=1,max-size=1048576,timeout=30,script-update-interval=86400
 
 [MITM]
-hostname = %APPEND% api.weibo.cn, *.uve.weibo.com
+hostname = %APPEND% api.weibo.cn, *.uve.weibo.com, card.weibo.com, weibo.com

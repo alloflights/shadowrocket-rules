@@ -1,0 +1,6 @@
+{"status":1,"data":[
+ {"entityType":"card","entityTemplate":"imageCard","entityId":12345,"title":"开屏","pic":"https://image.coolapk.com/splash.jpg","url":"https://ad.example.com"},
+ {"entityType":"card","entityTemplate":"configCard","entityId":6390,"title":"客户端配置","extraData":"{\"selectedHomeTab\":\"V9_HOME_TAB_HEADLINE\"}","extraDataArr":{"SplashAd.Type":"coolapk","SplashAd.Expires":300,"SplashAd.timeout":"3","SplashAd.onResume":"1","selectedHomeTab":"V9_HOME_TAB_HEADLINE"},
+  "entities":[{"entityType":"page","entityId":412,"title":"关注"},{"entityType":"page","entityId":420,"title":"头条"}]},
+ {"entityType":"card","entityTemplate":"configCard","entityId":"20131","title":"发现TAB配置","entities":[{"entityType":"page","entityId":"1175","title":"酷图"}]}
+]}

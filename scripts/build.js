@@ -1,0 +1,292 @@
+#!/usr/bin/env node
+/**
+ * v3 构建脚本：src/ 是唯一数据源，生成两个主配置与全部模块。
+ *   node scripts/build.js          生成
+ *   node scripts/build.js --check  只校验产物是否最新（CI / npm test 用）
+ */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.resolve(__dirname, '..');
+const SRC = path.join(ROOT, 'src');
+const meta = require(path.join(SRC, 'meta.js'));
+const profile = require(path.join(SRC, 'profile.js'));
+
+const SCRIPT_BASE = `${meta.cdn}/modules/scripts`;
+const AWAVENUE_RULE = `RULE-SET,${meta.awavenue},REJECT`;
+
+// ---------------------------------------------------------------- 读取数据源
+function readList(name) {
+  return fs.readFileSync(path.join(SRC, 'rules', name), 'utf8').replace(/\r/g, '').split('\n').map((l) => l.trimEnd());
+}
+function listFiles() {
+  return fs.readdirSync(path.join(SRC, 'rules')).filter((f) => f.endsWith('.list')).sort();
+}
+function loadApps() {
+  const dir = path.join(SRC, 'apps');
+  const units = [];
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.js')).sort()) {
+    delete require.cache[require.resolve(path.join(dir, f))];
+    const mod = require(path.join(dir, f));
+    for (const u of Array.isArray(mod) ? mod : [mod]) units.push(u);
+  }
+  const ids = new Set();
+  const names = new Set();
+  for (const u of units) {
+    if (ids.has(u.id)) throw new Error(`重复的 app id: ${u.id}`);
+    ids.add(u.id);
+    for (const s of u.scripts || []) {
+      if (names.has(s.name)) throw new Error(`重复的脚本名: ${s.name}`);
+      names.add(s.name);
+    }
+  }
+  return units;
+}
+
+// ---------------------------------------------------------------- 行生成
+function scriptLine(s) {
+  const parts = [`type=http-${s.type}`, `pattern=${s.pattern}`, `script-path=${SCRIPT_BASE}/${s.script}`];
+  if (s.type === 'response') {
+    parts.push('requires-body=1', `max-size=${s.maxSize || 1048576}`);
+    if (s.binary) parts.push('binary-body-mode=1');
+  } else {
+    parts.push('requires-body=0');
+  }
+  parts.push(`timeout=${s.timeout || 10}`, 'script-update-interval=86400');
+  return `${s.name} = ${parts.join(',')}`;
+}
+
+// 被解密的主机若走 QUIC(UDP/443) 会绕过重写与脚本；直连连接不受 block-quic=all-proxy 影响，
+// 所以只对这些主机拒绝 UDP/443，让 App 立即回落到 TCP，不影响其它任何直连流量的 QUIC。
+function quicRule(host) {
+  let matcher;
+  if (host.startsWith('*.')) matcher = `DOMAIN-SUFFIX,${host.slice(2)}`;
+  else if (host.includes('*')) matcher = `DOMAIN-SUFFIX,${host.slice(host.indexOf('.', host.indexOf('*')) + 1)}`;
+  else matcher = `DOMAIN,${host}`;
+  return `AND,((PROTOCOL,UDP),(DST-PORT,443),(${matcher})),REJECT`;
+}
+
+function uniq(arr) {
+  return [...new Set(arr)];
+}
+
+function mitmHosts(units) {
+  return uniq(units.flatMap((u) => u.mitm || []));
+}
+
+function quicRules(units) {
+  return uniq(mitmHosts(units).map(quicRule));
+}
+
+// 去重：同一条规则只保留第一次出现（注释与空行原样保留）
+function dedupe(lines) {
+  const seen = new Set();
+  const out = [];
+  for (const l of lines) {
+    const t = l.trim();
+    if (t && !t.startsWith('#')) {
+      if (seen.has(t)) continue;
+      seen.add(t);
+    }
+    out.push(l);
+  }
+  // 折叠多余空行
+  return out.filter((l, i) => !(l === '' && (i === 0 || out[i - 1] === '')));
+}
+
+function mapPolicy(line, map) {
+  const t = line.trim();
+  if (!t || t.startsWith('#')) return line;
+  if (/^(AND|OR|NOT),/.test(t)) return line;
+  const p = t.split(',');
+  if (p[0] === 'FINAL') return map[p[1]] ? `FINAL,${map[p[1]]}` : line;
+  if (p.length >= 3 && map[p[2]]) {
+    p[2] = map[p[2]];
+    return p.join(',');
+  }
+  return line;
+}
+
+function section(title) {
+  return [`# ==================== ${title} ====================`];
+}
+
+// ---------------------------------------------------------------- [Rule]
+function adblockRules(units) {
+  return [
+    ...section('去广告 · AWAvenue 秋风广告规则（上游实时更新）'),
+    AWAVENUE_RULE,
+    ...section('去广告 · 广告联盟 / 遥测 / HTTPDNS'),
+    ...readList('10-adblock.list'),
+    ...section('去广告 · App 专项'),
+    ...units.flatMap((u) => ((u.rules || []).length ? [`# ${u.name}`, ...u.rules] : [])),
+  ];
+}
+
+// 主配置只负责分流；去广告（拒绝规则 / 重写 / 脚本 / MITM）全部在 adblock-ultimate 模块里
+function confRules(policyMap) {
+  const routing = listFiles().filter((f) => !/^(00|10)-/.test(f)).flatMap((f) => ['', ...readList(f)]);
+  let lines = [...readList('00-protect.list'), ...routing];
+  if (policyMap) lines = lines.map((l) => mapPolicy(l, policyMap));
+  return dedupe(lines);
+}
+
+// ---------------------------------------------------------------- 重写 / 脚本 / MITM
+function rewriteBody(units) {
+  return units
+    .filter((u) => (u.rewrites || []).length)
+    .flatMap((u) => [`# --- ${u.name} ---`, ...u.rewrites, '']);
+}
+function scriptBody(units) {
+  return units
+    .filter((u) => (u.scripts || []).length)
+    .flatMap((u) => [`# --- ${u.name} ---`, ...u.scripts.map(scriptLine), '']);
+}
+
+// ---------------------------------------------------------------- 配置文件
+function confHeader(title, file, lines) {
+  return [
+    '# ==============================================================================',
+    `# ${title}  v${meta.version}`,
+    '# 本文件由 scripts/build.js 根据 src/ 自动生成，请勿直接修改；修改 src/ 后执行 npm run build。',
+    `# 订阅地址：${meta.cdn}/${file}`,
+    ...lines.map((l) => `# ${l}`),
+    '#',
+    '# 本配置只做分流，不含任何去广告内容。去广告请另外添加模块（配置 > 模块 > 右上角 +）：',
+    `#   ${meta.cdn}/modules/adblock-ultimate.sgmodule`,
+    '# 去广告模块需要 HTTPS 解密：配置文件 ⓘ > HTTPS 解密 > 证书 > 生成新的 CA 证书 > 安装证书，',
+    '#   再到 设置 > 通用 > 关于本机 > 证书信任设置 中信任该证书。',
+    '# ==============================================================================',
+    '',
+  ];
+}
+
+function buildConf({ file, title, desc, groups, policyMap }) {
+  const out = [
+    ...confHeader(title, file, desc),
+    profile.general(`${meta.cdn}/${file}`),
+  ];
+  if (groups) out.push('[Proxy]', '', profile.proxyGroups);
+  out.push(
+    '[Rule]',
+    ...confRules(policyMap),
+    '',
+    profile.host,
+  );
+  return out.join('\n');
+}
+
+// ---------------------------------------------------------------- 模块
+function moduleText({ name, desc, author, category, rules, rewrites, scripts, mitm }) {
+  const out = [
+    `#!name=${name}`,
+    `#!desc=${desc}`,
+    `#!author=${author || 'alloflights'}`,
+    `#!homepage=https://github.com/${meta.repo}`,
+    `#!category=${category || '去广告'}`,
+    '#!system=ios',
+    `# v${meta.version} · 由 scripts/build.js 自动生成，请勿直接修改`,
+    '',
+  ];
+  if (rules && rules.length) out.push('[Rule]', ...rules, '');
+  if (rewrites && rewrites.length) out.push('[URL Rewrite]', ...rewrites, '');
+  if (scripts && scripts.length) out.push('[Script]', ...scripts, '');
+  if (mitm && mitm.length) out.push('[MITM]', `hostname = %APPEND% ${mitm.join(', ')}`, '');
+  return out.join('\n').replace(/\n+$/, '\n');
+}
+
+function buildModules() {
+  const units = loadApps();
+  const files = {};
+  for (const u of units) {
+    if (u.moduleFile === false) continue;
+    files[`modules/${u.id}.sgmodule`] = moduleText({
+      name: u.name,
+      desc: u.desc,
+      author: u.author,
+      category: u.category,
+      rules: dedupe([...(u.mitm || []).map(quicRule), ...(u.rules || [])]),
+      rewrites: u.rewrites,
+      scripts: (u.scripts || []).map(scriptLine),
+      mitm: u.mitm,
+    });
+  }
+  files['modules/adblock-ultimate.sgmodule'] = moduleText({
+    name: '全量去广告 (AdBlock Ultimate)',
+    desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS 拦截 + 全部 App 专项去广告（酷安、闲鱼、知乎、微博、B站、小红书、贴吧、网盘、高德等）。已包含所有单 App 模块，请勿再叠加单 App 模块。需开启 HTTPS 解密。',
+    category: '去广告',
+    rules: dedupe([...section('HTTPS 解密主机 QUIC 回落 TCP'), ...quicRules(units), ...adblockRules(units)]),
+    rewrites: rewriteBody(units),
+    scripts: scriptBody(units),
+    mitm: mitmHosts(units),
+  });
+  files['modules/adblock.sgmodule'] = moduleText({
+    name: '广告联盟拦截 (AdBlock Lite)',
+    desc: '仅分流层拦截：AWAvenue 秋风规则 + 穿山甲 / 优量汇 / 百青藤 / 快手 / Sigmob 等广告联盟与遥测。无需 HTTPS 解密，零额外延迟。',
+    category: '去广告',
+    rules: dedupe([AWAVENUE_RULE, ...readList('10-adblock.list')]),
+  });
+  files['modules/awavenue.sgmodule'] = moduleText({
+    name: 'AWAvenue 秋风广告规则',
+    desc: '直接引用上游 TG-Twilight/AWAvenue-Ads-Rule 规则集（自动更新，不再内置过期副本）。',
+    author: 'TG-Twilight',
+    category: '去广告',
+    rules: [AWAVENUE_RULE],
+  });
+  const toProxy = (l) => mapPolicy(l, profile.AIO_POLICY);
+  files['modules/ai-services.sgmodule'] = moduleText({
+    name: 'AI 服务分流',
+    desc: 'OpenAI / Claude / Gemini / Meta AI / Grok / Perplexity / Cursor 等走代理，国内大模型直连。',
+    category: '分流',
+    rules: dedupe(readList('20-ai.list').map(toProxy)),
+  });
+  files['modules/overseas-top500.sgmodule'] = moduleText({
+    name: '海外常用应用与网站分流',
+    desc: '海外资讯、学术、开发者云服务、流媒体与常见海外 TLD 走代理。',
+    category: '分流',
+    rules: dedupe(['30-academic.list', '40-overseas-apps.list', '50-dev-cloud.list', '60-global-media.list', '70-intl-tld.list']
+      .flatMap((f) => ['', ...readList(f)]).map(toProxy)),
+  });
+  return files;
+}
+
+function buildAll() {
+  const files = buildModules();
+  files['Shadowrocket_LazyGroup_Merged.conf'] = buildConf({
+    file: 'Shadowrocket_LazyGroup_Merged.conf',
+    title: 'Shadowrocket 懒人策略组分流',
+    desc: ['纯分流：AI 专线 / 流媒体 / 社交 / 地区自动测速策略组，国内直连，Apple 原生服务保护。'],
+    groups: true,
+  });
+  files['Shadowrocket_AllInOne_Ultimate.conf'] = buildConf({
+    file: 'Shadowrocket_AllInOne_Ultimate.conf',
+    title: 'Shadowrocket 大一统精简分流（仅 PROXY / DIRECT）',
+    desc: ['与懒人版规则完全一致，只是不含策略组：海外走 PROXY、国内与 Apple 走 DIRECT。'],
+    groups: false,
+    policyMap: profile.AIO_POLICY,
+  });
+  return files;
+}
+
+if (require.main === module) {
+  const check = process.argv.includes('--check');
+  const files = buildAll();
+  let stale = 0;
+  for (const [rel, content] of Object.entries(files)) {
+    const abs = path.join(ROOT, rel);
+    const old = fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8') : null;
+    if (old === content) continue;
+    if (check) {
+      console.error(`产物过期: ${rel}`);
+      stale++;
+    } else {
+      fs.writeFileSync(abs, content);
+      console.log(`写入 ${rel}`);
+    }
+  }
+  if (check && stale) process.exit(1);
+  if (!check) console.log(`完成，共 ${Object.keys(files).length} 个产物`);
+}
+
+module.exports = { buildAll, loadApps, quicRule, mitmHosts, scriptLine, SCRIPT_BASE };

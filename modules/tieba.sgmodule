@@ -1,20 +1,22 @@
-#!name=百度贴吧全能净化 (Tieba Pro)
-#!desc=屏蔽贴吧开屏广告、首页推荐伪装广告贴(excellent/personalized)、吧内商业贴、详情页直播推荐与底层HTTPDNS
-#!author=app2smile
+#!name=百度贴吧净化
+#!desc=去除贴吧开屏、首页推荐伪装广告贴、吧内商业贴、详情页直播推荐与插楼广告（JSON + Protobuf）。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
 #!system=ios
-#!category=应用净化
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
-DOMAIN,180.76.76.200,REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,tiebac.baidu.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,c.tieba.baidu.com)),REJECT
 IP-CIDR,180.76.76.200/32,REJECT,no-resolve
 
 [URL Rewrite]
-^https?:\/\/180\.76\.76\.200\/ - reject
 ^https?:\/\/tiebac\.baidu\.com\/c\/s\/log - reject-200
 
 [Script]
-贴吧_JSON = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))$|tiebaads\/commonbatch\?),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,script-update-interval=0
-贴吧_Proto = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?cmd,requires-body=1,binary-body-mode=1,max-size=-1,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,script-update-interval=0
+tieba_json = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))$|tiebaads\/commonbatch\?),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,requires-body=1,max-size=1048576,timeout=10,script-update-interval=86400
+tieba_proto = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?cmd,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,requires-body=1,max-size=1048576,binary-body-mode=1,timeout=10,script-update-interval=86400
 
 [MITM]
 hostname = %APPEND% tiebac.baidu.com, c.tieba.baidu.com

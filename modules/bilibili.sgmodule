@@ -1,15 +1,18 @@
-#!name=哔哩哔哩净化 (Bilibili Pro)
-#!desc=去除B站开屏广告(含品牌与事件开屏)、首页推荐流广告、顶栏游戏中心、底栏会员购/发布按钮与视频播放页UP主带货广告
-#!author=app2smile, allofights
+#!name=哔哩哔哩净化
+#!desc=去除 B 站开屏（含品牌 / 事件开屏）、首页推荐流广告、顶栏多余 Tab、播放页广告卡片。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
 #!system=ios
-#!category=应用净化
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
-URL-REGEX,^https?:\/\/.*\.bilivideo\.com\/.*-SPLA,REJECT-IMG
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,app.bilibili.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,grpc.biliapi.net)),REJECT
 
 [Script]
-bili_json = type=http-response,pattern=^https:\/\/app\.bilibili\.com\/x\/(v2\/(splash\/(list|show|brand\/list|event\/list2)|feed\/index\?)|resource\/show\/tab\/v2),requires-body=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-json.js,script-update-interval=0
-bili_proto = type=http-response,pattern=^https:\/\/(grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.app\.viewunite\.v1\.View\/View$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-proto.js,script-update-interval=0
+bili_json = type=http-response,pattern=^https:\/\/app\.bilibili\.com\/x\/(v2\/(splash\/(list|show|brand\/list|event\/list2)|feed\/index\?)|resource\/show\/tab\/v2),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-json.js,requires-body=1,max-size=1048576,timeout=10,script-update-interval=86400
+bili_proto = type=http-response,pattern=^https:\/\/(grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.app\.viewunite\.v1\.View\/View$,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/bilibili-proto.js,requires-body=1,max-size=1048576,binary-body-mode=1,timeout=10,script-update-interval=86400
 
 [MITM]
 hostname = %APPEND% app.bilibili.com, grpc.biliapi.net

@@ -1,11 +1,12 @@
 {
   "name": "shadowrocket-rules",
-  "version": "2.0.0",
-  "description": "Shadowrocket Zero-Touch AdBlock & Precision Routing Architecture",
+  "version": "3.0.0",
+  "description": "Shadowrocket 分流 + 去广告配置（src/ 单一数据源自动生成）",
   "scripts": {
-    "build": "node scripts/sync_architecture.js",
+    "build": "node scripts/build.js",
+    "check": "node scripts/build.js --check",
     "test": "node tests/verify_all.js"
   },
-  "author": "allofights",
+  "author": "alloflights",
   "license": "MIT"
 }

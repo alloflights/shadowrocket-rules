@@ -1,0 +1,38 @@
+#!name=闲鱼去广告
+#!desc=修复闲鱼去开屏失效（阻断 AMDC 调度，强制回落 HTTPS），去除开屏、首页运营位/广告商品、搜索广告与底纹、悬浮球弹窗、猜你喜欢。首次启用后请删除重装闲鱼一次。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
+#!system=ios
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,acs.m.goofish.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,g-acs.m.goofish.com)),REJECT
+AND,((URL-REGEX,"^http:\/\/.+\/amdc\/mobileDispatch"),(USER-AGENT,"%E9%97%B2%E9%B1%BC*")),REJECT
+DOMAIN-SUFFIX,iyes.youku.com,REJECT
+
+[URL Rewrite]
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlecommerce\.splash - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.splash - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.home\.welcome - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.popup\.window - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.float\.window - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlemtopsearch\.item\.search\.activate - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlemtopsearch\.search\.discover - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlemtopsearch\.detailpage\.search\.shade - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.item\.resell\.recommendorhotcate - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlehome\.idle\.coin\.nextfresh - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.home\.top - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.idle\.trade\.item\.recommend\.render - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.live\.home\.ads\.material\.get - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.topic\.banner - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.taobao\.wireless\.home\.xianyu(\.my)?\.awesome\.get - reject-dict
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.idle\.ad\.expose - reject-200
+^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.idle\.idleadv - reject-200
+
+[Script]
+goofish_clean = type=http-response,pattern=^https?:\/\/(g-)?acs\.m\.goofish\.com\/gw\/mtop\.(taobao\.(idlehome\.home\.(nextfresh|circle\.list)|idlehome\.widget\.refresh\.get|idle\.(local\.home|home\.whale\.modulet|user\.strategy\.list|playboy\.recommend|item\.recommend\.list|group\.myself\.banner|circle\.(myself\.banner|visited)|fun\.follow\.often\.visit|local\.flow\.plat\.section)|idlemtopsearch\.search(\.shade)?)|idle\.user\.page\.my\.adapter)\/,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/goofish.js,requires-body=1,max-size=2097152,timeout=10,script-update-interval=86400
+
+[MITM]
+hostname = %APPEND% acs.m.goofish.com, g-acs.m.goofish.com

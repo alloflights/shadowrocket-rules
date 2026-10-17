@@ -1,8 +1,10 @@
-#!name=全球主流 AI 与个人智能体生态增强分流 (Global AI & Agent Rules)
-#!desc=精准分流 Meta Muse、OpenAI/ChatGPT、Claude、Gemini、Grok、Perplexity、Cursor、Suno、Midjourney 及全网最新主流 AI 智能体生态，国内主流 AI 严格直连免风控。
-#!author=allofights
+#!name=AI 服务分流
+#!desc=OpenAI / Claude / Gemini / Meta AI / Grok / Perplexity / Cursor 等走代理，国内大模型直连。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=分流
 #!system=ios
-#!category=分流规则
+# v3.0.0 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
 # ==================== 1. Meta AI & 个人智能体生态 (Meta Muse / Meta AI / Llama) ====================
@@ -12,9 +14,7 @@ DOMAIN-SUFFIX,muse-meta.com,PROXY
 DOMAIN-SUFFIX,metaaivm.com,PROXY
 DOMAIN-SUFFIX,meta.ai,PROXY
 DOMAIN,hatch.metaaivm.com,PROXY
-DOMAIN-KEYWORD,metaaivm,PROXY
-DOMAIN-KEYWORD,muse,PROXY
-DOMAIN-KEYWORD,metaclaw,PROXY
+# Meta 核心 AI 助手与多模态交互
 DOMAIN,imagine.meta.com,PROXY
 DOMAIN,flow.meta.com,PROXY
 # Meta 基础架构、账号中心与 API (解决 Muse 登录鉴权失败、虚拟机断开及跨国切线风控)
@@ -28,7 +28,7 @@ DOMAIN,llama.meta.com,PROXY
 DOMAIN-SUFFIX,ai.meta.com,PROXY
 DOMAIN-SUFFIX,oculus.com,PROXY
 DOMAIN-SUFFIX,m.me,PROXY
-# Meta 官方 IP 范围与 ASN (含 2022-2026 最新 57.141.0.0/14 与 163.70.0.0/16)
+# Meta 官方 IP 范围与 ASN (含 2022-2026 最新 57.141.0.0/14 与 163.70.0.0/16，彻底杜绝直连 IP 落入漏网之鱼)
 IP-CIDR,57.141.0.0/14,PROXY,no-resolve
 IP-CIDR,157.240.0.0/16,PROXY,no-resolve
 IP-CIDR,31.13.0.0/16,PROXY,no-resolve
@@ -38,10 +38,12 @@ IP-CIDR,66.220.144.0/20,PROXY,no-resolve
 IP-CIDR,163.70.0.0/16,PROXY,no-resolve
 IP-CIDR,185.60.216.0/22,PROXY,no-resolve
 IP-CIDR,204.15.20.0/22,PROXY,no-resolve
-IP-ASN,32934,PROXY
-IP-ASN,63293,PROXY
+IP-ASN,32934,PROXY,no-resolve
+IP-ASN,63293,PROXY,no-resolve
 
 # ==================== 2. Google Gemini & DeepMind 专线全链路 ====================
+# 必须放置在 谷歌服务 (Google.list) 前优先命中，独立【Gemini】专线策略组，坚定锁定单个优质节点，严禁走香港节点！
+# Gemini 主站、AI Studio 与核心 API 接口
 DOMAIN-SUFFIX,gemini.google.com,PROXY
 DOMAIN-SUFFIX,bard.google.com,PROXY
 DOMAIN-SUFFIX,ai.google.dev,PROXY
@@ -57,10 +59,12 @@ DOMAIN,proactivebackend-pa.googleapis.com,PROXY
 DOMAIN,alkalimakersuite-pa.googleapis.com,PROXY
 DOMAIN,alkalimakersuite-pa.clients6.google.com,PROXY
 DOMAIN,apis.google.com,PROXY
-DOMAIN-KEYWORD,colab,PROXY
-DOMAIN-KEYWORD,developerprofiles,PROXY
+DOMAIN-SUFFIX,colab.research.google.com,PROXY
+DOMAIN-SUFFIX,colab.google,PROXY
+DOMAIN,developerprofiles-pa.googleapis.com,PROXY
 DOMAIN,clients6.google.com,PROXY
 DOMAIN-SUFFIX,waa-pa.clients6.google.com,PROXY
+# Gemini 多模态图片上传、存储与渲染专线（解决上传照片断流与IP不一致风控）
 DOMAIN,storage.googleapis.com,PROXY
 DOMAIN,content-storage.googleapis.com,PROXY
 DOMAIN,geller-pa.googleapis.com,PROXY

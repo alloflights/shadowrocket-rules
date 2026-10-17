@@ -1,0 +1,13 @@
+# 海外 TikTok 规则集
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/TikTok/TikTok.list,TikTok
+
+# 局域网 / 国内 / 海外 大规则集（域名优先匹配，绝大多数国内流量在这里就以 DIRECT 命中，无需额外 DNS 查询）
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Lan/Lan.list,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/China/China.list,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Global/Global.list,PROXY
+
+# 规则都没命中的域名：本地解析一次，解析到中国大陆 IP 就直连（保证冷门国内服务 / 政务 / 银行仍走直连）
+GEOIP,CN,DIRECT
+
+# 兜底：境外未知流量走代理（懒人版可在「漏网之鱼」组一键切回 DIRECT）
+FINAL,漏网之鱼

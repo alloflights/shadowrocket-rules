@@ -1,0 +1,193 @@
+# ==================== 1. Meta AI & 个人智能体生态 (Meta Muse / Meta AI / Llama) ====================
+# Meta 2026 最新个人自主智能体 Muse 全链路 (核心域 / 云端沙箱虚拟机 / 后台通信 / 关键字匹配)
+DOMAIN-SUFFIX,muse.ai,MetaAI
+DOMAIN-SUFFIX,muse-meta.com,MetaAI
+DOMAIN-SUFFIX,metaaivm.com,MetaAI
+DOMAIN-SUFFIX,meta.ai,MetaAI
+DOMAIN,hatch.metaaivm.com,MetaAI
+# Meta 核心 AI 助手与多模态交互
+DOMAIN,imagine.meta.com,MetaAI
+DOMAIN,flow.meta.com,MetaAI
+# Meta 基础架构、账号中心与 API (解决 Muse 登录鉴权失败、虚拟机断开及跨国切线风控)
+DOMAIN-SUFFIX,meta.com,MetaAI
+DOMAIN-SUFFIX,facebook.com,MetaAI
+DOMAIN-SUFFIX,fbcdn.net,MetaAI
+DOMAIN-SUFFIX,fbsbx.com,MetaAI
+DOMAIN-SUFFIX,internalfb.com,MetaAI
+DOMAIN-SUFFIX,llama.com,MetaAI
+DOMAIN,llama.meta.com,MetaAI
+DOMAIN-SUFFIX,ai.meta.com,MetaAI
+DOMAIN-SUFFIX,oculus.com,MetaAI
+DOMAIN-SUFFIX,m.me,MetaAI
+# Meta 官方 IP 范围与 ASN (含 2022-2026 最新 57.141.0.0/14 与 163.70.0.0/16，彻底杜绝直连 IP 落入漏网之鱼)
+IP-CIDR,57.141.0.0/14,MetaAI,no-resolve
+IP-CIDR,157.240.0.0/16,MetaAI,no-resolve
+IP-CIDR,31.13.0.0/16,MetaAI,no-resolve
+IP-CIDR,173.252.64.0/18,MetaAI,no-resolve
+IP-CIDR,129.134.0.0/16,MetaAI,no-resolve
+IP-CIDR,66.220.144.0/20,MetaAI,no-resolve
+IP-CIDR,163.70.0.0/16,MetaAI,no-resolve
+IP-CIDR,185.60.216.0/22,MetaAI,no-resolve
+IP-CIDR,204.15.20.0/22,MetaAI,no-resolve
+IP-ASN,32934,MetaAI,no-resolve
+IP-ASN,63293,MetaAI,no-resolve
+
+# ==================== 2. Google Gemini & DeepMind 专线全链路 ====================
+# 必须放置在 谷歌服务 (Google.list) 前优先命中，独立【Gemini】专线策略组，坚定锁定单个优质节点，严禁走香港节点！
+# Gemini 主站、AI Studio 与核心 API 接口
+DOMAIN-SUFFIX,gemini.google.com,Gemini
+DOMAIN-SUFFIX,bard.google.com,Gemini
+DOMAIN-SUFFIX,ai.google.dev,Gemini
+DOMAIN-SUFFIX,aistudio.google.com,Gemini
+DOMAIN-SUFFIX,makersuite.google.com,Gemini
+DOMAIN-SUFFIX,deepmind.google,Gemini
+DOMAIN-SUFFIX,deepmind.com,Gemini
+DOMAIN-SUFFIX,generativeai.google,Gemini
+DOMAIN-SUFFIX,notebooklm.google,Gemini
+DOMAIN-SUFFIX,notebooklm.google.com,Gemini
+DOMAIN,generativelanguage.googleapis.com,Gemini
+DOMAIN,proactivebackend-pa.googleapis.com,Gemini
+DOMAIN,alkalimakersuite-pa.googleapis.com,Gemini
+DOMAIN,alkalimakersuite-pa.clients6.google.com,Gemini
+DOMAIN,apis.google.com,Gemini
+DOMAIN-SUFFIX,colab.research.google.com,Gemini
+DOMAIN-SUFFIX,colab.google,Gemini
+DOMAIN,developerprofiles-pa.googleapis.com,Gemini
+DOMAIN,clients6.google.com,Gemini
+DOMAIN-SUFFIX,waa-pa.clients6.google.com,Gemini
+# Gemini 多模态图片上传、存储与渲染专线（解决上传照片断流与IP不一致风控）
+DOMAIN,storage.googleapis.com,Gemini
+DOMAIN,content-storage.googleapis.com,Gemini
+DOMAIN,geller-pa.googleapis.com,Gemini
+DOMAIN-SUFFIX,googleusercontent.com,Gemini
+DOMAIN-SUFFIX,lh3.googleusercontent.com,Gemini
+DOMAIN-SUFFIX,photoslibrary.googleapis.com,Gemini
+DOMAIN,oauthaccountmanager.googleapis.com,Gemini
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Gemini/Gemini.list,Gemini
+
+# ==================== 3. OpenAI / ChatGPT / Sora 全矩阵生态 ====================
+DOMAIN-SUFFIX,chatgpt.com,OpenAI
+DOMAIN-SUFFIX,openai.com,OpenAI
+DOMAIN-SUFFIX,oaistatic.com,OpenAI
+DOMAIN-SUFFIX,oaiusercontent.com,OpenAI
+DOMAIN-SUFFIX,sora.com,OpenAI
+DOMAIN-SUFFIX,searchgpt.com,OpenAI
+DOMAIN,chat.openai.com,OpenAI
+DOMAIN,api.openai.com,OpenAI
+DOMAIN,auth.openai.com,OpenAI
+DOMAIN,platform.openai.com,OpenAI
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/OpenAI/OpenAI.list,OpenAI
+
+# ==================== 4. Anthropic Claude 深度生态 ====================
+DOMAIN-SUFFIX,claude.ai,Claude
+DOMAIN-SUFFIX,anthropic.com,Claude
+DOMAIN-SUFFIX,claude.usercontent.com,Claude
+DOMAIN-SUFFIX,statsigapi.net,Claude
+DOMAIN-SUFFIX,usefathom.com,Claude
+DOMAIN,challenges.cloudflare.com,Claude
+DOMAIN,static.cloudflareinsights.com,Claude
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Claude/Claude.list,Claude
+
+# ==================== 5. xAI (Grok) 矩阵 ====================
+DOMAIN-SUFFIX,x.ai,AI
+DOMAIN-SUFFIX,grok.com,AI
+DOMAIN,api.x.ai,AI
+
+# ==================== 6. 搜索、自主智能体与 Agent 执行环境 ====================
+# Perplexity AI 全球搜索
+DOMAIN-SUFFIX,perplexity.ai,AI
+DOMAIN-SUFFIX,pplx.ai,AI
+# 全自主 AI 智能体 (Manus / Devin / Cognition / E2B 沙箱)
+DOMAIN-SUFFIX,manus.im,AI
+DOMAIN-SUFFIX,cognition.ai,AI
+DOMAIN-SUFFIX,devin.ai,AI
+DOMAIN-SUFFIX,e2b.dev,AI
+# 新一代 AI 搜索与生产力
+DOMAIN-SUFFIX,genspark.ai,AI
+DOMAIN-SUFFIX,phind.com,AI
+DOMAIN-SUFFIX,you.com,AI
+
+# ==================== 7. 研发、代码与工程智能体 (Cursor / Bolt / v0 / Copilot) ====================
+# Cursor IDE 与后台 API
+DOMAIN-SUFFIX,cursor.com,AI
+DOMAIN-SUFFIX,cursor.sh,AI
+DOMAIN-SUFFIX,cursorapi.com,AI
+# 前端与全栈即时生成智能体
+DOMAIN-SUFFIX,v0.dev,AI
+DOMAIN-SUFFIX,bolt.new,AI
+DOMAIN-SUFFIX,windsurf.ai,AI
+DOMAIN-SUFFIX,codeium.com,AI
+DOMAIN-SUFFIX,replit.com,AI
+# 微软 Copilot
+DOMAIN-SUFFIX,copilot.microsoft.com,AI
+DOMAIN,sydney.bing.com,AI
+DOMAIN,designer.microsoft.com,AI
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Copilot/Copilot.list,AI
+
+# ==================== 8. 多模态生图、生音、生视频智能体 ====================
+# 音频/音乐生成 (Suno / Udio / ElevenLabs)
+DOMAIN-SUFFIX,suno.com,AI
+DOMAIN-SUFFIX,suno.ai,AI
+DOMAIN-SUFFIX,udio.com,AI
+DOMAIN-SUFFIX,elevenlabs.io,AI
+# 图像生成 (Midjourney / Ideogram / Recraft / Flux)
+DOMAIN-SUFFIX,midjourney.com,AI
+DOMAIN-SUFFIX,ideogram.ai,AI
+DOMAIN-SUFFIX,recraft.ai,AI
+DOMAIN-SUFFIX,blackforestlabs.ai,AI
+DOMAIN-SUFFIX,krea.ai,AI
+# 视频生成 (Runway / Luma / Pika / Haiper)
+DOMAIN-SUFFIX,runwayml.com,AI
+DOMAIN-SUFFIX,runway.com,AI
+DOMAIN-SUFFIX,luma.ai,AI
+DOMAIN-SUFFIX,lumalabs.ai,AI
+DOMAIN-SUFFIX,pika.art,AI
+DOMAIN-SUFFIX,haiper.ai,AI
+
+# ==================== 9. 开源模型托管、推理加速与聚合路由 ====================
+# Hugging Face
+DOMAIN-SUFFIX,huggingface.co,AI
+DOMAIN-SUFFIX,hf.co,AI
+DOMAIN-SUFFIX,hf.space,AI
+# 算力与推理平台 (Replicate / Together / Groq / Fireworks / DeepInfra / OpenRouter / Mistral / Cohere)
+DOMAIN-SUFFIX,replicate.com,AI
+DOMAIN-SUFFIX,replicate.delivery,AI
+DOMAIN-SUFFIX,together.ai,AI
+DOMAIN-SUFFIX,together.xyz,AI
+DOMAIN-SUFFIX,groq.com,AI
+DOMAIN-SUFFIX,fireworks.ai,AI
+DOMAIN-SUFFIX,deepinfra.com,AI
+DOMAIN-SUFFIX,openrouter.ai,AI
+DOMAIN-SUFFIX,mistral.ai,AI
+DOMAIN-SUFFIX,lechat.ai,AI
+DOMAIN-SUFFIX,cohere.com,AI
+DOMAIN-SUFFIX,cohere.ai,AI
+# 交互伴侣与智能体平台 (Poe / Character.ai / Coze / Cici)
+DOMAIN-SUFFIX,poe.com,AI
+DOMAIN-SUFFIX,poecdn.net,AI
+DOMAIN-SUFFIX,character.ai,AI
+DOMAIN-SUFFIX,characterai.com,AI
+DOMAIN-SUFFIX,coze.com,AI
+DOMAIN-SUFFIX,cici.ai,AI
+RULE-SET,https://cdn.jsdelivr.net/gh/iab0x00/ProxyRules@main/Rule/AI.txt,AI
+
+# ==================== 10. 国内主流 AI 助手 (严格 DIRECT 直连免风控) ====================
+DOMAIN-SUFFIX,deepseek.com,DIRECT
+DOMAIN-SUFFIX,moonshot.cn,DIRECT
+DOMAIN-SUFFIX,kimi.ai,DIRECT
+DOMAIN-SUFFIX,doubao.com,DIRECT
+DOMAIN-SUFFIX,volces.com,DIRECT
+DOMAIN-SUFFIX,zhipuai.cn,DIRECT
+DOMAIN-SUFFIX,chatglm.cn,DIRECT
+DOMAIN-SUFFIX,tongyi.com,DIRECT
+DOMAIN-SUFFIX,stepfun.com,DIRECT
+DOMAIN-SUFFIX,yuewen.cn,DIRECT
+DOMAIN-SUFFIX,minimax.io,DIRECT
+DOMAIN-SUFFIX,hailuoai.com,DIRECT
+DOMAIN-SUFFIX,baichuan-ai.com,DIRECT
+DOMAIN-SUFFIX,lingyiwanwu.com,DIRECT
+DOMAIN-SUFFIX,01.ai,DIRECT
+DOMAIN-SUFFIX,sensetime.com,DIRECT
+DOMAIN,yiyan.baidu.com,DIRECT
+DOMAIN,hunyuan.tencent.com,DIRECT
+
