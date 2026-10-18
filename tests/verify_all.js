@@ -336,6 +336,16 @@ test('闲鱼：异常响应原样放行', () => {
     assert(out !== undefined, `未调用 $done: ${b}`);
   }
 });
+test('阿里系 AMDC：IP 直连时用 URL 重写兜底（实测规则命中 GEOIP）', () => {
+  const pat = new RegExp(build.AMDC_REWRITE.split(' ')[0]);
+  for (const u of ['http://amdc.m.taobao.com/amdc/mobileDispatch?appkey=12431167&v=6.3&appVersion=7.20.40&cv=0', 'http://58.205.209.140/amdc/mobileDispatch?appkey=12431167']) {
+    assert(pat.test(u), `未匹配 ${u}`);
+  }
+  assert(!pat.test('http://amdc.alipay.com/amdc/mobileDispatch?appkey=x'), '不应拦截支付宝 AMDC');
+  for (const rel of ['modules/adblock-ultimate.sgmodule', 'modules/goofish.sgmodule', 'modules/taobao.sgmodule', 'modules/amap.sgmodule']) {
+    assert(body(sectionOf(files[rel], 'URL Rewrite')).includes(build.AMDC_REWRITE), `${rel} 缺少 AMDC 重写`);
+  }
+});
 test('阿里系 AMDC：全局阻断明文调度与调度域名，支付宝不受影响', () => {
   for (const rel of ['modules/adblock-ultimate.sgmodule', 'modules/adblock.sgmodule', 'modules/goofish.sgmodule']) {
     const rules = body(sectionOf(files[rel], 'Rule'));

@@ -12,6 +12,7 @@ module.exports = {
   desc: '去除淘宝开屏图片与视频广告、开屏活动弹层（PopLayer）、二楼与首页 newface 推广、各类广告位接口；飞猪开屏与猜你喜欢；淘票票开屏与弹窗。首次启用后请删除重装淘宝一次以清除已缓存的开屏素材。',
   rules: [
     'DOMAIN,amdc.m.taobao.com,REJECT',
+    'URL-REGEX,"^http:\\/\\/.+\\/amdc\\/mobileDispatch",REJECT',
     'DOMAIN,adashx.m.taobao.com,REJECT',
     'DOMAIN,h-adashx.ut.taobao.com,REJECT',
     'DOMAIN,ut.taobao.com,REJECT',

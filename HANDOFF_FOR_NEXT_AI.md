@@ -20,6 +20,7 @@
 ## 已知根因（别再走回头路）
 - **酷安开屏要点“跳过”**：酷安自营开屏 = `/v6/main/init` 返回的第一张 `entityTemplate=imageCard`。只拦图片会得到“空白开屏 + 跳过”。正确做法：删除 imageCard，并把配置卡（entityId 6390）的 `SplashAd.Type=""`、`SplashAd.timeout="0"`、`SplashAd.Expires=9999999999`、`SplashAd.onResume="0"`；请求阶段去掉 `If-None-Match`/`If-Modified-Since`。不要拦 `image.coolapk.com`。
 - **闲鱼 / 淘宝开屏去不掉**：阿里系 App 先请求明文 `http://<ip或域名>/amdc/mobileDispatch` 拿调度结果，之后走 spdy / xQUIC 长连接，HTTPS 解密与重写全部失效。v3.1 用的 `AND(URL-REGEX + USER-AGENT 闲鱼*)` 不可靠（UA 会变、部分请求不带 UA），v3.2 改为**全局** `URL-REGEX,"^http:\/\/.+\/amdc\/mobileDispatch",REJECT` + `amdc.m.taobao.com` / `amdc.m.youku.com`（`10-adblock.list` 第 7 段）。支付宝在关键服务直连段，先于此规则命中，不受影响；不要拒绝 `amdc.alipay.com`。改完需重装 App 才能清掉缓存开屏。
+  **v3.2.1 实测**：闲鱼用缓存 / 内置 IP 直连 80 端口请求 AMDC（校园网下是 CERNET 节点 58.205.x），Shadowrocket 建连时只看到 IP，上面的 DOMAIN / URL-REGEX 规则都匹配不到（日志命中 `GEOIP,CN,DIRECT`）。因此 `scripts/build.js` 里的 `AMDC_REWRITE`（`[URL Rewrite]` reject，排除 alipay 主机）作为兜底，写进全量模块和带 AMDC 规则的单 App 模块。不要改成按 IP 封（节点随网络变化，且会误伤支付宝）。
 - 高德同理；不要在 AMDC 上用 http-response 脚本改 header（无效）。
 - **贴吧**：必须关闭「通过 HTTP/2 进行中间人攻击」，否则登录态异常（ack20a / 可莉插件同样的说明）。`tieba-json.js` 处理 JSON 接口，protobuf 接口只做 reject。
 - **关键服务下的精确广告域名**（如 `ad.12306.cn`、`ads.95516.com`、`m1.ad.10010.com`）：写在 `10-adblock.list` 即可，`criticalGuard` 会把它们提到关键服务直连段之前。

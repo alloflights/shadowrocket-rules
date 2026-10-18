@@ -151,7 +151,16 @@ function confRules(policyMap) {
 }
 
 // ---------------------------------------------------------------- 重写 / 脚本 / MITM
+// 阿里系 AMDC 调度：App 常用 HTTPDNS / 缓存的 IP 直连 80 端口，Shadowrocket 在建立连接时只看到 IP，
+// DOMAIN / URL-REGEX 规则都匹配不到（实测命中 GEOIP,CN）。明文 HTTP 的 URL 重写在解析请求后执行、与 IP 无关，
+// 所以再用一条 URL Rewrite 兜底。排除支付宝（主机含 alipay）。
+const AMDC_RULE = 'URL-REGEX,"^http:\\/\\/.+\\/amdc\\/mobileDispatch",REJECT';
+const AMDC_REWRITE = '^http:\\/\\/(?![^\\/]*alipay)[^\\/]+\\/amdc\\/mobileDispatch - reject';
+const usesAmdc = (u) => (u.rules || []).includes(AMDC_RULE);
 function rewriteBody(units) {
+  return ['# --- 阿里系 AMDC 调度（IP 直连兜底） ---', AMDC_REWRITE, '', ...rewriteBodyUnits(units)];
+}
+function rewriteBodyUnits(units) {
   return units
     .filter((u) => (u.rewrites || []).length)
     .flatMap((u) => [`# --- ${u.name} ---`, ...u.rewrites, '']);
@@ -241,7 +250,7 @@ function buildModules() {
       author: u.author,
       category: u.category,
       rules: dedupe([...(u.mitm || []).map(quicRule), ...(u.rules || [])]),
-      rewrites: u.rewrites,
+      rewrites: usesAmdc(u) ? [AMDC_REWRITE, ...(u.rewrites || [])] : u.rewrites,
       bodyRewrites: (u.bodyRewrites || []).map(bodyLine),
       scripts: (u.scripts || []).map(scriptLine),
       mitm: u.mitm,
@@ -326,4 +335,5 @@ if (require.main === module) {
   if (!check) console.log(`完成，共 ${Object.keys(files).length} 个产物`);
 }
 
-module.exports = { buildAll, loadApps, quicRule, mitmHosts, scriptLine, bodyLine, jqExpr, SCRIPT_BASE };
+module.exports = {
+  AMDC_REWRITE, buildAll, loadApps, quicRule, mitmHosts, scriptLine, bodyLine, jqExpr, SCRIPT_BASE };
