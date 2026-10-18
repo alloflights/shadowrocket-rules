@@ -1,10 +1,10 @@
 #!name=海外常用应用与网站分流
-#!desc=海外资讯、学术、开发者云服务、流媒体与常见海外 TLD 走代理。
+#!desc=海外资讯、学术、开发者云服务、流媒体、Edge / 必应与常见海外 TLD 走代理；Klook / Adobe / Canva / Zoom / Notion / Xmind 等国内可直连的境外品牌直连。
 #!author=alloflights
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!category=分流
 #!system=ios
-# v3.1.0 · 由 scripts/build.js 自动生成，请勿直接修改
+# v3.2.0 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
 # ==================== 用户专属画像：生信科学、生物医学与学术科研 (Rosalind / Academic) ====================
@@ -93,7 +93,7 @@ DOMAIN-SUFFIX,sci-hub.st,PROXY
 DOMAIN-SUFFIX,sci-hub.ru,PROXY
 
 # ==================== 用户已安装与高频境外应用专流 (出行 / 硬件 / 影音 / 社区) ====================
-# 1. 国际出行、航司预订与消费格价 (Flighty / AirAsia / BookCabin / Easybook / Grab / Klook / Price HK / Skyscanner)
+# 1. 国际出行与航司预订 (Flighty / AirAsia / BookCabin / Easybook / Grab / Skyscanner)；Klook / Price 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,flightyapp.com,PROXY
 DOMAIN-SUFFIX,flighty.com,PROXY
 DOMAIN-SUFFIX,flightradar24.com,PROXY
@@ -107,9 +107,6 @@ DOMAIN-SUFFIX,easibook.com,PROXY
 DOMAIN-SUFFIX,grab.com,PROXY
 DOMAIN-SUFFIX,grabtaxi.com,PROXY
 DOMAIN-SUFFIX,grabpay.com,PROXY
-DOMAIN-SUFFIX,klook.com,PROXY
-DOMAIN-SUFFIX,klooktravel.com,PROXY
-DOMAIN-SUFFIX,price.com.hk,PROXY
 DOMAIN-SUFFIX,skyscanner.com,PROXY
 DOMAIN-SUFFIX,skyscanner.net,PROXY
 DOMAIN-SUFFIX,booking.com,PROXY
@@ -130,10 +127,7 @@ DOMAIN-SUFFIX,ana.co.jp,PROXY
 DOMAIN-SUFFIX,jal.co.jp,PROXY
 DOMAIN-SUFFIX,emirates.com,PROXY
 
-# 2. 硬件生态互联、耳机与微单协同 (B&O / 索尼微单 / 监视器 / 3D扫描 / Tailscale / 运动相机)
-DOMAIN-SUFFIX,bang-olufsen.com,PROXY
-DOMAIN-SUFFIX,bang-olufsen.dk,PROXY
-DOMAIN-SUFFIX,beoplay.com,PROXY
+# 2. 硬件生态互联、耳机与微单协同 (索尼微单 / 监视器 / 3D扫描 / Tailscale / 运动相机)；B&O 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,imagingedge.biz,PROXY
 DOMAIN-SUFFIX,playmemoriesmobile.com,PROXY
 DOMAIN-SUFFIX,sony.net,PROXY
@@ -152,7 +146,7 @@ DOMAIN-SUFFIX,shure.com,PROXY
 DOMAIN-SUFFIX,sennheiser.com,PROXY
 DOMAIN-SUFFIX,sennheiser-hearing.com,PROXY
 
-# 3. 影音多媒体、流媒体与创意设计 (SoundCloud / Spotify / Twitch / Adobe / Canva / 摄影视觉)
+# 3. 影音多媒体、流媒体与创意设计 (SoundCloud / Twitch / Muse 视频编辑 / 摄影视觉)；Adobe / Canva 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,soundcloud.com,PROXY
 DOMAIN-SUFFIX,sndcdn.com,PROXY
 DOMAIN-SUFFIX,bandcamp.com,PROXY
@@ -162,13 +156,7 @@ DOMAIN-SUFFIX,qobuz.com,PROXY
 DOMAIN-SUFFIX,twitch.tv,PROXY
 DOMAIN-SUFFIX,ttvnw.net,PROXY
 DOMAIN-SUFFIX,jtvnw.net,PROXY
-DOMAIN-SUFFIX,adobe.com,PROXY
-DOMAIN-SUFFIX,adobelogin.com,PROXY
-DOMAIN-SUFFIX,adobe.io,PROXY
-DOMAIN-SUFFIX,photoshop.com,PROXY
-DOMAIN-SUFFIX,lightroom.com,PROXY
-DOMAIN-SUFFIX,adobe.cc,PROXY
-DOMAIN-SUFFIX,canva.com,PROXY
+DOMAIN-SUFFIX,bigrowth.io,PROXY
 DOMAIN-SUFFIX,vimeo.com,PROXY
 DOMAIN-SUFFIX,vimeocdn.com,PROXY
 DOMAIN-SUFFIX,dailymotion.com,PROXY
@@ -182,10 +170,11 @@ DOMAIN-SUFFIX,pximg.net,PROXY
 DOMAIN-SUFFIX,booth.pm,PROXY
 DOMAIN-SUFFIX,fanbox.cc,PROXY
 
-# 4. 海外高频社区、问答与即时通讯 (Discord / WhatsApp / Reddit / Quora / Zoom / Bluesky / LINE)
+# 4. 海外高频社区、问答与即时通讯 (Discord / WhatsApp / Reddit / Quora / HLTV / Bluesky / LINE)；Zoom 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,quora.com,PROXY
 DOMAIN-SUFFIX,quoracdn.net,PROXY
 DOMAIN-SUFFIX,qr.ae,PROXY
+DOMAIN-SUFFIX,hltv.org,PROXY
 # --- X (Twitter) 代理直通（杜绝任何阻断，确保原生秒开） ---
 DOMAIN-SUFFIX,x.com,PROXY
 DOMAIN-SUFFIX,twitter.com,PROXY
@@ -205,9 +194,6 @@ DOMAIN-SUFFIX,discordapp.net,PROXY
 DOMAIN-SUFFIX,discord.media,PROXY
 DOMAIN-SUFFIX,whatsapp.com,PROXY
 DOMAIN-SUFFIX,whatsapp.net,PROXY
-DOMAIN-SUFFIX,zoom.us,PROXY
-DOMAIN-SUFFIX,zoom.com,PROXY
-DOMAIN-SUFFIX,zoomgov.com,PROXY
 DOMAIN-SUFFIX,bsky.app,PROXY
 DOMAIN-SUFFIX,bsky.social,PROXY
 DOMAIN-SUFFIX,signal.org,PROXY
@@ -218,11 +204,14 @@ DOMAIN-SUFFIX,snapchat.com,PROXY
 DOMAIN-SUFFIX,snap-dev.net,PROXY
 DOMAIN-SUFFIX,sc-cdn.net,PROXY
 
-# 5. 海外主流游戏平台与联机服务 (Supercell / Steam / Epic / Riot / Blizzard / EA / Ubisoft)
+# 5. 海外主流游戏平台与联机服务 (Supercell / Epic / Riot / Blizzard / EA / Ubisoft；Steam 见 85-services)
 DOMAIN-SUFFIX,supercell.com,PROXY
 DOMAIN-SUFFIX,supercell.net,PROXY
 DOMAIN-SUFFIX,clashroyale.com,PROXY
 DOMAIN-SUFFIX,brawlstars.com,PROXY
+DOMAIN-SUFFIX,clashroyaleapp.com,PROXY
+DOMAIN-SUFFIX,clashofclans.com,PROXY
+DOMAIN-SUFFIX,brawlstarsgame.com,PROXY
 DOMAIN-SUFFIX,epicgames.com,PROXY
 DOMAIN-SUFFIX,unrealengine.com,PROXY
 DOMAIN-SUFFIX,riotgames.com,PROXY
@@ -236,6 +225,50 @@ DOMAIN-SUFFIX,ubisoft.com,PROXY
 DOMAIN-SUFFIX,ubi.com,PROXY
 DOMAIN-SUFFIX,roblox.com,PROXY
 DOMAIN-SUFFIX,rbxcdn.com,PROXY
+
+# 6. 侧载与代理工具官网 / 授权 / 订阅服务 (AltStore / SideStore / Surge / Quantumult X / Karing / Hiddify)
+DOMAIN-SUFFIX,altstore.io,PROXY
+DOMAIN-SUFFIX,sidestore.io,PROXY
+DOMAIN-SUFFIX,nssurge.com,PROXY
+DOMAIN-SUFFIX,quantumult.app,PROXY
+DOMAIN-SUFFIX,karing.app,PROXY
+DOMAIN-SUFFIX,hiddify.com,PROXY
+
+# 7. Edge 浏览器与必应（按用户决策走代理；Copilot 走 AI 组，见 20-ai；Microsoft 账号登录仍直连，见 81-mail）
+DOMAIN-SUFFIX,edge.microsoft.com,PROXY
+DOMAIN-SUFFIX,bing.com,PROXY
+DOMAIN-SUFFIX,bing.net,PROXY
+DOMAIN-SUFFIX,bingapis.com,PROXY
+
+# 8. 境外品牌但国内可直连（按用户应用清单决策 DIRECT：Klook / Price / B&O / Lightroom / Canva / Zoom / Xmind / Bark / Starryblu 等）
+DOMAIN-SUFFIX,klook.com,DIRECT
+DOMAIN-SUFFIX,klooktravel.com,DIRECT
+DOMAIN-SUFFIX,price.com.hk,DIRECT
+DOMAIN-SUFFIX,bang-olufsen.com,DIRECT
+DOMAIN-SUFFIX,bang-olufsen.dk,DIRECT
+DOMAIN-SUFFIX,beoplay.com,DIRECT
+DOMAIN-SUFFIX,adobe.com,DIRECT
+DOMAIN-SUFFIX,adobelogin.com,DIRECT
+DOMAIN-SUFFIX,adobe.io,DIRECT
+DOMAIN-SUFFIX,photoshop.com,DIRECT
+DOMAIN-SUFFIX,lightroom.com,DIRECT
+DOMAIN-SUFFIX,adobe.cc,DIRECT
+DOMAIN-SUFFIX,canva.com,DIRECT
+DOMAIN-SUFFIX,canva.cn,DIRECT
+DOMAIN-SUFFIX,zoom.us,DIRECT
+DOMAIN-SUFFIX,zoom.com,DIRECT
+DOMAIN-SUFFIX,zoomgov.com,DIRECT
+DOMAIN-SUFFIX,zoom.com.cn,DIRECT
+DOMAIN-SUFFIX,xmind.net,DIRECT
+DOMAIN-SUFFIX,xmind.app,DIRECT
+DOMAIN-SUFFIX,xmind.com,DIRECT
+DOMAIN-SUFFIX,day.app,DIRECT
+DOMAIN-SUFFIX,starryblu.com,DIRECT
+DOMAIN-SUFFIX,nextpls.com,DIRECT
+DOMAIN-SUFFIX,wotransfer.com,DIRECT
+DOMAIN-SUFFIX,roguelitegames.com,DIRECT
+DOMAIN-SUFFIX,ai-augmented.com,DIRECT
+DOMAIN,windream.super.site,DIRECT
 
 # ==================== 程序员、研发与现代云原生技术栈 (Top 500 Dev & Cloud) ====================
 # 1. 代码托管与协作
@@ -309,9 +342,12 @@ DOMAIN-SUFFIX,stackoverflow.com,PROXY
 DOMAIN-SUFFIX,stackexchange.com,PROXY
 DOMAIN-SUFFIX,superuser.com,PROXY
 DOMAIN-SUFFIX,serverfault.com,PROXY
-DOMAIN-SUFFIX,notion.so,PROXY
-DOMAIN-SUFFIX,notion.site,PROXY
-DOMAIN-SUFFIX,notion.com,PROXY
+# Notion 按用户决策直连（国内可直接访问）
+DOMAIN-SUFFIX,notion.so,DIRECT
+DOMAIN-SUFFIX,notion.site,DIRECT
+DOMAIN-SUFFIX,notion.com,DIRECT
+DOMAIN-SUFFIX,notion-static.com,DIRECT
+DOMAIN-SUFFIX,notionusercontent.com,DIRECT
 DOMAIN-SUFFIX,linear.app,PROXY
 DOMAIN-SUFFIX,raycast.com,PROXY
 DOMAIN-SUFFIX,obsidian.md,PROXY
@@ -392,6 +428,10 @@ DOMAIN-SUFFIX,nhk.jp,PROXY
 
 # 3. 社交、博客、内容创作与视觉设计
 DOMAIN-SUFFIX,threads.net,PROXY
+DOMAIN-SUFFIX,threads.com,PROXY
+DOMAIN-SUFFIX,instagram.com,PROXY
+DOMAIN-SUFFIX,cdninstagram.com,PROXY
+DOMAIN-SUFFIX,ig.me,PROXY
 DOMAIN-SUFFIX,pinterest.com,PROXY
 DOMAIN-SUFFIX,pinimg.com,PROXY
 DOMAIN-SUFFIX,tumblr.com,PROXY

@@ -1,0 +1,18 @@
+#!name=微信公众号净化
+#!desc=去除公众号文章底部广告、商品卡片、相关文章推荐与搜索推荐词。只解密 mp.weixin.qq.com，不影响微信聊天与支付。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
+#!system=ios
+# v3.2.0 · 由 scripts/build.js 自动生成，请勿直接修改
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,mp.weixin.qq.com)),REJECT
+DOMAIN-SUFFIX,wxs.qq.com,REJECT
+
+[URL Rewrite]
+^https:\/\/mp\.weixin\.qq\.com\/mp\/(cps_product_info|getappmsgad|jsmonitor|masonryfeed|relatedarticle)\? - reject-dict
+^https:\/\/mp\.weixin\.qq\.com\/mp\/relatedsearchword - reject-dict
+
+[MITM]
+hostname = %APPEND% mp.weixin.qq.com

@@ -1,5 +1,5 @@
 # ==================== 用户已安装与高频境外应用专流 (出行 / 硬件 / 影音 / 社区) ====================
-# 1. 国际出行、航司预订与消费格价 (Flighty / AirAsia / BookCabin / Easybook / Grab / Klook / Price HK / Skyscanner)
+# 1. 国际出行与航司预订 (Flighty / AirAsia / BookCabin / Easybook / Grab / Skyscanner)；Klook / Price 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,flightyapp.com,PROXY
 DOMAIN-SUFFIX,flighty.com,PROXY
 DOMAIN-SUFFIX,flightradar24.com,PROXY
@@ -13,9 +13,6 @@ DOMAIN-SUFFIX,easibook.com,PROXY
 DOMAIN-SUFFIX,grab.com,PROXY
 DOMAIN-SUFFIX,grabtaxi.com,PROXY
 DOMAIN-SUFFIX,grabpay.com,PROXY
-DOMAIN-SUFFIX,klook.com,PROXY
-DOMAIN-SUFFIX,klooktravel.com,PROXY
-DOMAIN-SUFFIX,price.com.hk,PROXY
 DOMAIN-SUFFIX,skyscanner.com,PROXY
 DOMAIN-SUFFIX,skyscanner.net,PROXY
 DOMAIN-SUFFIX,booking.com,PROXY
@@ -36,10 +33,7 @@ DOMAIN-SUFFIX,ana.co.jp,PROXY
 DOMAIN-SUFFIX,jal.co.jp,PROXY
 DOMAIN-SUFFIX,emirates.com,PROXY
 
-# 2. 硬件生态互联、耳机与微单协同 (B&O / 索尼微单 / 监视器 / 3D扫描 / Tailscale / 运动相机)
-DOMAIN-SUFFIX,bang-olufsen.com,PROXY
-DOMAIN-SUFFIX,bang-olufsen.dk,PROXY
-DOMAIN-SUFFIX,beoplay.com,PROXY
+# 2. 硬件生态互联、耳机与微单协同 (索尼微单 / 监视器 / 3D扫描 / Tailscale / 运动相机)；B&O 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,imagingedge.biz,PROXY
 DOMAIN-SUFFIX,playmemoriesmobile.com,PROXY
 DOMAIN-SUFFIX,sony.net,PROXY
@@ -58,7 +52,7 @@ DOMAIN-SUFFIX,shure.com,PROXY
 DOMAIN-SUFFIX,sennheiser.com,PROXY
 DOMAIN-SUFFIX,sennheiser-hearing.com,PROXY
 
-# 3. 影音多媒体、流媒体与创意设计 (SoundCloud / Spotify / Twitch / Adobe / Canva / 摄影视觉)
+# 3. 影音多媒体、流媒体与创意设计 (SoundCloud / Twitch / Muse 视频编辑 / 摄影视觉)；Adobe / Canva 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,soundcloud.com,PROXY
 DOMAIN-SUFFIX,sndcdn.com,PROXY
 DOMAIN-SUFFIX,bandcamp.com,PROXY
@@ -68,13 +62,7 @@ DOMAIN-SUFFIX,qobuz.com,PROXY
 DOMAIN-SUFFIX,twitch.tv,PROXY
 DOMAIN-SUFFIX,ttvnw.net,PROXY
 DOMAIN-SUFFIX,jtvnw.net,PROXY
-DOMAIN-SUFFIX,adobe.com,PROXY
-DOMAIN-SUFFIX,adobelogin.com,PROXY
-DOMAIN-SUFFIX,adobe.io,PROXY
-DOMAIN-SUFFIX,photoshop.com,PROXY
-DOMAIN-SUFFIX,lightroom.com,PROXY
-DOMAIN-SUFFIX,adobe.cc,PROXY
-DOMAIN-SUFFIX,canva.com,PROXY
+DOMAIN-SUFFIX,bigrowth.io,PROXY
 DOMAIN-SUFFIX,vimeo.com,PROXY
 DOMAIN-SUFFIX,vimeocdn.com,PROXY
 DOMAIN-SUFFIX,dailymotion.com,PROXY
@@ -88,10 +76,11 @@ DOMAIN-SUFFIX,pximg.net,PROXY
 DOMAIN-SUFFIX,booth.pm,PROXY
 DOMAIN-SUFFIX,fanbox.cc,PROXY
 
-# 4. 海外高频社区、问答与即时通讯 (Discord / WhatsApp / Reddit / Quora / Zoom / Bluesky / LINE)
+# 4. 海外高频社区、问答与即时通讯 (Discord / WhatsApp / Reddit / Quora / HLTV / Bluesky / LINE)；Zoom 按用户决策直连，见第 8 段
 DOMAIN-SUFFIX,quora.com,PROXY
 DOMAIN-SUFFIX,quoracdn.net,PROXY
 DOMAIN-SUFFIX,qr.ae,PROXY
+DOMAIN-SUFFIX,hltv.org,PROXY
 # --- X (Twitter) 代理直通（杜绝任何阻断，确保原生秒开） ---
 DOMAIN-SUFFIX,x.com,Twitter
 DOMAIN-SUFFIX,twitter.com,Twitter
@@ -111,9 +100,6 @@ DOMAIN-SUFFIX,discordapp.net,PROXY
 DOMAIN-SUFFIX,discord.media,PROXY
 DOMAIN-SUFFIX,whatsapp.com,PROXY
 DOMAIN-SUFFIX,whatsapp.net,PROXY
-DOMAIN-SUFFIX,zoom.us,PROXY
-DOMAIN-SUFFIX,zoom.com,PROXY
-DOMAIN-SUFFIX,zoomgov.com,PROXY
 DOMAIN-SUFFIX,bsky.app,PROXY
 DOMAIN-SUFFIX,bsky.social,PROXY
 DOMAIN-SUFFIX,signal.org,PROXY
@@ -124,11 +110,14 @@ DOMAIN-SUFFIX,snapchat.com,PROXY
 DOMAIN-SUFFIX,snap-dev.net,PROXY
 DOMAIN-SUFFIX,sc-cdn.net,PROXY
 
-# 5. 海外主流游戏平台与联机服务 (Supercell / Steam / Epic / Riot / Blizzard / EA / Ubisoft)
+# 5. 海外主流游戏平台与联机服务 (Supercell / Epic / Riot / Blizzard / EA / Ubisoft；Steam 见 85-services)
 DOMAIN-SUFFIX,supercell.com,游戏平台
 DOMAIN-SUFFIX,supercell.net,游戏平台
 DOMAIN-SUFFIX,clashroyale.com,游戏平台
 DOMAIN-SUFFIX,brawlstars.com,游戏平台
+DOMAIN-SUFFIX,clashroyaleapp.com,游戏平台
+DOMAIN-SUFFIX,clashofclans.com,游戏平台
+DOMAIN-SUFFIX,brawlstarsgame.com,游戏平台
 DOMAIN-SUFFIX,epicgames.com,游戏平台
 DOMAIN-SUFFIX,unrealengine.com,游戏平台
 DOMAIN-SUFFIX,riotgames.com,游戏平台
@@ -143,3 +132,46 @@ DOMAIN-SUFFIX,ubi.com,游戏平台
 DOMAIN-SUFFIX,roblox.com,游戏平台
 DOMAIN-SUFFIX,rbxcdn.com,游戏平台
 
+# 6. 侧载与代理工具官网 / 授权 / 订阅服务 (AltStore / SideStore / Surge / Quantumult X / Karing / Hiddify)
+DOMAIN-SUFFIX,altstore.io,PROXY
+DOMAIN-SUFFIX,sidestore.io,PROXY
+DOMAIN-SUFFIX,nssurge.com,PROXY
+DOMAIN-SUFFIX,quantumult.app,PROXY
+DOMAIN-SUFFIX,karing.app,PROXY
+DOMAIN-SUFFIX,hiddify.com,PROXY
+
+# 7. Edge 浏览器与必应（按用户决策走代理；Copilot 走 AI 组，见 20-ai；Microsoft 账号登录仍直连，见 81-mail）
+DOMAIN-SUFFIX,edge.microsoft.com,PROXY
+DOMAIN-SUFFIX,bing.com,PROXY
+DOMAIN-SUFFIX,bing.net,PROXY
+DOMAIN-SUFFIX,bingapis.com,PROXY
+
+# 8. 境外品牌但国内可直连（按用户应用清单决策 DIRECT：Klook / Price / B&O / Lightroom / Canva / Zoom / Xmind / Bark / Starryblu 等）
+DOMAIN-SUFFIX,klook.com,DIRECT
+DOMAIN-SUFFIX,klooktravel.com,DIRECT
+DOMAIN-SUFFIX,price.com.hk,DIRECT
+DOMAIN-SUFFIX,bang-olufsen.com,DIRECT
+DOMAIN-SUFFIX,bang-olufsen.dk,DIRECT
+DOMAIN-SUFFIX,beoplay.com,DIRECT
+DOMAIN-SUFFIX,adobe.com,DIRECT
+DOMAIN-SUFFIX,adobelogin.com,DIRECT
+DOMAIN-SUFFIX,adobe.io,DIRECT
+DOMAIN-SUFFIX,photoshop.com,DIRECT
+DOMAIN-SUFFIX,lightroom.com,DIRECT
+DOMAIN-SUFFIX,adobe.cc,DIRECT
+DOMAIN-SUFFIX,canva.com,DIRECT
+DOMAIN-SUFFIX,canva.cn,DIRECT
+DOMAIN-SUFFIX,zoom.us,DIRECT
+DOMAIN-SUFFIX,zoom.com,DIRECT
+DOMAIN-SUFFIX,zoomgov.com,DIRECT
+DOMAIN-SUFFIX,zoom.com.cn,DIRECT
+DOMAIN-SUFFIX,xmind.net,DIRECT
+DOMAIN-SUFFIX,xmind.app,DIRECT
+DOMAIN-SUFFIX,xmind.com,DIRECT
+DOMAIN-SUFFIX,day.app,DIRECT
+DOMAIN-SUFFIX,starryblu.com,DIRECT
+DOMAIN-SUFFIX,nextpls.com,DIRECT
+DOMAIN-SUFFIX,wotransfer.com,DIRECT
+DOMAIN-SUFFIX,roguelitegames.com,DIRECT
+DOMAIN-SUFFIX,ai-augmented.com,DIRECT
+DOMAIN,windream.super.site,DIRECT

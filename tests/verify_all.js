@@ -59,6 +59,14 @@ for (const [rel, text] of allTexts) {
       new RegExp(m[1]);
     }
   });
+  test(`${rel}: Body Rewrite 格式正确（http-response-jq + 单引号 jq，每步 try/catch）`, () => {
+    for (const l of body(sectionOf(text, 'Body Rewrite'))) {
+      const m = l.match(/^http-response-jq (\S+) '([^']+)'$/);
+      assert(m, `格式错误: ${l.slice(0, 120)}`);
+      new RegExp(m[1]);
+      assert(m[2].startsWith('(. as $o | try ('), `jq 未包裹 try/catch: ${l.slice(0, 120)}`);
+    }
+  });
   test(`${rel}: 脚本参数安全`, () => {
     for (const l of scripts) {
       const pat = (l.match(/pattern=(.*?),script-path=/) || [])[1];
@@ -108,7 +116,8 @@ for (const [rel, text] of allTexts) {
   test(`${rel}: MITM 不包含 Apple / 银行 / 运营商 / 大 CDN 通配`, () => {
     for (const h of hosts) {
       const bare = h.replace(/^\*\./, '');
-      assert(!PROTECTED.test(bare), `禁止解密: ${h}`);
+      // 唯一例外：公众号文章 mp.weixin.qq.com（精确主机，不含聊天 / 支付）
+      assert(!PROTECTED.test(bare) || h === 'mp.weixin.qq.com', `禁止解密: ${h}`);
       assert(!(h.startsWith('*.') && NO_WILDCARD.test(bare)), `禁止通配解密: ${h}`);
       assert(!/^\*\.[^.]+\.(com|cn|net)$/.test(h) || /^\*\.(ximalaya|mobileapi\.hupu|uve\.weibo)\./.test(h) || h === '*.ximalaya.com', `通配过宽: ${h}`);
       assert(h !== '*' && h !== '-*', `禁止全量解密: ${h}`);
@@ -132,7 +141,8 @@ for (const [rel, text] of allTexts) {
     const toRe = (h) => new RegExp('^' + h.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
     const hostRes = hosts.map(toRe);
     const lines = [...body(sectionOf(text, 'URL Rewrite')).map((l) => l.split(' ')[0]),
-      ...body(sectionOf(text, 'Script')).map((l) => (l.match(/pattern=(.*?),script-path=/) || [])[1])];
+      ...body(sectionOf(text, 'Script')).map((l) => (l.match(/pattern=(.*?),script-path=/) || [])[1]),
+      ...body(sectionOf(text, 'Body Rewrite')).map((l) => l.split(' ')[1])];
     // 用样例 URL 验证：从正则中提取字面主机
     for (const pat of lines) {
       if (!/^\^https(\?)?:/.test(pat) && !/^\^https\?/.test(pat)) continue;
@@ -149,7 +159,7 @@ for (const rel of CONFS) {
   const rules = body(sectionOf(text, 'Rule'));
   test(`${rel}: 纯分流（不含任何去广告内容）`, () => {
     assert(!rules.some((l) => /,REJECT/.test(l)), '主配置不应包含 REJECT 规则');
-    for (const sec of ['URL Rewrite', 'Script', 'MITM']) assert(!sectionOf(text, sec).length, `主配置不应包含 [${sec}]`);
+    for (const sec of ['URL Rewrite', 'Body Rewrite', 'Script', 'MITM']) assert(!sectionOf(text, sec).length, `主配置不应包含 [${sec}]`);
     assert(text.includes('modules/adblock-ultimate.sgmodule'), '头部应提示添加去广告模块');
   });
   test(`${rel}: Apple 保护规则最先匹配`, () => {
@@ -176,6 +186,73 @@ for (const rel of CONFS) {
     const g = sectionOf(text, 'General').join('\n');
     for (const k of ['dns-server = 223.5.5.5, 119.29.29.29', 'ipv6 = false', 'block-quic = all-proxy', 'dns-direct-system = true', 'compatibility-mode = 1', 'update-url = ']) {
       assert(g.includes(k), `缺少 ${k}`);
+    }
+  });
+}
+
+// ---------------------------------------------------------------- 分流（用户应用清单 / 冲突 / 遮蔽）
+function ipInCidr(ip, cidr) {
+  const [net, bits] = cidr.split('/');
+  const n = (s) => s.split('.').reduce((a, x) => a * 256 + Number(x), 0);
+  const size = 2 ** (32 - Number(bits));
+  return Math.floor(n(ip) / size) === Math.floor(n(net) / size);
+}
+// 只模拟能离线判断的规则；RULE-SET（远程）/ IP-ASN / GEOIP 之类都跳过，所以命中的一定是我们自己写的显式规则
+function routeOf(rules, host) {
+  const h = host.toLowerCase();
+  const isIp = /^\d+\.\d+\.\d+\.\d+$/.test(h);
+  for (const l of rules) {
+    const p = l.split(',');
+    const [type, value, policy] = [p[0], (p[1] || '').toLowerCase(), p[2]];
+    if (isIp) {
+      if (type === 'IP-CIDR' && ipInCidr(h, value)) return { policy, rule: l };
+      continue;
+    }
+    if ((type === 'DOMAIN' && h === value) || (type === 'DOMAIN-SUFFIX' && (h === value || h.endsWith(`.${value}`))) || (type === 'DOMAIN-KEYWORD' && h.includes(value))) {
+      return { policy, rule: l };
+    }
+  }
+  return null;
+}
+const appRouting = JSON.parse(read('tests/fixtures/app-routing.json'));
+{
+  const rules = body(sectionOf(files['Shadowrocket_AllInOne_Ultimate.conf'], 'Rule'));
+  for (const { app, expect, hosts } of appRouting.apps) {
+    test(`应用分流：${app} → ${expect}`, () => {
+      for (const host of hosts) {
+        const r = routeOf(rules, host);
+        assert(r, `${host} 没有命中任何显式规则`);
+        assert(r.policy === expect, `${host} 命中 ${r.rule}，应为 ${expect}`);
+      }
+    });
+  }
+  test('应用分流：GEOIP 兜底名单只用于没有固定域名的国内 App', () => {
+    const named = new Set(appRouting.apps.map((a) => a.app));
+    for (const a of appRouting.geoipOnly) assert(!named.has(a), `${a} 同时出现在显式清单和 GEOIP 名单`);
+    assert(rules.includes('GEOIP,CN,DIRECT'), '缺少 GEOIP,CN,DIRECT');
+  });
+}
+for (const rel of CONFS) {
+  const rules = body(sectionOf(files[rel], 'Rule'));
+  test(`${rel}: 同一域名 / IP 不出现互相矛盾的策略`, () => {
+    const seen = new Map();
+    for (const l of rules) {
+      const p = l.split(',');
+      if (!/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN)$/.test(p[0])) continue;
+      const k = `${p[0]},${p[1].toLowerCase()}`;
+      if (seen.has(k)) assert(seen.get(k).split(',')[2] === p[2], `冲突: ${l} ↔ ${seen.get(k)}`);
+      else seen.set(k, l);
+    }
+  });
+  test(`${rel}: 没有被前面更宽的后缀规则遮蔽的不同策略规则`, () => {
+    const suffixes = [];
+    for (const l of rules) {
+      const p = l.split(',');
+      if (p[0] !== 'DOMAIN' && p[0] !== 'DOMAIN-SUFFIX') continue;
+      const d = p[1].toLowerCase();
+      const parent = suffixes.find((s) => d === s.d || d.endsWith(`.${s.d}`));
+      assert(!parent || parent.policy === p[2], `${l} 永远不会生效（被 ${parent && parent.line} 先命中）`);
+      if (p[0] === 'DOMAIN-SUFFIX') suffixes.push({ d, policy: p[2], line: l });
     }
   });
 }
@@ -259,10 +336,18 @@ test('闲鱼：异常响应原样放行', () => {
     assert(out !== undefined, `未调用 $done: ${b}`);
   }
 });
-test('闲鱼：AMDC 调度按 UA 拒绝', () => {
-  for (const rel of ['modules/adblock-ultimate.sgmodule', 'modules/goofish.sgmodule']) {
+test('阿里系 AMDC：全局阻断明文调度与调度域名，支付宝不受影响', () => {
+  for (const rel of ['modules/adblock-ultimate.sgmodule', 'modules/adblock.sgmodule', 'modules/goofish.sgmodule']) {
     const rules = body(sectionOf(files[rel], 'Rule'));
-    assert(rules.some((l) => l.includes('amdc') && l.includes('%E9%97%B2%E9%B1%BC')), `${rel} 缺少闲鱼 AMDC 规则`);
+    const amdc = rules.indexOf('URL-REGEX,"^http:\\/\\/.+\\/amdc\\/mobileDispatch",REJECT');
+    assert(amdc >= 0, `${rel} 缺少 AMDC 全局规则`);
+    assert(rules.includes('DOMAIN,amdc.m.taobao.com,REJECT'), `${rel} 缺少 amdc.m.taobao.com`);
+    assert(!rules.some((l) => l.includes('amdc') && l.includes('USER-AGENT')), `${rel} 仍有按 UA 的 AMDC 规则（UA 匹配不可靠）`);
+    assert(!rules.some((l) => /amdc\.alipay\.com/.test(l) && /REJECT/.test(l)), `${rel} 不应拒绝支付宝 AMDC`);
+    if (rel !== 'modules/goofish.sgmodule') {
+      const ali = rules.indexOf('DOMAIN-SUFFIX,alipay.com,DIRECT');
+      assert(ali >= 0 && ali < amdc, `${rel} 支付宝直连保护应在 AMDC 规则之前`);
+    }
   }
 });
 test('去广告总模块包含全部 App 的重写 / 脚本 / MITM', () => {
@@ -270,8 +355,103 @@ test('去广告总模块包含全部 App 的重写 / 脚本 / MITM', () => {
   for (const u of build.loadApps()) {
     for (const r of u.rewrites || []) assert(text.includes(r), `${u.id} 重写缺失: ${r}`);
     for (const sc of u.scripts || []) assert(text.includes(`${sc.name} = `), `${u.id} 脚本缺失: ${sc.name}`);
+    for (const b of u.bodyRewrites || []) assert(text.includes(build.bodyLine(b)), `${u.id} Body Rewrite 缺失: ${b.pattern}`);
     for (const h of u.mitm || []) assert(text.includes(h), `${u.id} MITM 缺失: ${h}`);
   }
+});
+
+// ---------------------------------------------------------------- Body Rewrite（jq）
+let JQ = null;
+try {
+  execFileSync('jq', ['--version'], { stdio: 'pipe' });
+  JQ = 'jq';
+} catch (e) {
+  console.warn('⚠ 未安装 jq，跳过 jq 语法与行为测试');
+}
+function jq(expr, inputs) {
+  const out = execFileSync(JQ, ['-c', expr], { input: inputs.map((x) => JSON.stringify(x)).join('\n'), stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
+  return out ? out.split('\n').map((l) => JSON.parse(l)) : [];
+}
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const allBodies = build.loadApps().flatMap((u) => (u.bodyRewrites || []).map((b) => ({ unit: u.id, ...b })));
+function bodyOf(unit, includes) {
+  const b = allBodies.find((x) => x.unit === unit && x.pattern.includes(includes));
+  assert(b, `找不到 ${unit} 的 Body Rewrite: ${includes}`);
+  return build.jqExpr(b.jq);
+}
+test('Body Rewrite：同一接口只有一条（避免重复改写）', () => {
+  const seen = new Set();
+  for (const b of allBodies) {
+    assert(!seen.has(b.pattern), `重复的 Body Rewrite: ${b.pattern}`);
+    seen.add(b.pattern);
+  }
+});
+if (JQ) {
+  test('Body Rewrite：jq 语法有效；异常 / 无关输入原样返回且只输出一个结果', () => {
+    const inputs = [{ foo: 1 }, [], 'x', { data: null, result: 1, respData: 'x' }];
+    for (const b of allBodies) {
+      const steps = Array.isArray(b.jq) ? b.jq : [b.jq];
+      const constant = steps.length === 1 && steps[0].trim().startsWith('{');
+      let out;
+      try {
+        out = jq(build.jqExpr(b.jq), inputs);
+      } catch (e) {
+        throw new Error(`${b.unit} jq 执行失败: ${b.pattern}\n    ${String(e.stderr || e.message).trim()}`);
+      }
+      assert(out.length === inputs.length, `${b.unit} 输出数量异常: ${b.pattern}`);
+      // 前三个输入与任何接口都无关，必须原样返回；第四个只要求不报错
+      if (!constant) inputs.slice(0, 3).forEach((x, i) => assert(same(out[i], x), `${b.unit} 无关输入被改动: ${b.pattern} → ${JSON.stringify(out[i])}`));
+    }
+  });
+  const cases = [
+    ['闲鱼 magic 首页：删除 topList', 'goofish', 'magic', { data: { topList: [1], sections: [2] } }, { data: { sections: [2] } }],
+    ['网盘金刚区：去掉小说 / 短剧，保留文件入口', 'baidunetdisk', 'kingkong', { data: { data: [{ type: 'novel' }, { type: 'file' }, { type: 'shortplay' }] } }, { data: { data: [{ type: 'file' }] } }],
+    ['京东首页：去悬浮 / 通栏 / 二楼，保留推荐', 'jd', 'welcomeHome', { floorList: [{ type: 'float' }, { type: 'recommend' }, { type: 'topRotate' }], webViewFloorList: [1] }, { floorList: [{ type: 'recommend' }], webViewFloorList: [] }],
+    ['京东开屏：清空素材', 'jd', 'start(', { images: [1], showTimesDaily: 3, other: 1 }, { images: [], showTimesDaily: 0, other: 1 }],
+    ['拼多多订单列表：去成长提示，异常订单原样', 'pdd', 'order_list_v4', { orders: [{ order_buttons: [{ order_growth_tip: 1, text: 'a' }] }, { x: 1 }] }, { orders: [{ order_buttons: [{ text: 'a' }] }, { x: 1 }] }],
+    ['转转更多工具：去活动 / 金融分组与免流量特权', 'zhuanzhuan', 'getmymoretools', { respData: { groupList: [{ groupName: '活动参与' }, { groupName: '常用', items: [{ name: '免流量特权' }, { name: '设置' }] }] } }, { respData: { groupList: [{ groupName: '常用', items: [{ name: '设置' }] }] } }],
+    ['滴滴个人中心：只留基础卡片与优惠卡券', 'didi', 'usercenter', { data: { instances: { center_base_info_card: {}, ad_card: {}, center_wallet_finance_card: { data: { view_info: [{ title: '优惠卡券' }, { title: '借钱' }] } } } } }, { data: { instances: { center_base_info_card: {}, center_wallet_finance_card: { data: { view_info: [{ title: '优惠卡券' }] } } } } }],
+    ['斗鱼云控：只改已存在的开关', 'douyu', 'venus', { bringGoodsSwitch: 1, other: 1 }, { bringGoodsSwitch: 0, other: 1 }],
+    ['夸克云控：删广告字段，保留功能字段', 'quark', 'open-cms', { result: { cms_lottery_banner: 1, cms_search_page_config: 2 } }, { result: { cms_search_page_config: 2 } }],
+    ['贴吧搜索首页：返回成功空结果', 'tieba', 'startPage', { data: { hot: [1] } }, { no: 0, error: 'success' }],
+  ];
+  for (const [name, unit, inc, input, expected] of cases) {
+    test(`Body Rewrite 行为：${name}`, () => {
+      const [out] = jq(bodyOf(unit, inc), [input]);
+      assert(same(out, expected), JSON.stringify(out));
+    });
+  }
+  test('Body Rewrite 行为：贴吧我的页面（部分字段缺失时其余步骤照常生效）', () => {
+    const input = { vip_banner: {}, user: { consume_info: 1, shake_ad_switch: { is_show: 1 }, name: 'a' }, custom_grid: [{ title: '游戏大厅' }, { title: '我的收藏' }],
+      zone_info: [{ type: 'commerce' }, { type: 'normal', common_func: { common_func_noraml: [{ name: '创建智能体' }, { name: '历史' }] } }] };
+    const [out] = jq(bodyOf('tieba', 'profile'), [input]);
+    assert(!('vip_banner' in out) && !('consume_info' in out.user) && out.user.name === 'a' && out.user.shake_ad_switch.is_show === 0, JSON.stringify(out));
+    assert(same(out.custom_grid, [{ title: '我的收藏' }]), JSON.stringify(out.custom_grid));
+    assert(same(out.zone_info, [{ type: 'normal', common_func: { common_func_noraml: [{ name: '历史' }] } }]), JSON.stringify(out.zone_info));
+    const [partial] = jq(bodyOf('tieba', 'profile'), [{ vip_banner: 1, custom_grid: 'x' }]);
+    assert(same(partial, { custom_grid: 'x' }), JSON.stringify(partial));
+  });
+  test('Body Rewrite 行为：淘宝开屏素材失效，其它区块不动', () => {
+    const input = { data: { containers: { splash_home_base: { base: { sections: [
+      { bizData: { 'taobao-splash': { data: [{ imgUrl: 'u', waitTime: '3', coldStart: 'true', id: 7 }] } } }, { bizData: { other: 1 } }] } } } } };
+    const [out] = jq(bodyOf('taobao', 'splash'), [input]);
+    const [a, b] = out.data.containers.splash_home_base.base.sections;
+    const item = a.bizData['taobao-splash'].data[0];
+    assert(item.imgUrl === '' && item.waitTime === '0' && item.coldStart === 'false' && item.hotStart === 'false' && item.gmtStart.startsWith('2090') && item.id === 7, JSON.stringify(item));
+    assert(same(b, { bizData: { other: 1 } }), JSON.stringify(b));
+  });
+}
+
+test('贴吧 sync：删除开屏 / 悬浮 / 弹窗配置，广告条数置 0，只改已有键', () => {
+  const input = { error_code: 0, next_start: { a: 1 }, floating_icon: {}, scheme_whitelist: [1], user_growth_task_list: [1],
+    wl_config: { home_ad_num: 5, frs_ad_num: 3, download_edge_float: 1, keep: 1 },
+    config: { switch: [{ name: 'platform_csj_init', type: '1' }, { name: 'x', type: '1' }] } };
+  const out = JSON.parse(run('tieba-json.js', { url: 'https://tiebac.baidu.com/c/s/sync', responseBody: JSON.stringify(input) }).body);
+  for (const k of ['next_start', 'floating_icon', 'scheme_whitelist', 'user_growth_task_list']) assert(!(k in out), `${k} 未删除`);
+  assert(out.error_code === 0, 'error_code 被误删');
+  assert(out.wl_config.home_ad_num === 0 && out.wl_config.frs_ad_num === 0 && out.wl_config.keep === 1, JSON.stringify(out.wl_config));
+  assert(!('download_edge_float' in out.wl_config) && !('pb_comment_ad_num' in out.wl_config), JSON.stringify(out.wl_config));
+  assert(out.config.switch[0].type === '0' && out.config.switch[1].type === '1', JSON.stringify(out.config.switch));
 });
 
 // ---------------------------------------------------------------- 关键服务保护

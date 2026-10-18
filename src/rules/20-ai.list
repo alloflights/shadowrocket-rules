@@ -121,6 +121,7 @@ DOMAIN-SUFFIX,replit.com,AI
 # 微软 Copilot
 DOMAIN-SUFFIX,copilot.microsoft.com,AI
 DOMAIN,sydney.bing.com,AI
+DOMAIN,edgeservices.bing.com,AI
 DOMAIN,designer.microsoft.com,AI
 RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Copilot/Copilot.list,AI
 
@@ -175,6 +176,7 @@ RULE-SET,https://cdn.jsdelivr.net/gh/iab0x00/ProxyRules@main/Rule/AI.txt,AI
 DOMAIN-SUFFIX,deepseek.com,DIRECT
 DOMAIN-SUFFIX,moonshot.cn,DIRECT
 DOMAIN-SUFFIX,kimi.ai,DIRECT
+DOMAIN-SUFFIX,kimi.com,DIRECT
 DOMAIN-SUFFIX,doubao.com,DIRECT
 DOMAIN-SUFFIX,volces.com,DIRECT
 DOMAIN-SUFFIX,zhipuai.cn,DIRECT

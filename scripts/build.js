@@ -156,6 +156,21 @@ function rewriteBody(units) {
     .filter((u) => (u.rewrites || []).length)
     .flatMap((u) => [`# --- ${u.name} ---`, ...u.rewrites, '']);
 }
+// [Body Rewrite]：http-response-jq。每一步单独 try/catch，字段缺失或结构变化时原样返回该步之前的结果，
+// 绝不会因为某个接口改版而让 App 收到报错或空数据。jq 表达式用单引号包裹，所以表达式里不能出现单引号。
+function jqExpr(jq) {
+  const steps = Array.isArray(jq) ? jq : [jq];
+  for (const s of steps) if (s.includes("'")) throw new Error(`jq 表达式不能包含单引号: ${s}`);
+  return steps.map((s) => `(. as $o | try (${s}) catch $o)`).join(' | ');
+}
+function bodyLine(b) {
+  return `http-response-jq ${b.pattern} '${jqExpr(b.jq)}'`;
+}
+function bodyRewriteBody(units) {
+  return units
+    .filter((u) => (u.bodyRewrites || []).length)
+    .flatMap((u) => [`# --- ${u.name} ---`, ...u.bodyRewrites.map(bodyLine), '']);
+}
 function scriptBody(units) {
   return units
     .filter((u) => (u.scripts || []).length)
@@ -196,7 +211,7 @@ function buildConf({ file, title, desc, groups, policyMap }) {
 }
 
 // ---------------------------------------------------------------- 模块
-function moduleText({ name, desc, author, category, rules, rewrites, scripts, mitm }) {
+function moduleText({ name, desc, author, category, rules, rewrites, bodyRewrites, scripts, mitm }) {
   const out = [
     `#!name=${name}`,
     `#!desc=${desc}`,
@@ -209,6 +224,7 @@ function moduleText({ name, desc, author, category, rules, rewrites, scripts, mi
   ];
   if (rules && rules.length) out.push('[Rule]', ...rules, '');
   if (rewrites && rewrites.length) out.push('[URL Rewrite]', ...rewrites, '');
+  if (bodyRewrites && bodyRewrites.length) out.push('[Body Rewrite]', ...bodyRewrites, '');
   if (scripts && scripts.length) out.push('[Script]', ...scripts, '');
   if (mitm && mitm.length) out.push('[MITM]', `hostname = %APPEND% ${mitm.join(', ')}`, '');
   return out.join('\n').replace(/\n+$/, '\n');
@@ -226,16 +242,18 @@ function buildModules() {
       category: u.category,
       rules: dedupe([...(u.mitm || []).map(quicRule), ...(u.rules || [])]),
       rewrites: u.rewrites,
+      bodyRewrites: (u.bodyRewrites || []).map(bodyLine),
       scripts: (u.scripts || []).map(scriptLine),
       mitm: u.mitm,
     });
   }
   files['modules/adblock-ultimate.sgmodule'] = moduleText({
     name: '全量去广告 (AdBlock Ultimate)',
-    desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS 拦截 + 全部 App 专项去广告（酷安、闲鱼、知乎、微博、B站、小红书、贴吧、网盘、高德等）。已包含所有单 App 模块，请勿再叠加单 App 模块。需开启 HTTPS 解密。',
+    desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、拼多多、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含所有单 App 模块，请勿再叠加单 App 模块。需开启 HTTPS 解密。',
     category: '去广告',
     rules: dedupe([...section('HTTPS 解密主机 QUIC 回落 TCP'), ...quicRules(units), ...criticalGuard(adblockRules(units)), ...adblockRules(units)]),
     rewrites: rewriteBody(units),
+    bodyRewrites: bodyRewriteBody(units),
     scripts: scriptBody(units),
     // 末尾追加关键服务排除（-*.域名），即使叠加了其它带通配解密的模块，也不会解密银行 / 支付 / 12306 / 政务
     mitm: [...mitmHosts(units), ...mitmExcludes()],
@@ -262,7 +280,7 @@ function buildModules() {
   });
   files['modules/overseas-top500.sgmodule'] = moduleText({
     name: '海外常用应用与网站分流',
-    desc: '海外资讯、学术、开发者云服务、流媒体与常见海外 TLD 走代理。',
+    desc: '海外资讯、学术、开发者云服务、流媒体、Edge / 必应与常见海外 TLD 走代理；Klook / Adobe / Canva / Zoom / Notion / Xmind 等国内可直连的境外品牌直连。',
     category: '分流',
     rules: dedupe(['30-academic.list', '40-overseas-apps.list', '50-dev-cloud.list', '60-global-media.list', '70-intl-tld.list']
       .flatMap((f) => ['', ...readList(f)]).map(toProxy)),
@@ -308,4 +326,4 @@ if (require.main === module) {
   if (!check) console.log(`完成，共 ${Object.keys(files).length} 个产物`);
 }
 
-module.exports = { buildAll, loadApps, quicRule, mitmHosts, scriptLine, SCRIPT_BASE };
+module.exports = { buildAll, loadApps, quicRule, mitmHosts, scriptLine, bodyLine, jqExpr, SCRIPT_BASE };

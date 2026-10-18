@@ -6,7 +6,7 @@ module.exports = {
   desc: '去除高德地图开屏、首页营销卡片、搜索热词、路线规划推广、导航结束打车/福利弹窗。',
   author: 'RuCu6,kokoryh,alloflights',
   rules: [
-    'AND,((URL-REGEX,"^http:\\/\\/.+\\/amdc\\/mobileDispatch"),(USER-AGENT,"AMapiPhone*")),REJECT',
+    'URL-REGEX,"^http:\\/\\/.+\\/amdc\\/mobileDispatch",REJECT',
   ],
   rewrites: [
     M5 + r`faas\/amap-navigation\/card-service-(car-end|route-plan)\? - reject-dict`,

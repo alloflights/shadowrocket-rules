@@ -1,0 +1,1141 @@
+{
+ "_说明": "用户应用分流清单（2.2.92）。测试用 AllInOne 配置的 DOMAIN / DOMAIN-SUFFIX / DOMAIN-KEYWORD / IP-CIDR 规则按顺序匹配，每个 host 都必须命中显式规则且策略等于 expect；geoipOnly 里的 App 没有可靠的固定域名，交给 GEOIP,CN 直连兜底。",
+ "apps": [
+  {
+   "app": "AirAsia MOVE",
+   "expect": "PROXY",
+   "hosts": [
+    "www.airasia.com",
+    "api.airasia.com"
+   ]
+  },
+  {
+   "app": "AltStore",
+   "expect": "PROXY",
+   "hosts": [
+    "cdn.altstore.io",
+    "apps.altstore.io"
+   ]
+  },
+  {
+   "app": "BookCabin",
+   "expect": "PROXY",
+   "hosts": [
+    "www.bookcabin.com"
+   ]
+  },
+  {
+   "app": "ChatGPT",
+   "expect": "PROXY",
+   "hosts": [
+    "chatgpt.com",
+    "ab.chatgpt.com",
+    "api.openai.com"
+   ]
+  },
+  {
+   "app": "Chrome",
+   "expect": "PROXY",
+   "hosts": [
+    "www.google.com",
+    "clients4.google.com",
+    "update.googleapis.com",
+    "www.gstatic.com"
+   ]
+  },
+  {
+   "app": "Clash Royale",
+   "expect": "PROXY",
+   "hosts": [
+    "game.clashroyaleapp.com",
+    "supercell.com"
+   ]
+  },
+  {
+   "app": "Claude",
+   "expect": "PROXY",
+   "hosts": [
+    "claude.ai",
+    "api.anthropic.com"
+   ]
+  },
+  {
+   "app": "Developer",
+   "expect": "PROXY",
+   "hosts": [
+    "developer.apple.com",
+    "devstreaming-cdn.apple.com",
+    "devimages-cdn.apple.com"
+   ]
+  },
+  {
+   "app": "Discord",
+   "expect": "PROXY",
+   "hosts": [
+    "discord.com",
+    "gateway.discord.gg",
+    "cdn.discordapp.com"
+   ]
+  },
+  {
+   "app": "Easybook",
+   "expect": "PROXY",
+   "hosts": [
+    "www.easybook.com"
+   ]
+  },
+  {
+   "app": "Edge",
+   "expect": "PROXY",
+   "hosts": [
+    "edge.microsoft.com",
+    "www.bing.com",
+    "edgeservices.bing.com",
+    "sydney.bing.com",
+    "copilot.microsoft.com"
+   ]
+  },
+  {
+   "app": "Facebook",
+   "expect": "PROXY",
+   "hosts": [
+    "www.facebook.com",
+    "graph.facebook.com",
+    "static.xx.fbcdn.net"
+   ]
+  },
+  {
+   "app": "Gemini",
+   "expect": "PROXY",
+   "hosts": [
+    "gemini.google.com",
+    "generativelanguage.googleapis.com"
+   ]
+  },
+  {
+   "app": "GitHub",
+   "expect": "PROXY",
+   "hosts": [
+    "github.com",
+    "api.github.com",
+    "raw.githubusercontent.com",
+    "github.githubassets.com"
+   ]
+  },
+  {
+   "app": "Gmail",
+   "expect": "PROXY",
+   "hosts": [
+    "mail.google.com",
+    "gmail.com",
+    "inbox.google.com"
+   ]
+  },
+  {
+   "app": "Google",
+   "expect": "PROXY",
+   "hosts": [
+    "www.google.com",
+    "www.google.com.hk",
+    "lh3.googleusercontent.com"
+   ]
+  },
+  {
+   "app": "Google Earth",
+   "expect": "PROXY",
+   "hosts": [
+    "earth.google.com",
+    "kh.google.com"
+   ]
+  },
+  {
+   "app": "Google Maps",
+   "expect": "PROXY",
+   "hosts": [
+    "maps.googleapis.com",
+    "maps.gstatic.com",
+    "geo0.ggpht.com"
+   ]
+  },
+  {
+   "app": "Google One",
+   "expect": "PROXY",
+   "hosts": [
+    "one.google.com"
+   ]
+  },
+  {
+   "app": "Google 相册",
+   "expect": "PROXY",
+   "hosts": [
+    "photos.google.com",
+    "photoslibrary.googleapis.com"
+   ]
+  },
+  {
+   "app": "Grab",
+   "expect": "PROXY",
+   "hosts": [
+    "api.grab.com",
+    "grab.com"
+   ]
+  },
+  {
+   "app": "Grok",
+   "expect": "PROXY",
+   "hosts": [
+    "grok.com",
+    "api.x.ai"
+   ]
+  },
+  {
+   "app": "Hiddify",
+   "expect": "PROXY",
+   "hosts": [
+    "hiddify.com"
+   ]
+  },
+  {
+   "app": "HLTV",
+   "expect": "PROXY",
+   "hosts": [
+    "www.hltv.org",
+    "img-cdn.hltv.org"
+   ]
+  },
+  {
+   "app": "Instagram",
+   "expect": "PROXY",
+   "hosts": [
+    "www.instagram.com",
+    "i.instagram.com",
+    "scontent.cdninstagram.com"
+   ]
+  },
+  {
+   "app": "Karing",
+   "expect": "PROXY",
+   "hosts": [
+    "karing.app"
+   ]
+  },
+  {
+   "app": "Muse",
+   "expect": "PROXY",
+   "hosts": [
+    "muse.ai",
+    "bigrowth.io"
+   ]
+  },
+  {
+   "app": "Notebook (NotebookLM)",
+   "expect": "PROXY",
+   "hosts": [
+    "notebooklm.google.com"
+   ]
+  },
+  {
+   "app": "PayPal",
+   "expect": "PROXY",
+   "hosts": [
+    "www.paypal.com",
+    "www.paypalobjects.com"
+   ]
+  },
+  {
+   "app": "Poe",
+   "expect": "PROXY",
+   "hosts": [
+    "poe.com",
+    "psc2.cf2.poecdn.net"
+   ]
+  },
+  {
+   "app": "Quantumult X",
+   "expect": "PROXY",
+   "hosts": [
+    "quantumult.app"
+   ]
+  },
+  {
+   "app": "Quora",
+   "expect": "PROXY",
+   "hosts": [
+    "www.quora.com",
+    "qph.cf2.quoracdn.net"
+   ]
+  },
+  {
+   "app": "SoundCloud",
+   "expect": "PROXY",
+   "hosts": [
+    "soundcloud.com",
+    "api-v2.soundcloud.com",
+    "i1.sndcdn.com"
+   ]
+  },
+  {
+   "app": "Spotify",
+   "expect": "PROXY",
+   "hosts": [
+    "open.spotify.com",
+    "spclient.wg.spotify.com",
+    "i.scdn.co"
+   ]
+  },
+  {
+   "app": "Steam",
+   "expect": "PROXY",
+   "hosts": [
+    "store.steampowered.com",
+    "steamcommunity.com",
+    "community.akamai.steamstatic.com"
+   ]
+  },
+  {
+   "app": "Surge",
+   "expect": "PROXY",
+   "hosts": [
+    "nssurge.com"
+   ]
+  },
+  {
+   "app": "Tailscale",
+   "expect": "PROXY",
+   "hosts": [
+    "controlplane.tailscale.com",
+    "login.tailscale.com"
+   ]
+  },
+  {
+   "app": "Telegram",
+   "expect": "PROXY",
+   "hosts": [
+    "telegram.org",
+    "t.me",
+    "149.154.167.51",
+    "91.108.56.130"
+   ]
+  },
+  {
+   "app": "Threads",
+   "expect": "PROXY",
+   "hosts": [
+    "www.threads.net",
+    "www.threads.com"
+   ]
+  },
+  {
+   "app": "TikTok Pro",
+   "expect": "PROXY",
+   "hosts": [
+    "www.tiktok.com",
+    "api16-normal-c-useast1a.tiktokv.com",
+    "p16-sign-va.tiktokcdn.com"
+   ]
+  },
+  {
+   "app": "Twitch",
+   "expect": "PROXY",
+   "hosts": [
+    "www.twitch.tv",
+    "usher.ttvnw.net"
+   ]
+  },
+  {
+   "app": "WhatsApp",
+   "expect": "PROXY",
+   "hosts": [
+    "web.whatsapp.com",
+    "g.whatsapp.net"
+   ]
+  },
+  {
+   "app": "X",
+   "expect": "PROXY",
+   "hosts": [
+    "x.com",
+    "api.twitter.com",
+    "pbs.twimg.com"
+   ]
+  },
+  {
+   "app": "YouTube",
+   "expect": "PROXY",
+   "hosts": [
+    "www.youtube.com",
+    "youtubei.googleapis.com",
+    "i.ytimg.com",
+    "rr1---sn-a5mekn6s.googlevideo.com",
+    "youtu.be"
+   ]
+  },
+  {
+   "app": "云端硬盘",
+   "expect": "PROXY",
+   "hosts": [
+    "drive.google.com",
+    "docs.google.com"
+   ]
+  },
+  {
+   "app": "500px中国版",
+   "expect": "DIRECT",
+   "hosts": [
+    "500px.com.cn"
+   ]
+  },
+  {
+   "app": "Apple Store",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.apple.com",
+    "store.storeimages.cdn-apple.com"
+   ]
+  },
+  {
+   "app": "Authenticator",
+   "expect": "DIRECT",
+   "hosts": [
+    "login.microsoftonline.com",
+    "login.live.com"
+   ]
+  },
+  {
+   "app": "Bang & Olufsen",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.bang-olufsen.com"
+   ]
+  },
+  {
+   "app": "Bark",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.day.app"
+   ]
+  },
+  {
+   "app": "biubiu加速器",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.biubiu001.com"
+   ]
+  },
+  {
+   "app": "Canva可画",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.canva.com",
+    "www.canva.cn"
+   ]
+  },
+  {
+   "app": "DeepSeek",
+   "expect": "DIRECT",
+   "hosts": [
+    "chat.deepseek.com",
+    "api.deepseek.com"
+   ]
+  },
+  {
+   "app": "Excel / Word",
+   "expect": "DIRECT",
+   "hosts": [
+    "officeclient.microsoft.com",
+    "ecs.office.com",
+    "roaming.officeapps.live.com"
+   ]
+  },
+  {
+   "app": "GameCat:MHRise",
+   "expect": "DIRECT",
+   "hosts": [
+    "mhro.roguelitegames.com"
+   ]
+  },
+  {
+   "app": "Keynote / Numbers / Pages",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.icloud.com",
+    "gateway.icloud.com"
+   ]
+  },
+  {
+   "app": "Kimi 智能助手",
+   "expect": "DIRECT",
+   "hosts": [
+    "kimi.moonshot.cn",
+    "www.kimi.com",
+    "kimi.ai"
+   ]
+  },
+  {
+   "app": "Klook客路旅行",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.klook.com"
+   ]
+  },
+  {
+   "app": "Lightroom",
+   "expect": "DIRECT",
+   "hosts": [
+    "lightroom.adobe.com",
+    "lr.adobe.io",
+    "ims-na1.adobelogin.com"
+   ]
+  },
+  {
+   "app": "MNGA / NGA玩家社区 / 恩基爱社区",
+   "expect": "DIRECT",
+   "hosts": [
+    "bbs.nga.cn",
+    "ngabbs.com",
+    "img.nga.178.com"
+   ]
+  },
+  {
+   "app": "Notion",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.notion.so",
+    "www.notion.com",
+    "img.notionusercontent.com"
+   ]
+  },
+  {
+   "app": "OneDrive",
+   "expect": "DIRECT",
+   "hosts": [
+    "onedrive.live.com",
+    "api.onedrive.com",
+    "my.microsoftpersonalcontent.com",
+    "1drv.ms"
+   ]
+  },
+  {
+   "app": "Outlook",
+   "expect": "DIRECT",
+   "hosts": [
+    "outlook.office365.com",
+    "outlook.live.com"
+   ]
+  },
+  {
+   "app": "Price",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.price.com.hk"
+   ]
+  },
+  {
+   "app": "QQ / QQ同步助手 / QQ阅读 / 腾讯手机管家",
+   "expect": "DIRECT",
+   "hosts": [
+    "qq.com",
+    "qzone.qq.com",
+    "book.qq.com"
+   ]
+  },
+  {
+   "app": "Starryblu",
+   "expect": "DIRECT",
+   "hosts": [
+    "starryblu.com"
+   ]
+  },
+  {
+   "app": "TestFlight",
+   "expect": "DIRECT",
+   "hosts": [
+    "testflight.apple.com"
+   ]
+  },
+  {
+   "app": "vivo健康",
+   "expect": "DIRECT",
+   "hosts": [
+    "health.vivo.com.cn"
+   ]
+  },
+  {
+   "app": "WakeUp课程表",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.wakeup.fun"
+   ]
+  },
+  {
+   "app": "Xmind",
+   "expect": "DIRECT",
+   "hosts": [
+    "xmind.app",
+    "www.xmind.net"
+   ]
+  },
+  {
+   "app": "Zoom",
+   "expect": "DIRECT",
+   "hosts": [
+    "zoom.us",
+    "us04web.zoom.us",
+    "zoom.com.cn"
+   ]
+  },
+  {
+   "app": "中国农业银行",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.abchina.com"
+   ]
+  },
+  {
+   "app": "中国大学慕课",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.icourse163.org"
+   ]
+  },
+  {
+   "app": "中国工商银行",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.icbc.com.cn"
+   ]
+  },
+  {
+   "app": "中国移动",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.10086.cn"
+   ]
+  },
+  {
+   "app": "中国银行",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.boc.cn"
+   ]
+  },
+  {
+   "app": "丰收互联",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.zj96596.com"
+   ]
+  },
+  {
+   "app": "云闪付",
+   "expect": "DIRECT",
+   "hosts": [
+    "wallet.95516.com"
+   ]
+  },
+  {
+   "app": "交管12123",
+   "expect": "DIRECT",
+   "hosts": [
+    "gab.122.gov.cn"
+   ]
+  },
+  {
+   "app": "交通银行",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.bankcomm.com"
+   ]
+  },
+  {
+   "app": "京东",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.m.jd.com",
+    "img14.360buyimg.com"
+   ]
+  },
+  {
+   "app": "元气骑士",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.chillyroom.com"
+   ]
+  },
+  {
+   "app": "创客贴设计",
+   "expect": "DIRECT",
+   "hosts": [
+    "gw.chuangkit.com"
+   ]
+  },
+  {
+   "app": "创高体育",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.chingo.cn",
+    "huakesport.com"
+   ]
+  },
+  {
+   "app": "南方基金",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.nffund.com"
+   ]
+  },
+  {
+   "app": "去哪儿旅行",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.qunar.com"
+   ]
+  },
+  {
+   "app": "哔哩哔哩（国际版）",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.bilibili.tv",
+    "api.bilibili.tv",
+    "biliintl.com"
+   ]
+  },
+  {
+   "app": "哔哩哔哩",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.bilibili.com",
+    "i0.hdslb.com",
+    "upos-sz-mirrorcos.bilivideo.com"
+   ]
+  },
+  {
+   "app": "喜马拉雅",
+   "expect": "DIRECT",
+   "hosts": [
+    "mobile.ximalaya.com",
+    "fdfs.xmcdn.com"
+   ]
+  },
+  {
+   "app": "图虫",
+   "expect": "DIRECT",
+   "hosts": [
+    "tuchong.com"
+   ]
+  },
+  {
+   "app": "大众点评",
+   "expect": "DIRECT",
+   "hosts": [
+    "m.dianping.com"
+   ]
+  },
+  {
+   "app": "大润发优鲜",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.feiniu.com"
+   ]
+  },
+  {
+   "app": "央视频",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.yangshipin.cn",
+    "www.cctv.com"
+   ]
+  },
+  {
+   "app": "夸克",
+   "expect": "DIRECT",
+   "hosts": [
+    "drive.quark.cn"
+   ]
+  },
+  {
+   "app": "奶蛙",
+   "expect": "DIRECT",
+   "hosts": [
+    "windream.super.site"
+   ]
+  },
+  {
+   "app": "学信网",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.chsi.com.cn"
+   ]
+  },
+  {
+   "app": "完美世界电竞",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.pwesports.cn",
+    "www.wanmei.com"
+   ]
+  },
+  {
+   "app": "小红书",
+   "expect": "DIRECT",
+   "hosts": [
+    "edith.xiaohongshu.com",
+    "sns-img-qc.xhscdn.com"
+   ]
+  },
+  {
+   "app": "小雅智能助手",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.ai-augmented.com"
+   ]
+  },
+  {
+   "app": "小黑盒",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.xiaoheihe.cn",
+    "max-c.com"
+   ]
+  },
+  {
+   "app": "山姆会员商店",
+   "expect": "DIRECT",
+   "hosts": [
+    "api-sams.walmartmobile.cn"
+   ]
+  },
+  {
+   "app": "广发基金",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.gffunds.com.cn"
+   ]
+  },
+  {
+   "app": "微信",
+   "expect": "DIRECT",
+   "hosts": [
+    "weixin.qq.com",
+    "mp.weixin.qq.com"
+   ]
+  },
+  {
+   "app": "微博",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.weibo.cn",
+    "weibo.com",
+    "wx1.sinaimg.cn"
+   ]
+  },
+  {
+   "app": "微店",
+   "expect": "DIRECT",
+   "hosts": [
+    "thor.weidian.com",
+    "si.geilicdn.com"
+   ]
+  },
+  {
+   "app": "必胜客 / 肯德基",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.yumchina.com",
+    "order.kfc.com.cn"
+   ]
+  },
+  {
+   "app": "抖音 / 抖省省",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.douyin.com",
+    "aweme.snssdk.com",
+    "api5-normal-lq.zijieapi.com"
+   ]
+  },
+  {
+   "app": "招商银行 / 掌上生活",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.cmbchina.com"
+   ]
+  },
+  {
+   "app": "拼多多",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.pinduoduo.com",
+    "mobile.yangkeduo.com"
+   ]
+  },
+  {
+   "app": "携程旅行",
+   "expect": "DIRECT",
+   "hosts": [
+    "m.ctrip.com"
+   ]
+  },
+  {
+   "app": "支付宝",
+   "expect": "DIRECT",
+   "hosts": [
+    "mobilegw.alipay.com"
+   ]
+  },
+  {
+   "app": "数字人民币",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.ecny.cn"
+   ]
+  },
+  {
+   "app": "斗鱼",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.douyu.com"
+   ]
+  },
+  {
+   "app": "淘宝",
+   "expect": "DIRECT",
+   "hosts": [
+    "acs.m.taobao.com",
+    "gw.alicdn.com"
+   ]
+  },
+  {
+   "app": "滴滴出行",
+   "expect": "DIRECT",
+   "hosts": [
+    "common.diditaxi.com.cn",
+    "api.udache.com",
+    "xiaojukeji.com"
+   ]
+  },
+  {
+   "app": "爱思全能版",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.i4.cn"
+   ]
+  },
+  {
+   "app": "番茄小说",
+   "expect": "DIRECT",
+   "hosts": [
+    "api5-normal-lf.fqnovel.com"
+   ]
+  },
+  {
+   "app": "百度网盘",
+   "expect": "DIRECT",
+   "hosts": [
+    "pan.baidu.com"
+   ]
+  },
+  {
+   "app": "百度贴吧",
+   "expect": "DIRECT",
+   "hosts": [
+    "tieba.baidu.com"
+   ]
+  },
+  {
+   "app": "省钱快报",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.sqkb.com"
+   ]
+  },
+  {
+   "app": "知乎",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.zhihu.com",
+    "pic1.zhimg.com"
+   ]
+  },
+  {
+   "app": "知到",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.zhihuishu.com"
+   ]
+  },
+  {
+   "app": "网易云音乐",
+   "expect": "DIRECT",
+   "hosts": [
+    "music.163.com",
+    "p1.music.126.net"
+   ]
+  },
+  {
+   "app": "网易大神 / 阴阳师",
+   "expect": "DIRECT",
+   "hosts": [
+    "god.gameyw.netease.com",
+    "yys.163.com"
+   ]
+  },
+  {
+   "app": "美团",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.meituan.com"
+   ]
+  },
+  {
+   "app": "航旅纵横",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.umetrip.com"
+   ]
+  },
+  {
+   "app": "虎扑",
+   "expect": "DIRECT",
+   "hosts": [
+    "games.mobileapi.hupu.com"
+   ]
+  },
+  {
+   "app": "虎牙直播",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.huya.com"
+   ]
+  },
+  {
+   "app": "讯飞听见",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.iflyrec.com"
+   ]
+  },
+  {
+   "app": "豆包",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.doubao.com"
+   ]
+  },
+  {
+   "app": "起点读书",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.qidian.com"
+   ]
+  },
+  {
+   "app": "转转",
+   "expect": "DIRECT",
+   "hosts": [
+    "app.zhuanzhuan.com"
+   ]
+  },
+  {
+   "app": "酷安",
+   "expect": "DIRECT",
+   "hosts": [
+    "api.coolapk.com"
+   ]
+  },
+  {
+   "app": "铁路12306",
+   "expect": "DIRECT",
+   "hosts": [
+    "mobile.12306.cn"
+   ]
+  },
+  {
+   "app": "闲鱼",
+   "expect": "DIRECT",
+   "hosts": [
+    "acs.m.goofish.com",
+    "h5.m.goofish.com"
+   ]
+  },
+  {
+   "app": "雨课堂",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.yuketang.cn"
+   ]
+  },
+  {
+   "app": "雷神加速器",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.leigod.com"
+   ]
+  },
+  {
+   "app": "飞书",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.feishu.cn"
+   ]
+  },
+  {
+   "app": "飞猪旅行",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.fliggy.com"
+   ]
+  },
+  {
+   "app": "飞连",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.volcengine.com"
+   ]
+  },
+  {
+   "app": "高德地图",
+   "expect": "DIRECT",
+   "hosts": [
+    "m5.amap.com"
+   ]
+  },
+  {
+   "app": "麦当劳",
+   "expect": "DIRECT",
+   "hosts": [
+    "www.mcd.cn"
+   ]
+  },
+  {
+   "app": "Imaging Edge / Monitor+（相机 Wi-Fi）",
+   "expect": "DIRECT",
+   "hosts": [
+    "192.168.122.1"
+   ]
+  },
+  {
+   "app": "Windows / 掌上MuMu（局域网远程）",
+   "expect": "DIRECT",
+   "hosts": [
+    "192.168.1.10",
+    "10.0.0.8"
+   ]
+  }
+ ],
+ "geoipOnly": [
+  "Jinx",
+  "Subdeck",
+  "万家基金",
+  "体育",
+  "去留",
+  "古典乐",
+  "大成基金",
+  "天瑞地安",
+  "支持",
+  "活动邀请",
+  "足球英雄",
+  "连接至 Windows",
+  "钱迹"
+ ]
+}

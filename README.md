@@ -20,18 +20,28 @@ iPhone 用 Shadowrocket 配置：精确分流，App 开屏与信息流去广告�
 
 全量去广告需要 HTTPS 解密：配置文件 ⓘ → HTTPS 解密 → 生成并安装 CA 证书 → 系统设置 → 通用 → 关于本机 → 证书信任设置 中信任证书。
 
-
+> 升级到 v3.2 后：闲鱼、淘宝、百度贴吧删除重装一次，百度网盘清理缓存（清掉旧开屏缓存）。
+> 贴吧需关闭 HTTPS 解密里的「通过 HTTP/2 进行中间人攻击」，否则可能提示未登录。
 > 全量模块与单 App 模块不要同时开启（内容重复）。
 
 ## 单 App / 其它模块（只想净化个别 App 时用，与全量模块二选一）
 
 | 模块 | 地址 |
 | :--- | :--- |
-| 酷安 / 闲鱼 / 知乎 / 微博 / B站 / 小红书 / 贴吧 / 百度网盘 / 高德 / 网易云 / 喜马拉雅 / 起点 / 虎扑 / 航旅纵横 / 肯德基 / 麦当劳 / 完美电竞 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/<coolapk\|goofish\|zhihu\|weibo\|bilibili\|xiaohongshu\|tieba\|baidunetdisk\|amap\|netease\|ximalaya\|qidian\|hupu\|umetrip\|kfc\|mcdonald\|pwesports>.sgmodule` |
+| 酷安 / 闲鱼 / 淘宝（含飞猪、淘票票）/ 京东 / 拼多多 / 滴滴 / 知乎 / 微博 / B站 / 小红书 / 贴吧 / 百度网盘 / 高德 / 夸克 / 斗鱼 / 转转 / 微店 / 小黑盒 / 公众号文章 / 网易云 / 喜马拉雅 / 起点 / 虎扑 / 航旅纵横 / 肯德基 / 麦当劳 / 完美电竞 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/<coolapk\|goofish\|taobao\|jd\|pdd\|didi\|zhihu\|weibo\|bilibili\|xiaohongshu\|tieba\|baidunetdisk\|amap\|quark\|douyu\|zhuanzhuan\|weidian\|xiaoheihe\|wechat-mp\|netease\|ximalaya\|qidian\|hupu\|umetrip\|kfc\|mcdonald\|pwesports>.sgmodule` |
 | 外链直跳 / Safari 网页去打扰 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/direct-link.sgmodule`、`https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/safari-clean.sgmodule` |
 | AI 服务分流 / 海外常用分流（给使用其它分流配置的用户） | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/ai-services.sgmodule`、`https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/overseas-top500.sgmodule` |
 
-抖音、TikTok、微信、BoxJs 等模块为独立维护的静态模块，见 `modules/`。
+番茄小说、网易大神、WakeUp 课程表、山姆、创客贴等少量规则只在全量模块里。抖音、TikTok、微信、BoxJs 等模块为独立维护的静态模块，见 `modules/`。
+
+## 分流说明
+
+- 按 App 清单逐个校验（`tests/fixtures/app-routing.json`）：Google / YouTube / Telegram / X / Meta / TikTok / Steam / Spotify / PayPal / Edge / Apple Developer / AltStore 等走代理；Klook / Price / B&O / Lightroom / Canva / Zoom / Notion / Xmind / Bark / TestFlight / Kimi / B站国际版及国内 App 直连。
+- 测试同时禁止策略互相矛盾、被更宽规则遮蔽而不生效的规则。
+
+## 致谢
+
+规则与接口参考了 [可莉 luestr/ProxyResource](https://github.com/luestr/ProxyResource)（hub.kelee.one 插件）、[fmz200/wool_scripts](https://github.com/fmz200/wool_scripts)、[ack20a/sr-ad-plugins](https://github.com/ack20a/sr-ad-plugins)、[blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script)、[TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule)；本仓库只取已核对的部分并做了 Shadowrocket 适配与回归测试。
 
 ## 目录结构
 
@@ -41,10 +51,10 @@ src/
   profile.js       [General] / [Proxy Group] / [Host]
   rules/00,20-99   分流规则分段（进主配置）
   rules/10-adblock 广告联盟拦截（进去广告模块）
-  apps/*.js        每个 App 的去广告规则 / 重写 / 脚本 / MITM（进全量模块和单 App 模块）
+  apps/*.js        每个 App 的去广告规则 / 重写 / Body Rewrite(jq) / 脚本 / MITM（进全量模块和单 App 模块）
 modules/scripts/   脚本
 scripts/build.js   生成两个分流配置与全部模块
-tests/             校验与脚本行为测试
+tests/             校验、脚本行为、jq 改写与 App 分流清单测试
 ```
 
 ```bash

@@ -1,0 +1,27 @@
+#!name=京东净化
+#!desc=去除京东开屏、首页悬浮与通栏推广、下拉二楼、直播小窗、搜索框推荐词、物流页与订单页推广、我的页面弹窗与推荐楼层；关闭 HTTPDNS 与长连接探测，让去广告稳定生效。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
+#!system=ios
+# v3.2.0 · 由 scripts/build.js 自动生成，请勿直接修改
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api.m.jd.com)),REJECT
+URL-REGEX,"^http:\/\/\w{32}\.jddebug\.com\/diagnose\?",REJECT
+
+[URL Rewrite]
+^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=(searchBoxWord|stationPullService|uniformRecommend[06]) - reject-dict
+^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=getWidgetV1052 - reject-dict
+
+[Body Rewrite]
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=basicConfig '(. as $o | try (if (.data.JDMessage.socketmonitor | type) == "object" then .data.JDMessage.socketmonitor |= ((if has("isSocketEstablishedAhead") then .isSocketEstablishedAhead = 0 else . end) | (if has("isSocketReport") then .isSocketReport = 0 else . end)) else . end) catch $o) | (. as $o | try (if (.data.JDHttpToolKit.httpdns | type) == "object" and (.data.JDHttpToolKit.httpdns | has("httpdns")) then .data.JDHttpToolKit.httpdns.httpdns = 0 else . end) catch $o)'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=start(&|$) '(. as $o | try (if (.images | type) == "array" then .images = [] else . end) catch $o) | (. as $o | try (if .showTimesDaily then .showTimesDaily = 0 else . end) catch $o)'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=welcomeHome '(. as $o | try (.floorList |= map(select(.type as $v | ["bottomXview","float","photoCeiling","ruleFloat","searchIcon","topRotate","tabBarAtmosphere"] | index($v) | not))) catch $o) | (. as $o | try (if (.webViewFloorList | type) == "array" then .webViewFloorList = [] else . end) catch $o)'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=(deliverLayer|orderTrackBusiness) '(. as $o | try (del(.bannerInfo)) catch $o) | (. as $o | try (.floors |= map(select(.mId as $v | ["banner","jdDeliveryBanner"] | index($v) | not))) catch $o)'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=getTabHomeInfo '(. as $o | try (del(.result.iconInfo, .result.roofTop)) catch $o)'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=myOrderInfo '(. as $o | try (.floors |= map(select(.mId as $v | ["bannerFloor","bpDynamicFloor","plusFloor"] | index($v) | not))) catch $o) | (. as $o | try (.floors |= map(if .mId == "virtualServiceCenter" and (.data.virtualServiceCenters | type) == "array" then .data.virtualServiceCenters |= map(if (.serviceList | type) == "array" then .serviceList |= map(select(.serviceTitle != "精选特惠")) else . end) else . end)) catch $o)'
+http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=personinfoBusiness '(. as $o | try (.floors |= map(select(.mId as $v | ["bigSaleFloor","buyOften","newAttentionCard","newBigSaleFloor","newStyleAttentionCard","newsFloor","noticeFloor","recommendfloor"] | index($v) | not))) catch $o) | (. as $o | try (.floors |= map(if .mId == "basefloorinfo" and (.data | type) == "object" then .data |= (del(.commonPopup, .commonPopup_dynamic, .floatLayer) | (if (.commonTips | type) == "array" then .commonTips = [] else . end) | (if (.commonWindows | type) == "array" then .commonWindows = [] else . end)) else . end)) catch $o)'
+
+[MITM]
+hostname = %APPEND% api.m.jd.com

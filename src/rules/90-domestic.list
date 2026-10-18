@@ -218,3 +218,20 @@ DOMAIN-SUFFIX,tfogc.com,DIRECT
 DOMAIN-SUFFIX,doh.pub,DIRECT
 DOMAIN-SUFFIX,pool.ntp.org,DIRECT
 
+# 18. 用户应用清单补充（微店 / 番茄小说 / 网易系 / 央视频 / 省钱快报 / 知到 / 讯飞听见 / 元气骑士 / WakeUp / 创客贴 / 大润发优鲜 / 飞连）
+DOMAIN-SUFFIX,weidian.com,DIRECT
+DOMAIN-SUFFIX,geilicdn.com,DIRECT
+DOMAIN-SUFFIX,fqnovel.com,DIRECT
+DOMAIN-SUFFIX,126.net,DIRECT
+DOMAIN-SUFFIX,netease.com,DIRECT
+DOMAIN-SUFFIX,cctv.com,DIRECT
+DOMAIN-SUFFIX,cctvpic.com,DIRECT
+DOMAIN-SUFFIX,sqkb.com,DIRECT
+DOMAIN-SUFFIX,zhihuishu.com,DIRECT
+DOMAIN-SUFFIX,iflyrec.com,DIRECT
+DOMAIN-SUFFIX,iflytek.com,DIRECT
+DOMAIN-SUFFIX,chillyroom.com,DIRECT
+DOMAIN-SUFFIX,wakeup.fun,DIRECT
+DOMAIN-SUFFIX,chuangkit.com,DIRECT
+DOMAIN-SUFFIX,feiniu.com,DIRECT
+DOMAIN-SUFFIX,volcengine.com,DIRECT

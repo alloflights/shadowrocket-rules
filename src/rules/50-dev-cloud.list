@@ -70,9 +70,12 @@ DOMAIN-SUFFIX,stackoverflow.com,PROXY
 DOMAIN-SUFFIX,stackexchange.com,PROXY
 DOMAIN-SUFFIX,superuser.com,PROXY
 DOMAIN-SUFFIX,serverfault.com,PROXY
-DOMAIN-SUFFIX,notion.so,PROXY
-DOMAIN-SUFFIX,notion.site,PROXY
-DOMAIN-SUFFIX,notion.com,PROXY
+# Notion 按用户决策直连（国内可直接访问）
+DOMAIN-SUFFIX,notion.so,DIRECT
+DOMAIN-SUFFIX,notion.site,DIRECT
+DOMAIN-SUFFIX,notion.com,DIRECT
+DOMAIN-SUFFIX,notion-static.com,DIRECT
+DOMAIN-SUFFIX,notionusercontent.com,DIRECT
 DOMAIN-SUFFIX,linear.app,PROXY
 DOMAIN-SUFFIX,raycast.com,PROXY
 DOMAIN-SUFFIX,obsidian.md,PROXY

@@ -1,0 +1,25 @@
+#!name=微店净化
+#!desc=去除微店开屏、弹窗、猜你喜欢、相似推荐、搜索底纹与话题、推荐店铺与达人。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
+#!system=ios
+# v3.2.0 · 由 scripts/build.js 自动生成，请勿直接修改
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,thor.weidian.com)),REJECT
+
+[URL Rewrite]
+^https:\/\/thor\.weidian\.com\/ares\/home\.splash\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/ares\/app\.dialog\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/warlock\/recommend\.guessULike\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/poseidon\/exhibit\.spaceJson\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/feedserver\/feed\.similarRecFeeds\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/faith\/search\.hotRecShadowWord\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/faith\/search\.getProcessTopics\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/feedserver\/feed\.listGoodUsers\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/ares\/recommend\.getSpecialFocusList\/ - reject-dict
+^https:\/\/thor\.weidian\.com\/ares\/collect\.recommendShop\/ - reject-dict
+
+[MITM]
+hostname = %APPEND% thor.weidian.com

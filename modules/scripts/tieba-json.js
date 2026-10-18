@@ -4,13 +4,34 @@
  * 核心能力：
  * 1. 开屏广告 (c/f/ad/getSplashAd)：置 error_code=2230209 并清空 data，秒过开屏；
  * 2. 看图模式广告 (tiebaads/commonbatch)：清空 res.ad 数组；
- * 3. 全局配置同步 (c/s/sync)：清空右下角悬浮图标、回帖栏广告、外部 ABTest，
- *    禁用穿山甲(csj)/广点通(gdt)/快手(ks)/百青藤(bqt)/优效/Ubix/华为等第三方 SDK 初始化开关；
+ * 3. 全局配置同步 (c/s/sync)：删除开屏 / 弹窗 / 悬浮图标 / 直播引导 / 广告配置（参考可莉 Tieba 插件），
+ *    wl_config 广告条数与密度置 0，禁用穿山甲(csj)/广点通(gdt)/快手(ks)/百青藤(bqt)/优效/Ubix/华为等第三方 SDK 初始化开关；
  * 4. 吧内列表与详情页 (frs/page, threadlist, pb/page, personalized)：剥离直播强插帖、带货 goods_info 与顶部商业横幅；
  * 5. 100% 静默无感运行：彻底移除全部 $notification.post 报错弹窗，配备完整 try/catch 与空包早退保护。
  */
 
 (function tiebaJsonPro() {
+    var SYNC_DELETE_KEYS = [
+        "activity_switch", "video_report_config", "advertisement_config", "next_start", "push_strategy_new",
+        "live_activity_guide", "h5_pop_ups", "duxiaoman_url", "is_need_remind_live_rooms", "floating_icon",
+        "ad_stlog_switch", "first_time_motivate", "windowStrategyList", "ad_adsense", "ad_config",
+        "videoup_guide_pop", "ad_origin_config_switch", "needNewUserLead", "h5_pop_ups_config", "alaTabColor",
+        "search_guide", "ad_sdk_priority", "low_version_pop_config", "ad_num_competition_frs",
+        "live_new_user_guide_day", "screen_fill_data_result", "yy_live_tab", "ad_num_competition_personalize",
+        "complete_apk_url", "user_activity", "homepage_guide", "bottom_bubble_config", "home_screen_ad",
+        "afSearch_tab", "recent_client_info", "video_activity", "namoaixud_url", "yy_live_config",
+        "user_growth_task_list", "cloud_control_data_info", "scheme_whitelist"
+    ];
+    var WL_DELETE_KEYS = [
+        "pb_banner_funad_cache_strategy", "pb_comment_asyncafd_cache_strategy", "download_edge_float",
+        "download_pause_retain_dialog_conf", "download_mobile_dialog_conf",
+        "download_fake_progress_config_a", "download_fake_progress_config_b"
+    ];
+    // 只改已存在的键：广告条数 / 密度置 0，首屏广告楼层推到极远
+    var WL_SET = {
+        "home_ad_num": 0, "frs_ad_num": 0, "pb_comment_ad_num": 0, "index_bear_density": 0, "frs_bear_density": 0,
+        "index_bear_first_floor_max": 999999999, "index_bear_first_floor_min": 999999999
+    };
     var request = (typeof $request !== "undefined" && $request) ? $request : null;
     var url = (request && request.url) ? String(request.url) : "";
     var hasResponse = typeof $response !== "undefined" && $response;
@@ -39,16 +60,20 @@
                 body.recom_live_list = [];
             }
         } else if (url.indexOf("c/s/sync") !== -1) {
-            if ("floating_icon" in body) {
-                body.floating_icon = null;
+            // 参考 可莉 Tieba 插件：删除开屏 / 弹窗 / 悬浮 / 直播引导 / 第三方广告配置
+            for (var k = 0; k < SYNC_DELETE_KEYS.length; k++) {
+                delete body[SYNC_DELETE_KEYS[k]];
             }
-            if ("advertisement_config" in body) {
-                body.advertisement_config = null;
-            }
-            if (body.cloud_control_data_info &&
-                body.cloud_control_data_info.common_config &&
-                body.cloud_control_data_info.common_config.external_abtest_switch) {
-                body.cloud_control_data_info.common_config.external_abtest_switch = null;
+            var wl = body.wl_config;
+            if (wl && typeof wl === "object") {
+                for (var w = 0; w < WL_DELETE_KEYS.length; w++) {
+                    delete wl[WL_DELETE_KEYS[w]];
+                }
+                for (var key in WL_SET) {
+                    if (Object.prototype.hasOwnProperty.call(wl, key)) {
+                        wl[key] = WL_SET[key];
+                    }
+                }
             }
             if (body.config && Array.isArray(body.config.switch)) {
                 var blockSdkSwitches = {
@@ -67,14 +92,6 @@
                         item.type = "0";
                     }
                 }
-            }
-            if (body.screen_fill_data_result && typeof body.screen_fill_data_result === "object") {
-                body.screen_fill_data_result.screen_fill_advertisement_bear_switch = "0";
-                body.screen_fill_data_result.screen_fill_advertisement_plj_cpc_switch = "0";
-                body.screen_fill_data_result.screen_fill_advertisement_plj_switch = "0";
-            }
-            if ("ad_stlog_switch" in body) {
-                body.ad_stlog_switch = "0";
             }
             if (body.lcs_strategy && typeof body.lcs_strategy === "object") {
                 body.lcs_strategy.conn_conf = "1";

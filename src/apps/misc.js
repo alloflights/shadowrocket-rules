@@ -1,26 +1,85 @@
-// 其他 App 的开屏 / 推广接口（无专用脚本，纯 reject 重写）。只解密确有规则的精确主机名。
+// 其他 App 的开屏 / 推广接口（无专用脚本，纯 reject 重写或少量 jq）。只解密确有规则的精确主机名。
+// 这些单元不单独生成模块，只合并进 adblock-ultimate。
 const r = String.raw;
-module.exports = {
-  id: 'misc',
-  name: '其他 App 开屏净化',
-  desc: '小黑盒、NGA、懂球帝、网易大神、斗鱼、虎牙、转转、500px、图虫、中国大学慕课的开屏与推广接口；g.cn / google.cn 首页跳转 google.com。',
-  moduleFile: false,
-  rules: [
-    'DOMAIN,hdads.huya.com,REJECT',
-  ],
-  rewrites: [
-    r`^https?:\/\/(www\.)?(g|google)\.cn\/?(\?.*)?$ https://www.google.com 302`,
-    r`^https?:\/\/api\.xiaoheihe\.cn\/bbs\/app\/api\/(startup|ad\/|feed\/ad|general\/v\d\/banner|game\/promote) - reject-dict`,
-    r`^https?:\/\/(bbs\.nga\.cn|nga\.178\.com)\/app_api\.php\?.*__lib=(advert|splash) - reject-dict`,
-    r`^https?:\/\/api\.dongqiudi\.com\/v\d\/(article\/ad|splash|tab\/ad) - reject-dict`,
-    r`^https?:\/\/god\.game\.163\.com\/api\/v\d\/(ad\/|splash) - reject-dict`,
-    r`^https?:\/\/(capi|apiv2)\.douyucdn\.cn\/api\/v\d\/(getAppSplash|client_ad|room_ad) - reject-dict`,
-    r`^https?:\/\/business\.msorpack\.huya\.com\/.*Adv - reject-dict`,
-    r`^https?:\/\/api\.zhuanzhuan\.com\/zz\/transfer\/(splash|ad) - reject-dict`,
-    r`^https?:\/\/api\.500px\.com\.cn\/v\d\/(splash|advertisements) - reject-dict`,
-    r`^https?:\/\/api\.tuchong\.com\/2\/(splash|ad\/) - reject-dict`,
-    r`^https?:\/\/www\.icourse163\.org\/mob\/ad\/ - reject-dict`,
-  ],
-  scripts: [],
-  mitm: ['g.cn', 'www.g.cn', 'google.cn', 'www.google.cn', 'api.xiaoheihe.cn', 'bbs.nga.cn', 'nga.178.com', 'api.dongqiudi.com', 'god.game.163.com', 'capi.douyucdn.cn', 'apiv2.douyucdn.cn', 'business.msorpack.huya.com', 'api.zhuanzhuan.com', 'api.500px.com.cn', 'api.tuchong.com', 'www.icourse163.org'],
-};
+module.exports = [
+  {
+    id: 'misc',
+    name: '其他 App 开屏净化',
+    desc: 'NGA、懂球帝、虎牙、500px、图虫、中国大学慕课的开屏与推广接口；g.cn / google.cn 首页跳转 google.com。',
+    moduleFile: false,
+    rules: [
+      'DOMAIN,hdads.huya.com,REJECT',
+    ],
+    rewrites: [
+      r`^https?:\/\/(www\.)?(g|google)\.cn\/?(\?.*)?$ https://www.google.com 302`,
+      r`^https?:\/\/(bbs\.nga\.cn|nga\.178\.com)\/app_api\.php\?.*__lib=(advert|splash) - reject-dict`,
+      r`^https?:\/\/api\.dongqiudi\.com\/v\d\/(article\/ad|splash|tab\/ad) - reject-dict`,
+      r`^https?:\/\/business\.msorpack\.huya\.com\/.*Adv - reject-dict`,
+      r`^https?:\/\/api\.500px\.com\.cn\/v\d\/(splash|advertisements) - reject-dict`,
+      r`^https?:\/\/api\.tuchong\.com\/2\/(splash|ad\/) - reject-dict`,
+      r`^https?:\/\/www\.icourse163\.org\/mob\/ad\/ - reject-dict`,
+    ],
+    scripts: [],
+    mitm: ['g.cn', 'www.g.cn', 'google.cn', 'www.google.cn', 'bbs.nga.cn', 'nga.178.com', 'api.dongqiudi.com', 'business.msorpack.huya.com', 'api.500px.com.cn', 'api.tuchong.com', 'www.icourse163.org'],
+  },
+  {
+    // 参考 可莉 DragonRead：只拦番茄自己的日志 / 监控域名；字节通用的 snssdk / gecko / zijieapi 基础域名会影响登录与资源下载，不拦
+    id: 'fanqie',
+    name: '番茄小说净化',
+    desc: '阻断番茄小说日志与监控上报（广告 SDK 由广告联盟规则统一拦截）。',
+    moduleFile: false,
+    rules: [
+      ...['log3-applog', 'log5-applog', 'rtlog3-applog', 'rtlog5-applog', 'mon3-misc', 'mon11-misc', 'mon11-misc-lq'].map((h) => `DOMAIN,${h}.fqnovel.com,REJECT`),
+      'DOMAIN,ads3-normal.zijieapi.com,REJECT',
+      'DOMAIN,ads5-normal.zijieapi.com,REJECT',
+    ],
+    rewrites: [],
+    scripts: [],
+    mitm: [],
+  },
+  {
+    id: 'netease-godlike',
+    name: '网易大神净化',
+    desc: '去除网易大神开屏广告（参考 可莉 NetEaseGodlike）。',
+    moduleFile: false,
+    rules: [],
+    rewrites: [r`^https:\/\/god\.gameyw\.netease\.com\/v\d\/ad - reject-dict`],
+    scripts: [],
+    mitm: ['god.gameyw.netease.com'],
+  },
+  {
+    id: 'wakeup',
+    name: 'WakeUp 课程表净化',
+    desc: '去除 WakeUp 课程表横幅广告（参考 可莉 WakeupSchedule）。',
+    moduleFile: false,
+    rules: [],
+    rewrites: [r`^https:\/\/api\.wakeup\.fun\/wakeup\/app\/bannerconf$ - reject-dict`],
+    bodyRewrites: [{ pattern: r`^https:\/\/api\.wakeup\.fun\/wakeup\/user\/mine$`, jq: 'del(.data.bannerItems)' }],
+    scripts: [],
+    mitm: ['api.wakeup.fun'],
+  },
+  {
+    id: 'sams',
+    name: '山姆会员商店净化',
+    desc: '去除山姆开屏推广与弹窗、广告组与搜索推荐（参考 fmz200）；保留常购清单与个人中心入口。',
+    moduleFile: false,
+    rules: [],
+    rewrites: [
+      r`^https:\/\/api-sams\.walmartmobile\.cn\/api\/v\d\/sams\/sams-user\/(window\/getGoUpPlus|screen_promotion\/get) - reject-dict`,
+      r`^https:\/\/api-sams\.walmartmobile\.cn\/api\/v\d\/sams\/channel\/portal\/AdgroupData - reject-dict`,
+      r`^https:\/\/api-sams\.walmartmobile\.cn\/api\/v\d\/sams\/goods-portal\/spu\/searchRecommendPool - reject-dict`,
+    ],
+    scripts: [],
+    mitm: ['api-sams.walmartmobile.cn'],
+  },
+  {
+    id: 'chuangkit',
+    name: '创客贴净化',
+    desc: '去除创客贴开屏与广告位（参考 可莉 Remove_ads_by_keli）。',
+    moduleFile: false,
+    rules: [],
+    rewrites: [r`^https:\/\/gw\.chuangkit\.com\/team\/app\/common\/ad\/ - reject-dict`],
+    scripts: [],
+    mitm: ['gw.chuangkit.com'],
+  },
+];

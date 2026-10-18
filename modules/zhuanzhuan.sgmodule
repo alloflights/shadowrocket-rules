@@ -1,0 +1,32 @@
+#!name=转转净化
+#!desc=去除转转开屏、首页弹窗与运营位、我的页面推广卡片与金融入口、猜你喜欢与足迹推荐、信息流轮播推广。
+#!author=alloflights
+#!homepage=https://github.com/alloflights/shadowrocket-rules
+#!category=去广告
+#!system=ios
+# v3.2.0 · 由 scripts/build.js 自动生成，请勿直接修改
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,app.zhuanzhuan.com)),REJECT
+
+[URL Rewrite]
+^https:\/\/app\.zhuanzhuan\.com\/zz\/v2\/zzlogic\/getOpenScreen$ - reject-dict
+^https:\/\/app\.zhuanzhuan\.com\/zz\/v2\/zzinfoshow\/getwindvanecardv2$ - reject-dict
+^https:\/\/app\.zhuanzhuan\.com\/zzopen\/popwindow\/getallpopwin\? - reject-dict
+^https:\/\/app\.zhuanzhuan\.com\/zzopen\/zzbmlogic\/queryFrontPageWindowInfo\? - reject-dict
+^https:\/\/app\.zhuanzhuan\.com\/zzopen\/ptuserlogic\/subscribehotrecommend$ - reject-dict
+^https:\/\/app\.zhuanzhuan\.com\/zzopen\/ypmall\/listData$ - reject-dict
+^https:\/\/app\.zhuanzhuan\.com\/zz\/v2\/zzusercenter\/myprofilevariouscards$ - reject-dict
+
+[Body Rewrite]
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zzopen\/ptsimpleshow\/recommendbymyloveinfo\? '(. as $o | try ({"respCode": 0, "errorMsg": "null", "errMsg": ""}) catch $o)'
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zz\/v2\/zzinfoshow\/footprintsamerecommend\? '(. as $o | try ({"respCode": 0, "errorMsg": "", "errMsg": ""}) catch $o)'
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zz\/v2\/zzinfoshow\/getchoicegoodsinfos\? '(. as $o | try ({"respCode": 0, "respData": {}, "errorMsg": "", "errMsg": ""}) catch $o)'
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zz\/v2\/zzlogic\/mycontinenthomepage\? '(. as $o | try (del(.respData.topOpera.leftOpera, .respData.topOpera.rightOpera2)) catch $o) | (. as $o | try (del(.respData.topActBanner, .respData.bmArea)) catch $o)'
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zzx\/transfer\/getConfigInfo\? '(. as $o | try (del(.respData.freeMarketTabLeadPop, .respData.topOperations)) catch $o)'
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zz\/v2\/zzinfoshow\/getfeedflowinfo\? '(. as $o | try (if .respData.userRed.campName == "OCD挂件" then del(.respData.userRed) else . end) catch $o) | (. as $o | try (.respData.infoData |= map(del(.rotateResource, .appRecommendResource, .cargoGroupCardV2))) catch $o)'
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zz\/transfer\/getmymoretools$ '(. as $o | try (walk(if type == "array" then map(select((type == "object" and .name == "免流量特权") | not)) else . end)) catch $o) | (. as $o | try (.respData.groupList |= map(select(.groupName != "活动参与" and .groupName != "金融工具"))) catch $o)'
+http-response-jq ^https:\/\/app\.zhuanzhuan\.com\/zz\/transfer\/getmyprofilev3$ '(. as $o | try (del(.respData.bmNewInfo)) catch $o) | (. as $o | try (.respData.itemGroupList |= map(if (.itemList | type) == "array" then .itemList |= map(select(.name != "天天赚钱" and .name != "借钱")) else . end)) catch $o) | (. as $o | try (.respData.itemGroupList |= map(select(.groupType != 15))) catch $o)'
+
+[MITM]
+hostname = %APPEND% app.zhuanzhuan.com

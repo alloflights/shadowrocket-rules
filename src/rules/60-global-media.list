@@ -60,6 +60,10 @@ DOMAIN-SUFFIX,nhk.jp,PROXY
 
 # 3. 社交、博客、内容创作与视觉设计
 DOMAIN-SUFFIX,threads.net,Facebook
+DOMAIN-SUFFIX,threads.com,Facebook
+DOMAIN-SUFFIX,instagram.com,Facebook
+DOMAIN-SUFFIX,cdninstagram.com,Facebook
+DOMAIN-SUFFIX,ig.me,Facebook
 DOMAIN-SUFFIX,pinterest.com,PROXY
 DOMAIN-SUFFIX,pinimg.com,PROXY
 DOMAIN-SUFFIX,tumblr.com,PROXY

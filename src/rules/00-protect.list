@@ -3,7 +3,10 @@
 # 且不做 HTTPS 解密、不做 QUIC 阻断，保证推送 / iCloud 同步 / 隔空投送 / 接力等不受影响。
 DOMAIN,captive.apple.com,DIRECT
 DOMAIN-SUFFIX,push.apple.com,DIRECT
-DOMAIN,testflight.apple.com,PROXY
+# Apple Developer App（文档 / WWDC 视频）按用户决策走代理；TestFlight 不单列，随「苹果服务」直连
+DOMAIN,developer.apple.com,PROXY
+DOMAIN,devimages-cdn.apple.com,PROXY
+DOMAIN,devstreaming-cdn.apple.com,PROXY
 DOMAIN-SUFFIX,apple.com,苹果服务
 DOMAIN-SUFFIX,apple.com.cn,苹果服务
 DOMAIN-SUFFIX,icloud.com,苹果服务
