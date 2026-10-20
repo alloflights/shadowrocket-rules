@@ -34,18 +34,24 @@ const TUN_EXCLUDED = [
   'fe80::/10', 'ff00::/8', 'ff02::fb/128',
 ];
 
+// 仅 Shadowrocket 使用：显式代理域名必须能进入规则引擎。
+// Loon 仍使用上面的共享基础列表，本补丁不改变其生成产物。
+const SR_SKIP_PROXY = SKIP_PROXY.filter((p) => !['*.apple.com', '17.0.0.0/8'].includes(p));
+const SR_TUN_EXCLUDED = TUN_EXCLUDED.filter((p) => p !== '17.0.0.0/8');
+
 function general(updateUrl) {
   return `[General]
 bypass-system = true
 
-# 跳过代理：Apple 核心服务、局域网、12306 / 政务 / 银行 / 支付 / 运营商等关键服务，直接由系统处理，最低延迟、最少干扰。
-skip-proxy = ${[...SKIP_PROXY, ...criticalPatterns()].join(', ')}
+# 跳过代理：局域网、部分 Apple 核心主机及银行 / 支付等关键服务。
+# 不整站旁路 *.apple.com：Developer / WWDC CDN 按规则走代理，其余 Apple 服务默认直连。
+skip-proxy = ${[...SR_SKIP_PROXY, ...criticalPatterns()].join(', ')}
 
 # 真实 IP：Apple 认证 / 推送、微软邮件、NTP / STUN 不使用虚拟 IP，避免握手失败与时间同步异常。
 always-real-ip = ${ALWAYS_REAL_IP.join(', ')}
 
-# TUN 旁路：17.0.0.0/8 (Apple)、fe80::/10 (AWDL 隔空投送)、组播地址不进隧道，保证 AirDrop / 接力 / 通用剪贴板。
-tun-excluded-routes = ${TUN_EXCLUDED.join(', ')}
+# TUN 旁路：保留局域网、链路本地和组播；Apple 公网不整段旁路，避免覆盖显式代理规则。
+tun-excluded-routes = ${SR_TUN_EXCLUDED.join(', ')}
 
 # DNS：直连流量用运营商级 UDP 公共 DNS（阿里 + 腾讯），首包无需 TLS/HTTP 握手，比 DoH 少 1~2 个 RTT。
 # 代理流量的域名在远端解析，不受本地 DNS 污染影响。需要防劫持时可改为：https://dns.alidns.com/dns-query, https://doh.pub/dns-query
@@ -95,10 +101,10 @@ const ALL = '香港节点,台湾节点,日本节点,新加坡节点,韩国节点
 const NON_HK_AI = '🇺🇸|US|USA|America|United States|美国|🇯🇵|JP|Japan|日本|🇸🇬|SG|Singapore|新加坡|🇹🇼|TW|Taiwan|台湾';
 
 const proxyGroups = `[Proxy Group]
-# ---------- AI 专线（固定节点，避免 IP 漂移触发风控；Gemini / Claude 不要用香港） ----------
+# ---------- AI 专线（默认 fallback，减少测速切线；严格固定出口请手动选单节点） ----------
 OpenAI = select,AI稳定线路,美国节点,日本节点,新加坡节点,台湾节点,PROXY,policy-select-name=AI稳定线路
-Claude = select,新加坡节点,AI稳定线路,美国节点,日本节点,台湾节点,PROXY,policy-select-name=新加坡节点
-Gemini = select,新加坡节点,AI稳定线路,美国节点,日本节点,台湾节点,PROXY,policy-select-name=新加坡节点
+Claude = select,AI稳定线路,新加坡节点,美国节点,日本节点,台湾节点,PROXY,policy-select-name=AI稳定线路
+Gemini = select,AI稳定线路,新加坡节点,美国节点,日本节点,台湾节点,PROXY,policy-select-name=AI稳定线路
 MetaAI = select,AI稳定线路,美国节点,PROXY,日本节点,新加坡节点,policy-select-name=AI稳定线路
 AI = select,AI稳定线路,美国节点,日本节点,新加坡节点,台湾节点,PROXY,policy-select-name=AI稳定线路
 # ---------- 流媒体 / 社交 ----------
@@ -122,7 +128,7 @@ Amazon = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
 # 漏网之鱼：规则与 GEOIP,CN 都没命中的流量（基本都是境外站点）。默认代理，可一键切 DIRECT。
 漏网之鱼 = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
 
-# AI稳定线路：fallback（非测速跳变），排除香港与信息节点，除非节点彻底超时否则不换 IP
+# AI稳定线路：fallback（非最低延迟竞选），排除香港与信息节点；故障 / 恢复可能切换，不能保证固定 IP
 AI稳定线路 = fallback,url=http://www.gstatic.com/generate_204,interval=1800,timeout=5,policy-regex-filter=${filter(NON_HK_AI)}
 # 地区自动测速组：公差 100ms，避免频繁切线
 ${REGIONS.map(([n, k]) => `${n} = url-test,url=http://www.gstatic.com/generate_204,interval=1800,tolerance=100,timeout=5,select=0,policy-regex-filter=${filter(k)}`).join('\n')}

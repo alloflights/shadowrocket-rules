@@ -192,7 +192,7 @@ function scriptBody(units) {
 function confHeader(title, file, lines) {
   return [
     '# ==============================================================================',
-    `# ${title}  v${meta.version}`,
+    `# ${title}  v${meta.shadowrocketVersion || meta.version}`,
     '# 本文件由 scripts/build.js 根据 src/ 自动生成，请勿直接修改；修改 src/ 后执行 npm run build。',
     `# 订阅地址：${meta.cdn}/${file}`,
     ...lines.map((l) => `# ${l}`),

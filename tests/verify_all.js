@@ -227,6 +227,55 @@ function routeOf(rules, host) {
   }
   return null;
 }
+// ---------------------------------------------------------------- Shadowrocket v3.3.2：旁路优先于规则，不能只测 [Rule]
+const globMatches = (pattern, host) => new RegExp('^' + pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$', 'i').test(host);
+for (const rel of CONFS) {
+  const text = files[rel];
+  const setting = (key) => (sectionOf(text, 'General').find((l) => l.startsWith(`${key} = `)) || '').split(' = ')[1].split(',').map((x) => x.trim());
+  test(`${rel}: Apple Developer 代理域名不被 skip-proxy 提前旁路`, () => {
+    const rules = body(sectionOf(text, 'Rule'));
+    const skip = setting('skip-proxy');
+    for (const host of ['developer.apple.com', 'devimages-cdn.apple.com', 'devstreaming-cdn.apple.com']) {
+      assert(routeOf(rules, host).policy === 'PROXY', `${host} 应走代理`);
+      assert(!skip.some((p) => globMatches(p, host)), `${host} 被 skip-proxy 旁路`);
+    }
+  });
+  test(`${rel}: Apple 公网不整段绕过 TUN，保留局域网和链路本地保护`, () => {
+    const excluded = setting('tun-excluded-routes');
+    const skip = setting('skip-proxy');
+    for (const ip of ['17.1.2.3', '17.253.144.10']) {
+      for (const entry of [...excluded, ...skip].filter((p) => /^\d+\.\d+\.\d+\.\d+\/\d+$/.test(p))) {
+        assert(!ipInCidr(ip, entry), `${ip} 被 ${entry} 整段旁路`);
+      }
+    }
+    for (const entry of ['10.0.0.0/8', '192.168.0.0/16', 'fe80::/10', 'ff00::/8']) assert(excluded.includes(entry), `缺少 ${entry}`);
+  });
+  test(`${rel}: Apple 核心服务仍显式直连或使用默认直连策略`, () => {
+    const rules = body(sectionOf(text, 'Rule'));
+    for (const host of ['captive.apple.com', 'courier.push.apple.com', 'gsa.apple.com', 'apps.apple.com', 'testflight.apple.com', 'setup.icloud.com']) {
+      const hit = routeOf(rules, host);
+      assert(hit && ['DIRECT', '苹果服务'].includes(hit.policy), `${host} 未受保护`);
+    }
+    if (rel.includes('LazyGroup')) assert(text.includes('苹果服务 = select,DIRECT,'), '苹果服务应默认直连');
+  });
+}
+test('Shadowrocket：Claude / Gemini 默认使用 fallback 稳定线路而非 url-test 测速组', () => {
+  const text = files['Shadowrocket_LazyGroup_Merged.conf'];
+  for (const name of ['Claude', 'Gemini']) {
+    assert(text.includes(`${name} = select,AI稳定线路,`), `${name} 第一成员应为 AI稳定线路`);
+    const line = text.split('\n').find((l) => l.startsWith(`${name} = `));
+    assert(line.includes('policy-select-name=AI稳定线路'), `${name} 默认选择应为 AI稳定线路`);
+  }
+  assert(text.includes('AI稳定线路 = fallback,'), '稳定线路不应使用 url-test');
+});
+test('Shadowrocket 分流版本独立，不提升 Loon / 去广告模块版本', () => {
+  const meta = require('../src/meta');
+  assert(meta.shadowrocketVersion, '缺少独立分流版本号');
+  for (const rel of CONFS) assert(files[rel].includes(`v${meta.shadowrocketVersion}`), `${rel} 版本号错误`);
+  assert(files['Loon_LazyGroup.conf'].includes(`v${meta.version}`), 'Loon 应保持基础版本');
+  assert(files['modules/adblock-ultimate.sgmodule'].includes(`v${meta.version}`), '去广告模块应保持基础版本');
+});
+
 const appRouting = JSON.parse(read('tests/fixtures/app-routing.json'));
 {
   const rules = body(sectionOf(files['Shadowrocket_AllInOne_Ultimate.conf'], 'Rule'));

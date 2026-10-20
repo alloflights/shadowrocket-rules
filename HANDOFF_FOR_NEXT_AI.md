@@ -1,5 +1,11 @@
 # 维护说明（v3）
 
+## v3.3.2：仅 Shadowrocket 分流补丁
+- `src/meta.js` 的 `shadowrocketVersion` 用于两个 SR 主配置；`version` 仍用于 Loon / 去广告模块。两者独立升级，不要因 SR 分流补丁批量更新其它产物。
+- SR 的 `general()` 用派生旁路列表，不旁路 `*.apple.com` 或 `17.0.0.0/8`，以免遮蔽 Developer / WWDC CDN 代理规则；其余 Apple 域名仍默认直连。共享基础列表继续供 Loon 使用，未改变 Loon 产物。
+- SR Claude / Gemini 默认选 `AI稳定线路`（fallback）；它减少测速切线但不保证固定 IP。需要固定出口时选单节点，已有客户端可能需要手动更新策略选择。
+
+
 ## 原则
 0. **分流与去广告分离**：两个 `.conf` 只做分流（不得出现 REJECT 规则、[URL Rewrite]、[Script]、[MITM]）；去广告全部在 `modules/adblock-ultimate.sgmodule`（由 `src/rules/10-adblock.list` + `src/apps/*.js` 生成）。测试会强制检查。
 1. **只改 `src/` 和 `modules/scripts/`**，然后 `npm run build && npm test`。两个 `.conf` 与生成的模块都是产物，手改会被覆盖，`npm test` 也会报“产物过期”。
