@@ -150,4 +150,4 @@ const host = `[Host]
 localhost = 127.0.0.1
 `;
 
-module.exports = { general, proxyGroups, AIO_POLICY, host, CRITICAL, criticalPatterns };
+module.exports = { general, proxyGroups, AIO_POLICY, host, CRITICAL, criticalPatterns, SKIP_PROXY, ALWAYS_REAL_IP, TUN_EXCLUDED };

@@ -1,0 +1,6 @@
+# 自研分流 #17 → PayPal（3 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 85-services.list
+DOMAIN-SUFFIX,paypal.com
+DOMAIN-SUFFIX,paypal.me
+DOMAIN-SUFFIX,paypalobjects.com

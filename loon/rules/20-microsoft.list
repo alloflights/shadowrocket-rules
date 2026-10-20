@@ -1,0 +1,19 @@
+# 自研分流 #20 → 微软服务（16 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 85-services.list
+DOMAIN-SUFFIX,microsoft.com
+DOMAIN-SUFFIX,microsoft365.com
+DOMAIN-SUFFIX,microsoftpersonalcontent.com
+DOMAIN-SUFFIX,windows.com
+DOMAIN-SUFFIX,onedrive.com
+DOMAIN-SUFFIX,1drv.com
+DOMAIN-SUFFIX,1drv.ms
+DOMAIN-SUFFIX,sharepoint.com
+DOMAIN-SUFFIX,sharepointonline.com
+DOMAIN-SUFFIX,svc.ms
+DOMAIN-SUFFIX,sfx.ms
+DOMAIN-SUFFIX,live.net
+DOMAIN-SUFFIX,onenote.com
+DOMAIN-SUFFIX,onenote.net
+DOMAIN-SUFFIX,msocdn.com
+DOMAIN-SUFFIX,aka.ms

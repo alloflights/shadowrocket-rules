@@ -1,0 +1,6 @@
+# 自研分流 #14 → Max（3 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 85-services.list
+DOMAIN-SUFFIX,litix.io
+DOMAIN-SUFFIX,discomax.com
+DOMAIN-SUFFIX,brightline.tv

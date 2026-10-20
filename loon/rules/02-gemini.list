@@ -1,0 +1,30 @@
+# 自研分流 #2 → Gemini（27 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 20-ai.list
+DOMAIN-SUFFIX,gemini.google.com
+DOMAIN-SUFFIX,bard.google.com
+DOMAIN-SUFFIX,ai.google.dev
+DOMAIN-SUFFIX,aistudio.google.com
+DOMAIN-SUFFIX,makersuite.google.com
+DOMAIN-SUFFIX,deepmind.google
+DOMAIN-SUFFIX,deepmind.com
+DOMAIN-SUFFIX,generativeai.google
+DOMAIN-SUFFIX,notebooklm.google
+DOMAIN-SUFFIX,notebooklm.google.com
+DOMAIN,generativelanguage.googleapis.com
+DOMAIN,proactivebackend-pa.googleapis.com
+DOMAIN,alkalimakersuite-pa.googleapis.com
+DOMAIN,alkalimakersuite-pa.clients6.google.com
+DOMAIN,apis.google.com
+DOMAIN-SUFFIX,colab.research.google.com
+DOMAIN-SUFFIX,colab.google
+DOMAIN,developerprofiles-pa.googleapis.com
+DOMAIN,clients6.google.com
+DOMAIN-SUFFIX,waa-pa.clients6.google.com
+DOMAIN,storage.googleapis.com
+DOMAIN,content-storage.googleapis.com
+DOMAIN,geller-pa.googleapis.com
+DOMAIN-SUFFIX,googleusercontent.com
+DOMAIN-SUFFIX,lh3.googleusercontent.com
+DOMAIN-SUFFIX,photoslibrary.googleapis.com
+DOMAIN,oauthaccountmanager.googleapis.com

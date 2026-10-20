@@ -1,0 +1,14 @@
+# 自研分流 #13 → YouTube（11 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 85-services.list
+DOMAIN-SUFFIX,youtube.com
+DOMAIN-SUFFIX,youtu.be
+DOMAIN-SUFFIX,yt.be
+DOMAIN-SUFFIX,youtube-nocookie.com
+DOMAIN-SUFFIX,youtubekids.com
+DOMAIN-SUFFIX,ytimg.com
+DOMAIN-SUFFIX,googlevideo.com
+DOMAIN,youtubei.googleapis.com
+DOMAIN,youtube.googleapis.com
+DOMAIN,yt3.ggpht.com
+DOMAIN,yt4.ggpht.com

@@ -33,3 +33,12 @@
 - 用户决策：Klook / Price / B&O / Adobe(Lightroom) / Canva / Zoom / Notion / Xmind / Bark / Starryblu / TestFlight / Kimi / B站国际版 直连；Edge + 必应、Apple Developer（developer.apple.com 与两个视频 CDN）、AltStore、Surge / QX / Karing / Hiddify 官网走代理。`msn.com` 仍在 81-mail 直连（Outlook 相关），Edge 新标签页资讯因此是国内版，属预期。
 
 去广告模块的规则顺序：`QUIC 回落 → AWAvenue → 广告联盟 → App 专项`。Shadowrocket 中模块规则先于配置规则匹配，所以模块里绝不能拒绝 Apple 核心域名（测试已覆盖）。
+
+## Loon 版（v3.3）
+产物：`Loon_LazyGroup.conf`、`loon/plugins/adblock-supplement.plugin`（配合可莉）、`loon/plugins/adblock-ultimate.plugin`（不用可莉时）、`loon/rules/*.list`（自研分流块）。全部由 `scripts/loon.js` 从同一份 `src/` 生成；可莉插件清单在 `src/loon.js`。
+- **Loon 规则来源优先级：本地 [Rule] > 插件 > [Remote Rule]**，且域名请求先匹配所有域名规则，没命中才解析 DNS 匹配 IP 规则。所以本地只放 00 保护 + 关键服务（含 `criticalGuard` 提前的精确广告拒绝）+ 邮件端口 + GEOIP / FINAL；分流全部做成远程规则，否则本地的 `DOMAIN-SUFFIX,taobao.com,DIRECT` 之类会盖掉可莉 / 自研插件的拒绝规则。
+- 远程规则一个文件只能对应一个策略。`routingBlocks` 按原顺序分块：显式规则只并入更早的同策略块，中间不能隔着不同策略的 RULE-SET（屏障）或与之重叠的不同策略规则。测试逐域名比对 Loon 与 Shadowrocket 懒人版的首个命中，并检查每条显式规则前面的不同策略规则集不变。块编号会随规则增减变化，主配置同步重新生成即可。
+- `KELEE_PLUGINS[].covers` = 被该可莉插件取代的自研单元：补充插件自动排除这些单元，避免同一接口被两套脚本处理。新增 App 单元时先查可莉有没有同名插件（`https://kelee.one/Tool/Loon/Lpx/<Name>.lpx`，kelee.one 只允许 Loon 客户端下载，沙箱里拿不到原文，可参考 GitHub 上的镜像）。不收录 12306 / 云闪付插件（会解密关键服务）；主配置 [MitM] 用 `-域名` 排除全部关键服务，可莉的可莉广告过滤器 / 小程序插件里写了 10086、10010、tenpay、bankcomm、12306 的主机，靠这里排除。
+- 直连提速：`dns-server = system,223.5.5.5,119.29.29.29`，**不要加 doh-server**（Loon 配了加密 DNS 就优先用它）；`ip-mode = ipv4-only`；`domain-reject-mode = DNS`。
+- jq 改写用 Loon 旧语法 `response-body-json-jq '...'`，脚本用旧语法 `http-response <正则> script-path=..., requires-body=true, binary-body-mode=true, timeout=10, tag=...`，脚本文件与 Shadowrocket 共用 `modules/scripts/`。尚未真机验证 Loon 的 jq 是否支持 `try ... catch`（只影响默认关闭的全量插件）。
+- 已知：blackmatrix7 的 `China.list` 上游目前只有 74 行（头部写 3752 条），两个客户端都靠自研 90-domestic 与 GEOIP,CN 兜底。

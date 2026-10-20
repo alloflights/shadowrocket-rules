@@ -12,6 +12,8 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const meta = require(path.join(SRC, 'meta.js'));
 const profile = require(path.join(SRC, 'profile.js'));
+const loon = require(path.join(SRC, 'loon.js'));
+const buildLoon = require('./loon.js');
 
 const SCRIPT_BASE = `${meta.cdn}/modules/scripts`;
 const AWAVENUE_RULE = `RULE-SET,${meta.awavenue},REJECT`;
@@ -312,6 +314,9 @@ function buildAll() {
     groups: false,
     policyMap: profile.AIO_POLICY,
   });
+  Object.assign(files, buildLoon({
+    meta, profile, loon, readList, listFiles, loadApps, dedupe, section, adblockRules, criticalGuard, mitmHosts, AMDC_REWRITE, jqExpr, SCRIPT_BASE,
+  }));
   return files;
 }
 
@@ -327,6 +332,7 @@ if (require.main === module) {
       console.error(`产物过期: ${rel}`);
       stale++;
     } else {
+      fs.mkdirSync(path.dirname(abs), { recursive: true });
       fs.writeFileSync(abs, content);
       console.log(`写入 ${rel}`);
     }

@@ -1,0 +1,13 @@
+# 自研分流 #3 → OpenAI（10 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 20-ai.list
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,sora.com
+DOMAIN-SUFFIX,searchgpt.com
+DOMAIN,chat.openai.com
+DOMAIN,api.openai.com
+DOMAIN,auth.openai.com
+DOMAIN,platform.openai.com

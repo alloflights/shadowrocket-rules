@@ -1,0 +1,10 @@
+# 自研分流 #4 → Claude（7 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 20-ai.list
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN-SUFFIX,claude.usercontent.com
+DOMAIN-SUFFIX,statsigapi.net
+DOMAIN-SUFFIX,usefathom.com
+DOMAIN,challenges.cloudflare.com
+DOMAIN,static.cloudflareinsights.com

@@ -1,0 +1,31 @@
+# 自研分流 #1 → MetaAI（28 条）
+# v3.3.0 · 由 scripts/build.js 根据 src/rules 自动生成，请勿直接修改
+# 20-ai.list
+DOMAIN-SUFFIX,muse.ai
+DOMAIN-SUFFIX,muse-meta.com
+DOMAIN-SUFFIX,metaaivm.com
+DOMAIN-SUFFIX,meta.ai
+DOMAIN,hatch.metaaivm.com
+DOMAIN,imagine.meta.com
+DOMAIN,flow.meta.com
+DOMAIN-SUFFIX,meta.com
+DOMAIN-SUFFIX,facebook.com
+DOMAIN-SUFFIX,fbcdn.net
+DOMAIN-SUFFIX,fbsbx.com
+DOMAIN-SUFFIX,internalfb.com
+DOMAIN-SUFFIX,llama.com
+DOMAIN,llama.meta.com
+DOMAIN-SUFFIX,ai.meta.com
+DOMAIN-SUFFIX,oculus.com
+DOMAIN-SUFFIX,m.me
+IP-CIDR,57.141.0.0/14,no-resolve
+IP-CIDR,157.240.0.0/16,no-resolve
+IP-CIDR,31.13.0.0/16,no-resolve
+IP-CIDR,173.252.64.0/18,no-resolve
+IP-CIDR,129.134.0.0/16,no-resolve
+IP-CIDR,66.220.144.0/20,no-resolve
+IP-CIDR,163.70.0.0/16,no-resolve
+IP-CIDR,185.60.216.0/22,no-resolve
+IP-CIDR,204.15.20.0/22,no-resolve
+IP-ASN,32934,no-resolve
+IP-ASN,63293,no-resolve

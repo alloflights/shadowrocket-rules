@@ -44,7 +44,9 @@ test('构建幂等', () => {
   for (const k of Object.keys(files)) assert(again[k] === files[k], `${k} 两次构建结果不同`);
 });
 
-const allTexts = Object.entries(files);
+const isLoon = (rel) => rel.startsWith('loon/') || rel.startsWith('Loon_');
+// Shadowrocket 产物（Loon 产物语法不同，见文末 Loon 段）
+const allTexts = Object.entries(files).filter(([rel]) => !isLoon(rel));
 
 // ---------------------------------------------------------------- 通用语法
 for (const [rel, text] of allTexts) {
@@ -514,6 +516,241 @@ test('关键服务：去广告总模块 MITM 排除关键域名，且解密列�
     assert(!ex.some((e) => toRe(e).test(sample)), `解密主机落入排除范围: ${h}`);
   }
 });
+
+// ---------------------------------------------------------------- Loon
+const loonSrc = require('../src/loon.js');
+const profile = require('../src/profile.js');
+const loonBuild = require('../scripts/loon.js');
+const LOON_CONF = files['Loon_LazyGroup.conf'];
+const loonPlugins = Object.keys(files).filter((k) => k.startsWith('loon/plugins/'));
+const BUILTIN = new Set(['DIRECT', 'REJECT', 'REJECT-IMG', 'REJECT-DICT', 'REJECT-ARRAY', 'REJECT-DROP']);
+const loonGroups = new Set(body(sectionOf(LOON_CONF, 'Proxy Group')).map((l) => l.split(' = ')[0]));
+const loonFilters = new Set(body(sectionOf(LOON_CONF, 'Remote Filter')).map((l) => l.split(' = ')[0]));
+const loonLocal = body(sectionOf(LOON_CONF, 'Rule'));
+const loonRemote = body(sectionOf(LOON_CONF, 'Remote Rule')).map((l) => {
+  const m = l.match(/^(https:\/\/\S+), policy=([^,]+), tag=([^,]+), enabled=(true|false)$/);
+  return m ? { url: m[1], policy: m[2], tag: m[3], line: l } : { line: l };
+});
+const OWN = `${require('../src/meta.js').cdn}/`;
+
+test('Loon：产物齐全（主配置 + 两个插件 + 远程规则）', () => {
+  assert(LOON_CONF, '缺少 Loon_LazyGroup.conf');
+  assert(files['loon/plugins/adblock-supplement.plugin'] && files['loon/plugins/adblock-ultimate.plugin'], '缺少自研插件');
+  assert(Object.keys(files).some((k) => k.startsWith('loon/rules/')), '缺少远程规则文件');
+});
+test('Loon：主配置不含 Shadowrocket 专有语法', () => {
+  for (const bad of ['DST-PORT', 'RULE-SET,', '%APPEND%', 'policy-select-name', 'policy-regex-filter', 'block-quic', 'always-real-ip', 'tun-excluded-routes', 'doh-server', 'dns-direct-system']) {
+    assert(!LOON_CONF.includes(bad), `出现 ${bad}`);
+  }
+  for (const l of loonLocal) assert(!/,PROXY(,|$)/.test(l), `Loon 没有内置 PROXY 策略: ${l}`);
+});
+test('Loon：直连提速设置（system DNS 优先、无加密 DNS、仅 IPv4、DNS 阶段拒绝）', () => {
+  const g = body(sectionOf(LOON_CONF, 'General'));
+  const val = (k) => (g.find((l) => l.startsWith(`${k} =`)) || '').split(' = ')[1];
+  assert(/^system,/.test(val('dns-server')), 'dns-server 应以 system 开头');
+  assert(!g.some((l) => /^(doh|doq|doh3)-server/.test(l)), '不要配置加密 DNS（Loon 会优先使用，变慢）');
+  assert(val('ip-mode') === 'ipv4-only', 'ip-mode 应为 ipv4-only');
+  assert(val('domain-reject-mode') === 'DNS', 'domain-reject-mode 应为 DNS');
+  assert(/wifi\.vivo\.com\.cn/.test(val('internet-test-url')), '网络检测应使用国内地址');
+});
+test('Loon：策略组成员都存在（策略组 / 筛选器 / 内置策略）', () => {
+  for (const l of body(sectionOf(LOON_CONF, 'Proxy Group'))) {
+    const [name, def] = l.split(' = ');
+    const parts = def.split(',');
+    assert(/^(select|url-test|fallback|load-balance)$/.test(parts[0]), `${name}: 未知类型 ${parts[0]}`);
+    const members = parts.slice(1).filter((x) => !x.includes('='));
+    assert(members.length, `${name}: 没有成员`);
+    for (const m of members) assert(loonGroups.has(m) || loonFilters.has(m) || BUILTIN.has(m), `${name}: 成员 ${m} 不存在`);
+    if (parts[0] !== 'select') assert(/url=http/.test(def) && /interval=\d+/.test(def), `${name}: 缺少测速参数`);
+  }
+  for (const l of body(sectionOf(LOON_CONF, 'Remote Filter'))) {
+    const m = l.match(/^\S+ = NameRegex, FilterKey = "(.+)"$/);
+    assert(m, `筛选器格式错误: ${l}`);
+    new RegExp(m[1]);
+  }
+});
+test('Loon：本地规则 / 远程规则的策略都存在，远程规则格式正确', () => {
+  for (const l of loonLocal) {
+    const p = l.split(',');
+    const pol = p[0] === 'FINAL' ? p[1] : /^(AND|OR|NOT)$/.test(p[0]) ? l.split(',').pop() : p[2];
+    assert(/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN|GEOIP|DEST-PORT|FINAL)$/.test(p[0]), `本地规则类型: ${l}`);
+    assert(BUILTIN.has(pol) || loonGroups.has(pol), `策略不存在: ${l}`);
+  }
+  assert(loonLocal[loonLocal.length - 1].startsWith('FINAL,'), 'FINAL 应在最后');
+  for (const r of loonRemote) {
+    assert(r.url, `远程规则格式错误: ${r.line}`);
+    assert(BUILTIN.has(r.policy) || loonGroups.has(r.policy), `远程规则策略不存在: ${r.line}`);
+    assert(!/\/rule\/(Shadowrocket|QuantumultX)\//.test(r.url), `应使用 blackmatrix7 的 Loon 规则: ${r.url}`);
+    if (r.url.startsWith(OWN)) assert(files[r.url.slice(OWN.length)], `远程规则文件不存在: ${r.url}`);
+  }
+  assert(loonRemote[0].policy === 'REJECT' && /AWAvenue/.test(loonRemote[0].url), 'AWAvenue 应是第一条远程规则');
+});
+test('Loon：自研远程规则文件只含域名 / IP 规则，不带策略，IP 规则带 no-resolve', () => {
+  for (const [rel, text] of Object.entries(files).filter(([k]) => k.startsWith('loon/rules/'))) {
+    for (const l of body(text.split('\n'))) {
+      assert(/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD),[^,]+$/.test(l) || /^(IP-CIDR|IP-CIDR6|IP-ASN),[^,]+,no-resolve$/.test(l), `${rel}: ${l}`);
+    }
+  }
+});
+
+// 路由等价：Shadowrocket 懒人版按顺序匹配；Loon 依次匹配 本地 → 远程（插件只有拒绝规则，比较时忽略拒绝）。
+// 两边都跳过 RULE-SET（内容未知），再单独校验每条显式规则前面「不同策略的规则集」完全相同。
+const srPol = (pol) => (pol === 'PROXY' ? loonSrc.PROXY : pol);
+const srSeq = [];
+for (const l of body(sectionOf(files['Shadowrocket_LazyGroup_Merged.conf'], 'Rule'))) {
+  const p = l.split(',');
+  if (p[0] === 'RULE-SET') srSeq.push({ ruleSet: p[1].replace('/rule/Shadowrocket/', '/rule/Loon/').replace('/rule/QuantumultX/', '/rule/Loon/'), policy: srPol(p[2]) });
+  else if (/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN)$/.test(p[0])) srSeq.push({ type: p[0], value: p[1], policy: srPol(p[2]) });
+}
+const loonSeq = [];
+for (const l of loonLocal) {
+  const p = l.split(',');
+  if (/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN)$/.test(p[0]) && !/^REJECT/.test(p[2])) loonSeq.push({ type: p[0], value: p[1], policy: p[2] });
+}
+for (const r of loonRemote.slice(1)) {
+  if (!r.url.startsWith(OWN)) {
+    loonSeq.push({ ruleSet: r.url, policy: r.policy });
+    continue;
+  }
+  for (const l of body(files[r.url.slice(OWN.length)].split('\n'))) {
+    const p = l.split(',');
+    loonSeq.push({ type: p[0], value: p[1], policy: r.policy });
+  }
+}
+const toLines = (seq) => seq.filter((e) => !e.ruleSet).map((e) => `${e.type},${e.value},${e.policy}`);
+test('Loon：分流与 Shadowrocket 懒人版逐域名等价', () => {
+  const sr = toLines(srSeq);
+  const lo = toLines(loonSeq);
+  const hosts = new Set(appRouting.apps.flatMap((a) => a.hosts));
+  for (const e of srSeq.filter((x) => /^DOMAIN/.test(x.type || ''))) {
+    hosts.add(e.value);
+    hosts.add(`x.${e.value}`);
+  }
+  for (const e of srSeq.filter((x) => x.type === 'IP-CIDR')) hosts.add(e.value.split('/')[0]);
+  let n = 0;
+  for (const h of hosts) {
+    const a = routeOf(sr, h);
+    const b = routeOf(lo, h);
+    assert((a && a.policy) === (b && b.policy), `${h}: Shadowrocket ${a && a.rule} ↔ Loon ${b && b.rule}`);
+    n++;
+  }
+  assert(n > 1500, `样本过少: ${n}`);
+});
+test('Loon：规则集顺序不变，且每条显式规则之前的不同策略规则集与 Shadowrocket 一致', () => {
+  const rs = (seq) => seq.filter((e) => e.ruleSet).map((e) => e.ruleSet);
+  assert(JSON.stringify(rs(srSeq)) === JSON.stringify(rs(loonSeq)), '规则集顺序不同');
+  const before = (seq) => {
+    const out = new Map();
+    const seen = [];
+    for (const e of seq) {
+      if (e.ruleSet) seen.push(e);
+      else {
+        const k = `${e.type},${e.value},${e.policy}`;
+        if (!out.has(k)) out.set(k, seen.filter((s) => s.policy !== e.policy).map((s) => s.ruleSet).join('|'));
+      }
+    }
+    return out;
+  };
+  const a = before(srSeq);
+  const b = before(loonSeq);
+  for (const [k, v] of a) assert(b.get(k) === v, `${k}: 前置规则集不同`);
+});
+test('Loon：分块合并逻辑（不同策略的重叠规则不会被跨越）', () => {
+  const R = (type, value, policy) => ({ type, value, policy, opts: [], file: 't' });
+  const blocks = loonBuild.routingBlocks([R('DOMAIN-SUFFIX', 'a.com', 'P'), R('DOMAIN', 'x.b.com', 'Q'), R('DOMAIN-SUFFIX', 'b.com', 'P'), R('DOMAIN-SUFFIX', 'c.com', 'Q')]);
+  assert(blocks.length === 3 && blocks[1].rules.length === 2 && blocks[2].rules[0].value === 'b.com', JSON.stringify(blocks.map((b) => b.rules.map((r) => r.value))));
+  const rs = loonBuild.routingBlocks([R('DOMAIN', 'a.com', 'P'), { ruleSet: 'u', policy: 'Q' }, R('DOMAIN', 'z.com', 'P')]);
+  assert(rs.length === 3, '不同策略的规则集必须是屏障');
+  assert(loonBuild.overlap(R('IP-CIDR', '91.108.4.0/22'), R('IP-CIDR', '91.108.5.0/24')) && !loonBuild.overlap(R('IP-CIDR', '1.0.0.0/24'), R('IP-CIDR', '1.0.1.0/24')), 'CIDR 重叠判断错误');
+});
+{
+  const AIO = { ...require('../src/profile.js').AIO_POLICY, [loonSrc.PROXY]: 'PROXY', DIRECT: 'DIRECT' };
+  const lo = toLines(loonSeq);
+  test('Loon：用户应用清单分流全部正确', () => {
+    for (const { app, expect, hosts } of appRouting.apps) {
+      for (const host of hosts) {
+        const r = routeOf(lo, host);
+        assert(r && AIO[r.policy] === expect, `${app} ${host}: ${r && r.rule} 应为 ${expect}`);
+      }
+    }
+  });
+}
+test('Loon：关键服务在本地规则最前（先于插件 / 远程规则），广告精确拒绝排在保护段之前', () => {
+  for (const d of CRITICAL_MUST) assert(loonLocal.includes(`DOMAIN-SUFFIX,${d},DIRECT`), `缺少本地直连: ${d}`);
+  const i = loonLocal.indexOf('DOMAIN,ad.12306.cn,REJECT');
+  assert(i >= 0 && i < loonLocal.indexOf('DOMAIN-SUFFIX,12306.cn,DIRECT'), 'ad.12306.cn 拒绝应在 12306 直连之前');
+  const mitm = body(sectionOf(LOON_CONF, 'MitM')).find((l) => l.startsWith('hostname')).replace(/^hostname = /, '').split(', ');
+  assert(mitm.every((h) => h.startsWith('-')), '主配置 MitM 只放排除项');
+  for (const d of CRITICAL_MUST) assert(mitm.includes(`-*.${d}`) && mitm.includes(`-${d}`), `缺少 MitM 排除: ${d}`);
+  const sp = body(sectionOf(LOON_CONF, 'General')).find((l) => l.startsWith('skip-proxy'));
+  for (const d of CRITICAL_MUST) assert(sp.includes(`*.${d}`), `skip-proxy 缺少 ${d}`);
+});
+test('Loon：可莉插件地址规范，不含解密关键服务的插件', () => {
+  const urls = loonSrc.KELEE_PLUGINS.map((p) => p.url);
+  assert(new Set(urls).size === urls.length, '可莉插件重复');
+  for (const u of urls) assert(/^https:\/\/kelee\.one\/Tool\/Loon\/Lpx\/[A-Za-z0-9_]+\.lpx$/.test(u), `地址格式: ${u}`);
+  assert(!urls.some((u) => /12306|UnionPay/.test(u)), '不要引用 12306 / 云闪付插件（会解密关键服务）');
+  for (const u of urls) assert(LOON_CONF.includes(`${u}, tag=`), `主配置缺少 ${u}`);
+  assert(/adblock-ultimate\.plugin, tag=[^,]+, enabled=false/.test(LOON_CONF), '自研全量插件默认关闭（与可莉插件二选一）');
+  assert(/adblock-supplement\.plugin, tag=[^,]+, enabled=true/.test(LOON_CONF), '自研补充插件默认开启');
+  assert(LOON_CONF.indexOf('adblock-supplement.plugin') < LOON_CONF.indexOf('kelee.one'), '自研补充插件应排在可莉插件前');
+});
+{
+  const units = build.loadApps();
+  const covered = new Set(loonSrc.KELEE_PLUGINS.flatMap((p) => p.covers));
+  const mitmOf = (rel) => (body(sectionOf(files[rel], 'MitM')).find((l) => l.startsWith('hostname')) || 'hostname = ').replace(/^hostname = /, '').split(', ').filter(Boolean);
+  test('Loon：补充插件不含可莉已覆盖的 App，全量插件包含全部 App', () => {
+    const sup = files['loon/plugins/adblock-supplement.plugin'];
+    const supHosts = new Set(mitmOf('loon/plugins/adblock-supplement.plugin'));
+    const keep = new Set(units.filter((u) => !covered.has(u.id)).flatMap((u) => u.mitm || []));
+    for (const u of units.filter((x) => covered.has(x.id))) {
+      assert(!sup.includes(`# --- ${u.name} ---`), `补充插件不应包含 ${u.name}`);
+      for (const h of u.mitm || []) assert(!supHosts.has(h) || keep.has(h), `补充插件不应解密 ${h}`);
+    }
+    const ultHosts = new Set(mitmOf('loon/plugins/adblock-ultimate.plugin'));
+    for (const h of build.mitmHosts(units)) assert(ultHosts.has(h), `全量插件缺少 ${h}`);
+  });
+  for (const rel of loonPlugins) {
+    const text = files[rel];
+    test(`${rel}: Loon 插件语法（规则 / 重写 / jq / 脚本 / MitM）`, () => {
+      assert(/^#!name=.+\n#!desc=.+/.test(text), '缺少插件信息');
+      for (const bad of ['DST-PORT', '%APPEND%', 'http-response-jq', 'type=http-', ' - reject', 'script-update-interval', 'max-size', '[URL Rewrite]', '[Body Rewrite]', '[MITM]']) assert(!text.includes(bad), `出现 Shadowrocket 语法: ${bad}`);
+      for (const l of body(sectionOf(text, 'Rule'))) {
+        assert(/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN|USER-AGENT|URL-REGEX|AND|OR|NOT|DEST-PORT),/.test(l), `规则类型: ${l}`);
+        assert(/,(DIRECT|REJECT|REJECT-IMG|REJECT-DICT|REJECT-ARRAY|REJECT-DROP)(,no-resolve)?$/.test(l), `插件规则只能用 DIRECT / REJECT 系列: ${l}`);
+      }
+      for (const l of body(sectionOf(text, 'Rewrite'))) {
+        const m = l.match(/^(\S+) (reject|reject-200|reject-dict|reject-array|reject-img|30[27] https?:\/\/\S+|response-body-json-jq '([^']+)')$/);
+        assert(m, `重写格式: ${l.slice(0, 150)}`);
+        new RegExp(m[1]);
+        if (m[3]) assert(m[3].startsWith('(. as $o | try ('), `jq 未包裹 try/catch: ${l.slice(0, 120)}`);
+      }
+      for (const l of body(sectionOf(text, 'Script'))) {
+        const m = l.match(/^http-(request|response) (\S+) script-path=(\S+), requires-body=(true|false)(, binary-body-mode=true)?, timeout=(10|30), tag=[\w-]+$/);
+        assert(m, `脚本格式: ${l.slice(0, 160)}`);
+        new RegExp(m[2]);
+        const file = (m[3].match(/\/modules\/scripts\/(.+)$/) || [])[1];
+        assert(file && fs.existsSync(path.join(scriptDir, file)), `脚本不存在: ${m[3]}`);
+      }
+      const hosts = mitmOf(rel);
+      const rules = body(sectionOf(text, 'Rule'));
+      for (const h of hosts) {
+        const bare = h.replace(/^\*\./, '');
+        assert(!PROTECTED.test(bare) || h === 'mp.weixin.qq.com', `禁止解密: ${h}`);
+        assert(!profile.CRITICAL.some((c) => bare === c.domain || bare.endsWith(`.${c.domain}`)), `解密了关键服务: ${h}`);
+        const quicOk = rules.some((r) => r.startsWith('AND,((PROTOCOL,QUIC),(') && r.includes(h.includes('*') ? h.slice(h.indexOf('.', h.indexOf('*')) + 1) : h));
+        assert(quicOk, `缺少 QUIC 回落: ${h}`);
+      }
+    });
+  }
+  test('Loon：全量插件的重写 / jq / 脚本条数与 Shadowrocket 全量模块一致', () => {
+    const sr = files['modules/adblock-ultimate.sgmodule'];
+    const lo = files['loon/plugins/adblock-ultimate.plugin'];
+    const count = (t, sec) => body(sectionOf(t, sec)).length;
+    assert(count(lo, 'Rewrite') === count(sr, 'URL Rewrite') + count(sr, 'Body Rewrite'), '重写条数不一致');
+    assert(count(lo, 'Script') === count(sr, 'Script'), '脚本条数不一致');
+  });
+}
 
 console.log(`\n${pass} 通过, ${fail} 失败`);
 process.exit(fail ? 1 : 0);
