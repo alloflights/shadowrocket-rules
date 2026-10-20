@@ -1,7 +1,10 @@
+// 异常响应原样放行；每次请求只完成一次。
+(function safeResponse() {
+try {
 // 2024-06-11 20:25
 
 const url = $request.url;
-if (!$response.body) $done({});
+if (typeof $response === 'undefined' || !$response || !$response.body) return $done({});
 let obj = JSON.parse($response.body);
 
 if (url.includes("/boss/car/order/content_info")) {
@@ -585,3 +588,6 @@ if (url.includes("/boss/car/order/content_info")) {
 }
 
 $done({ body: JSON.stringify(obj) });
+
+} catch (error) { $done({}); }
+})();

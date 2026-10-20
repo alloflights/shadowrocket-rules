@@ -141,7 +141,8 @@ function criticalGuard(rejectLines) {
   return [...section('关键服务保护（先于第三方广告规则，防止误杀登录 / 支付 / 购票）'), ...early, ...direct];
 }
 function mitmExcludes() {
-  return profile.criticalPatterns().map((h) => `-${h}`);
+  return profile.CRITICAL.flatMap((c) => c.type === 'DOMAIN'
+    ? [`-${c.domain}`] : [`-${c.domain}`, `-*.${c.domain}`]);
 }
 
 // 主配置只负责分流；去广告（拒绝规则 / 重写 / 脚本 / MITM）全部在 adblock-ultimate 模块里
@@ -230,7 +231,7 @@ function moduleText({ name, desc, author, category, rules, rewrites, bodyRewrite
     `#!homepage=https://github.com/${meta.repo}`,
     `#!category=${category || '去广告'}`,
     '#!system=ios',
-    `# v${meta.version} · 由 scripts/build.js 自动生成，请勿直接修改`,
+    `# v${meta.shadowrocketVersion || meta.version} · 由 scripts/build.js 自动生成，请勿直接修改`,
     '',
   ];
   if (rules && rules.length) out.push('[Rule]', ...rules, '');
@@ -242,7 +243,9 @@ function moduleText({ name, desc, author, category, rules, rewrites, bodyRewrite
 }
 
 function buildModules() {
-  const units = loadApps();
+  // SR 中模块规则先于主配置；公众号只按广告接口拒绝，不封 wxs.qq.com 整个资源域。
+  const units = loadApps().map((u) => Array.isArray(u.shadowrocketRules)
+    ? { ...u, rules: u.shadowrocketRules } : u);
   const files = {};
   for (const u of units) {
     if (u.moduleFile === false) continue;
@@ -251,7 +254,7 @@ function buildModules() {
       desc: u.desc,
       author: u.author,
       category: u.category,
-      rules: dedupe([...(u.mitm || []).map(quicRule), ...(u.rules || [])]),
+      rules: dedupe([...(usesAmdc(u) ? criticalGuard(u.rules || []) : []), ...(u.mitm || []).map(quicRule), ...(u.rules || [])]),
       rewrites: usesAmdc(u) ? [AMDC_REWRITE, ...(u.rewrites || [])] : u.rewrites,
       bodyRewrites: (u.bodyRewrites || []).map(bodyLine),
       scripts: (u.scripts || []).map(scriptLine),
@@ -260,7 +263,7 @@ function buildModules() {
   }
   files['modules/adblock-ultimate.sgmodule'] = moduleText({
     name: '全量去广告 (AdBlock Ultimate)',
-    desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、拼多多、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含所有单 App 模块，请勿再叠加单 App 模块。需开启 HTTPS 解密。',
+    desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、拼多多、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含同源生成的 App 与浏览增强模块，请勿重复叠加；抖音 / TikTok / 微信 / BoxJS 等静态模块独立按需开启。需开启 HTTPS 解密。',
     category: '去广告',
     rules: dedupe([...section('HTTPS 解密主机 QUIC 回落 TCP'), ...quicRules(units), ...criticalGuard(adblockRules(units)), ...adblockRules(units)]),
     rewrites: rewriteBody(units),

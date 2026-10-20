@@ -104,7 +104,6 @@
                 delete obj.data.pop_window;
                 delete obj.data.dialog;
                 delete obj.data.floating_layer;
-                delete obj.data.notice;
             }
         }
 
@@ -119,27 +118,25 @@
     function isPwesportsAd(item) {
         if (!item) return false;
 
-        if (item.is_ad || item.is_advert || item.is_sponsor || item.is_commercial || item.is_promote || item.ad_type || item.ad_id || item.advert_id || item.advertisement) {
+        const flag = (v) => v === true || v === 1 || v === "1" || v === "true";
+        if ([item.is_ad, item.is_advert, item.is_sponsor, item.is_commercial, item.is_promote].some(flag) ||
+            (item.ad_id && item.ad_id !== "0") || (item.advert_id && item.advert_id !== "0") ||
+            (item.ad_type && item.ad_type !== "0") || flag(item.advertisement)) {
             return true;
         }
 
         const type = String(item.type || item.entity_type || item.card_type || item.style || "").toLowerCase();
-        if (type.includes("ad") || type.includes("advert") || type.includes("banner_ad") || type.includes("sponsor") || type.includes("promote")) {
+        if (/(^|[_-])(ad|ads|advert|advertisement|sponsor|sponsored|promote|promotion)([_-]|$)/.test(type)) {
             return true;
         }
 
         const tag = String(item.tag || item.label || item.corner_mark || item.badge || item.sub_title || "").toLowerCase();
-        if (tag.includes("广告") || tag.includes("推广") || tag.includes("商单") || tag.includes("赞助") || tag.includes("特惠") || tag.includes("福利") || tag.includes("抽奖")) {
-            return true;
-        }
-
-        const title = String(item.title || item.name || "").toLowerCase();
-        if (title.includes("广告") || title.includes("推广")) {
+        if (tag.includes("广告") || tag.includes("推广") || tag.includes("商单") || tag.includes("赞助")) {
             return true;
         }
 
         if (item.extra && typeof item.extra === "object") {
-            if (item.extra.ad || item.extra.is_ad || item.extra.commercial) {
+            if ([item.extra.ad, item.extra.is_ad, item.extra.commercial].some(flag)) {
                 return true;
             }
         }
@@ -147,7 +144,7 @@
         // 外链商业推广与非官方商城跳转
         if (item.jump_url || item.target_url || item.url || item.link) {
             const u = String(item.jump_url || item.target_url || item.url || item.link).toLowerCase();
-            if (u.includes("union") || u.includes("ad_id") || u.includes("cps=") || u.includes("channel=ad") || u.includes("commercial")) {
+            if (/[?&](ad_id|cps|commercial)=[^&#]+/.test(u) || /[?&]channel=ad(?:[&#]|$)/.test(u)) {
                 return true;
             }
         }

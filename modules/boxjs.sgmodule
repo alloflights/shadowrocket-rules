@@ -5,12 +5,20 @@
 #!icon=https://raw.githubusercontent.com/chavyleung/scripts/master/box/icons/BoxJs.png
 #!category=自动化脚本
 #!system=ios
+# Shadowrocket v3.3.3 · 独立维护模块，统一纳入安全与脚本回归检查
+
+[Rule]
+# HTTPS 解密主机禁用 UDP/443，避免 QUIC 绕过重写 / 脚本
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,boxjs.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,boxjs.net)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,boxjs.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,boxjs.net)),REJECT
 
 [General]
 force-http-engine-hosts = %APPEND% boxjs.com, boxjs.net, *.boxjs.com, *.boxjs.net
 
 [Script]
-BoxJs = type=http-request,pattern=^https?:\/\/(.+\.)?boxjs\.(com|net),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/boxjs.js,requires-body=true,timeout=120
+BoxJs = type=http-request,pattern=^https?:\/\/(.+\.)?boxjs\.(com|net)(?=[:/?#]|$),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/boxjs.js,requires-body=true,timeout=120,script-update-interval=86400
 
 [MITM]
 hostname = %INSERT% boxjs.com, boxjs.net, *.boxjs.com, *.boxjs.net

@@ -1,11 +1,16 @@
 #!name=抖音网页版原画无水印直存 (Douyin Web Media)
-#!desc=【App 零侵入安全方案】仅拦截 Safari 浏览器内访问的 www.douyin.com 页面，自动提取图集全部超清无水印原图与 1080P 视频，绝对不触碰手机抖音 App 内部通信，评论区与通信 100% 顺畅。
+#!desc=仅处理 www.douyin.com 的视频 / 图集网页，不解密抖音 App API。提取可用媒体链接，受网页数据结构和媒体可用性影响。
 #!author=allofights
 #!system=ios
+# Shadowrocket v3.3.3 · 独立维护模块，统一纳入安全与脚本回归检查
 #!category=浏览增强
 
+[Rule]
+# HTTPS 解密主机禁用 UDP/443，避免 QUIC 绕过重写 / 脚本
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,www.douyin.com)),REJECT
+
 [Script]
-抖音_网页原画 = type=http-response,pattern=^https?:\/\/www\.douyin\.com\/(video|note)\/,requires-body=true,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=86400
+抖音_网页原画 = type=http-response,pattern=^https?:\/\/www\.douyin\.com\/(video|note)\/,requires-body=true,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=86400,timeout=10
 
 [MITM]
 # 仅解密 www.douyin.com 网页端，绝对不解密 amemv.com 与 snssdk.com，保证 App 零风险

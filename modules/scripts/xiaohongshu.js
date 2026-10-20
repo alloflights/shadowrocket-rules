@@ -1,14 +1,17 @@
+// 异常响应原样放行；每次请求只完成一次。
+(function safeResponse() {
+try {
 // 小红书去广告、无水印原图保存与 LivePhoto 增强 (全版本自适应版)
 // 维护: allofights
 const url = $request.url;
 const isQuanX = typeof $task !== "undefined";
-if (!$response.body) $done({});
+if (typeof $response === 'undefined' || !$response || !$response.body) return $done({});
 
 let obj;
 try {
   obj = JSON.parse($response.body);
 } catch (e) {
-  $done({});
+  return $done({});
 }
 
 // 核心函数：遍历并解锁媒体保存、去水印与视频下载
@@ -137,8 +140,7 @@ if (url.includes("/homefeed") && Array.isArray(obj?.data)) {
   obj.data = obj.data.filter(item => {
     if (!item) return false;
     if (item.model_type === "live_v2") return false;
-    if (item.hasOwnProperty("ads_info")) return false;
-    if (item.hasOwnProperty("card_icon")) return false;
+    if (item.ads_info && typeof item.ads_info === "object" && Object.keys(item.ads_info).length > 0) return false;
     if (item?.note_attributes?.includes("goods")) return false;
     if (item?.related_ques) delete item.related_ques;
     return true;
@@ -151,3 +153,6 @@ if (url.includes("/search/notes") && Array.isArray(obj?.data?.items)) {
 }
 
 $done({ body: JSON.stringify(obj) });
+
+} catch (error) { $done({}); }
+})();

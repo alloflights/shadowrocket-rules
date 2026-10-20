@@ -1,14 +1,23 @@
 # 维护说明（v3）
 
+## v3.3.3：Shadowrocket 全组件维护
+- `meta.shadowrocketVersion` 同时用于 SR 主配置和生成模块；`meta.version` 继续只控制 Loon 产物。不要升级 Loon 产物版本来发布 SR 补丁。
+- `tests/maintenance.js` 发现并检查全部 `.sgmodule`，包含不参与构建的 9 个静态模块；新静态模块必须满足脚本超时、更新间隔、资源限制和 MITM / QUIC 安全边界。
+- `src/apps/*.js` 可选 `shadowrocketRules` 覆盖该单元在 SR 的 rules（Loon 仍用 rules）；当前公众号单元用它避免 wxs.qq.com 整域误拦，保留 Loon 基础产物不动。
+- 外链仅 HTTP(S)，不依赖 URL API，不对已完整解出的目标继续整体 decodeURIComponent。脚本用 vm.Script 验证真实脚本语法，node --check 的 CommonJS 语法检查不能替代它。
+- protobuf / gRPC 脚本必须捕获解码错误并原样放行；B 站只修改单个完整消息帧，损坏、多帧和 trailers 保守放行。
+- CI 缺 jq 必须失败；`npm run check:remotes` 是联网检查，不替代离线回归。每周远程检查仅检测可用性及基本格式，不保证上游不存在误杀。
+- 两端共享的 modules/scripts 修复也会影响 Loon；本轮 Loon 配置 / 插件 / 规则文件保持不变，不能声称 Loon 运行行为完全没变化。
+
 ## v3.3.2：仅 Shadowrocket 分流补丁
-- `src/meta.js` 的 `shadowrocketVersion` 用于两个 SR 主配置；`version` 仍用于 Loon / 去广告模块。两者独立升级，不要因 SR 分流补丁批量更新其它产物。
+- `src/meta.js` 的 `shadowrocketVersion` 用于两个 SR 主配置；`version` 当时仍用于 Loon / 去广告模块（v3.3.3 起模块改用 shadowrocketVersion）。两者独立升级，不要因 SR 分流补丁批量更新其它产物。
 - SR 的 `general()` 用派生旁路列表，不旁路 `*.apple.com` 或 `17.0.0.0/8`，以免遮蔽 Developer / WWDC CDN 代理规则；其余 Apple 域名仍默认直连。共享基础列表继续供 Loon 使用，未改变 Loon 产物。
 - SR Claude / Gemini 默认选 `AI稳定线路`（fallback）；它减少测速切线但不保证固定 IP。需要固定出口时选单节点，已有客户端可能需要手动更新策略选择。
 
 
 ## 原则
 0. **分流与去广告分离**：两个 `.conf` 只做分流（不得出现 REJECT 规则、[URL Rewrite]、[Script]、[MITM]）；去广告全部在 `modules/adblock-ultimate.sgmodule`（由 `src/rules/10-adblock.list` + `src/apps/*.js` 生成）。测试会强制检查。
-1. **只改 `src/` 和 `modules/scripts/`**，然后 `npm run build && npm test`。两个 `.conf` 与生成的模块都是产物，手改会被覆盖，`npm test` 也会报“产物过期”。
+1. **生成模块只改 `src/` 和 `modules/scripts/`；9 个静态模块可直接维护并必须通过测试**，然后 `npm run build && npm test`。两个 `.conf` 与生成的模块都是产物，手改会被覆盖，`npm test` 也会报“产物过期”。
 2. **Apple 原生服务永远最先匹配、不解密、不拒绝**（`src/rules/00-protect.list` + `skip-proxy` / `always-real-ip` / `tun-excluded-routes`）。
 3. **MITM 只写精确主机名**，不解密银行 / 支付 / 运营商 / 大 CDN，也不写 `*.qq.com`、`*.taobao.com` 这类整站通配。每个 MITM 主机会自动生成 `UDP/443 → REJECT` 规则，迫使 App 用 TCP（否则 QUIC 会绕过重写与脚本）；`block-quic=all-proxy` 只管走代理的连接，管不到直连 App。
 4. **不要用宽泛 REJECT**（如 `gtimg.cn`、`umeng.com`、`bytegecko.com`、京东 / 淘宝联盟跳转域名），测试里有黑名单。

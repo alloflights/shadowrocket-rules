@@ -1,8 +1,10 @@
+// 异常响应原样放行；每次请求只完成一次。
+(function safeResponse() {
+try {
 // 2024-10-05 02:40
 
 const url = $request.url;
-if (!$response) $done({});
-if (!$response.body) $done({});
+if (typeof $response === 'undefined' || !$response || !$response.body) return $done({});
 let body = $response.body;
 
 // 微博详情页菜单配置
@@ -1327,3 +1329,5 @@ function removeVoteInfo(item) {
     delete item.page_info.media_info.vote_info;
   }
 }
+} catch (error) { $done({}); }
+})();

@@ -1,7 +1,8 @@
 #!name=抖音深度纯净版 (Douyin Pro - 网络层稳态版)
-#!desc=基于真机抓包精准拦截巨量引擎与穿山甲4200+次商业打点，阻断开屏广告与小黄车配置，避开Cronet证书绑定风控，保障推荐流流畅自然无反弹。
+#!desc=抖音独立网络层模块：广告联盟、遥测和电商入口拦截；可能影响购物功能，按需开启。不解密 App、不全局关闭其它模块的解密。
 #!author=allofights
 #!system=ios
+# Shadowrocket v3.3.3 · 独立维护模块，统一纳入安全与脚本回归检查
 #!category=应用净化
 
 [Rule]
@@ -46,7 +47,6 @@ DOMAIN-SUFFIX,wmzfylgdsz.com,REJECT
 
 # 直播间推流、直播带货卡片与同城直播强插 (Webcast - 杀错不放过)
 # 不使用 DOMAIN-KEYWORD,webcast：会误伤正常直播正文，广告由接口/SDK规则与响应层处理
-DOMAIN-SUFFIX,bytegecko.com,REJECT
 
 # 广告资源与行为埋点
 DOMAIN-KEYWORD,ad-pattern,REJECT-IMG
@@ -65,6 +65,5 @@ DOMAIN-KEYWORD,toblog,REJECT
 ^https?:\/\/.*\.ecombdapi\.com\/.* - reject-200
 ^https?:\/\/.*\.ecombdpage\.com\/.* - reject-200
 
-[MITM]
-# 抖音客户端采用 Chromium Cronet 强证书校验 (SSL Pinning)，严禁对 amemv API 域名强开解密，避免触发字节安全降级机制导致底模商业广告轰炸
-hostname = %APPEND% -*
+
+# 不解密抖音 App；不要使用 -*，它会影响其它模块。HTTPS 重写仅在相应主机已被解密时生效。

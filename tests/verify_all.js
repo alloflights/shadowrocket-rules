@@ -268,12 +268,12 @@ test('Shadowrocket：Claude / Gemini 默认使用 fallback 稳定线路而非 ur
   }
   assert(text.includes('AI稳定线路 = fallback,'), '稳定线路不应使用 url-test');
 });
-test('Shadowrocket 分流版本独立，不提升 Loon / 去广告模块版本', () => {
+test('Shadowrocket 配置 / 模块版本独立，不提升 Loon 版本', () => {
   const meta = require('../src/meta');
   assert(meta.shadowrocketVersion, '缺少独立分流版本号');
   for (const rel of CONFS) assert(files[rel].includes(`v${meta.shadowrocketVersion}`), `${rel} 版本号错误`);
   assert(files['Loon_LazyGroup.conf'].includes(`v${meta.version}`), 'Loon 应保持基础版本');
-  assert(files['modules/adblock-ultimate.sgmodule'].includes(`v${meta.version}`), '去广告模块应保持基础版本');
+  assert(files['modules/adblock-ultimate.sgmodule'].includes(`v${meta.shadowrocketVersion}`), '去广告模块应使用 Shadowrocket 版本');
 });
 
 const appRouting = JSON.parse(read('tests/fixtures/app-routing.json'));
@@ -339,7 +339,7 @@ function run(file, { url, headers, responseBody }) {
   };
   if (responseBody !== undefined) ctx.$response = { body: responseBody, headers: {} };
   vm.runInNewContext(code, ctx, { timeout: 2000 });
-  assert(calls >= 1, `${file} 没有调用 $done`);
+  assert(calls === 1, `${file} 应只调用一次 $done，实际 ${calls}`);
   return result;
 }
 const fixture = (n) => fs.readFileSync(path.join(__dirname, 'fixtures', n), 'utf8');
@@ -438,7 +438,8 @@ try {
   execFileSync('jq', ['--version'], { stdio: 'pipe' });
   JQ = 'jq';
 } catch (e) {
-  console.warn('⚠ 未安装 jq，跳过 jq 语法与行为测试');
+  if (process.env.CI) throw new Error('CI 必须安装 jq，禁止跳过改写测试');
+  console.warn('⚠ 未安装 jq，跳过 jq 语法与行为测试（本地）');
 }
 function jq(expr, inputs) {
   const out = execFileSync(JQ, ['-c', expr], { input: inputs.map((x) => JSON.stringify(x)).join('\n'), stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
@@ -811,6 +812,8 @@ test('Loon：可莉插件地址规范，不含解密关键服务的插件', () =
     assert(count(lo, 'Script') === count(sr, 'Script'), '脚本条数不一致');
   });
 }
+
+require('./maintenance')({ test, assert, ROOT, files, read, body, sectionOf });
 
 console.log(`\n${pass} 通过, ${fail} 失败`);
 process.exit(fail ? 1 : 0);

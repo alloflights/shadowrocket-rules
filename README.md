@@ -2,14 +2,22 @@
 
 iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去广告。Loon 版见[下方](#loon-版)。
 
-## 小火箭分流 v3.3.2
+## 小火箭 v3.3.3：分流 + 去广告维护版
 
-本次仅更新两个 Shadowrocket 分流配置；Loon 和去广告模块保持 v3.3.1，不改其规则、脚本或产物。
+本轮维护覆盖两个 Shadowrocket 主配置、全部 43 个模块和 21 个脚本的静态 / 安全检查。Loon 配置、插件和规则产物未改动；两端共用的脚本修复也会作用于引用同一脚本的 Loon 插件。
 
-- 修复 Apple Developer / WWDC CDN 的显式代理与 `*.apple.com`、`17.0.0.0/8` 旁路设置冲突；其余 Apple 服务仍按规则默认直连，保留局域网、链路本地和组播旁路。
-- 懒人版 Claude / Gemini 默认改用 `AI稳定线路`（fallback），减少地区测速组切线。故障或恢复仍可能换出口；严格固定 IP 请手动选择单节点。
-- 新增旁路冲突、Apple 核心服务和 AI 默认策略回归测试。构建版本独立，避免小火箭更新连带重写 Loon / 去广告产物。
-- 更新现有配置即可，订阅地址不变。客户端若保留旧策略选择，请手动将 Claude / Gemini 切到 `AI稳定线路`。
+- 继承 v3.3.2 分流修复：Apple Developer / WWDC CDN 不再被 Apple 整站旁路覆盖；Claude / Gemini 默认使用 fallback 稳定线路，但不保证固定出口 IP。
+- 外链直跳不再依赖浏览器 URL API；保留路径和签名参数编码，只允许 HTTP(S)，校验来源主机，拒绝危险协议、凭据及响应头注入。
+- 高德、微博、小红书、喜马拉雅和 protobuf 脚本补齐异常放行；B 站 / 网易云修复非 CommonJS 沙箱的顶层 return；B 站增加完整单帧 gRPC 检查与 ArrayBuffer 支持。
+- 完美电竞不再因 `thread` / `download` 等类型、普通福利标签或正文标题误删内容；小红书不再仅因普通 `card_icon` 删除笔记。
+- 小火箭公众号模块取消 `wxs.qq.com` 整域拦截，继续按具体广告接口处理；全量模块补齐关键服务根域名排除；阿里系单模块加入支付宝前置保护。
+- 独立抖音模块移除全局 `-*` 解密排除与 `bytegecko.com` 整域拦截；独立模块补齐解密主机 QUIC 回落和脚本资源上限。
+- 网页净化仅处理 HTML、避免重复注入，保留普通按钮和登录框；不覆盖只读 Location 方法，不移除 CSP。网站 CSP 可能阻止内联脚本，主动 `location` 跳转不保证拦截。
+- `npm test` 覆盖所有生成及静态模块；CI 强制安装 jq，提交 / PR 自动测试，每周或手动运行远程规则源检查。
+
+**升级**：更新主配置和已启用模块，并刷新远程脚本（默认更新间隔 24 小时）；地址不变。已有客户端如保留旧选择，可把 Claude / Gemini 手动切到「AI稳定线路」。不要为本版本直接卸载 App；缓存问题优先清缓存，重装前先备份本地数据。
+
+> 这是离线回归和规则源验证后的维护版本，不代表所有 App 版本均已真机验证；广告接口、证书绑定和上游脚本变化仍可能影响效果。
 
 ## 使用方式：分流配置 + 去广告模块
 
@@ -24,12 +32,12 @@ iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去
 
 | 模块 | 地址 |
 | :--- | :--- |
-| **全量去广告（推荐，已含下面所有单 App 模块）** | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock-ultimate.sgmodule` |
+| **全量去广告（推荐，含同源生成的 App / 浏览增强模块）** | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock-ultimate.sgmodule` |
 | 仅广告联盟拦截 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock.sgmodule` |
 
 全量去广告需要 HTTPS 解密：配置文件 ⓘ → HTTPS 解密 → 生成并安装 CA 证书 → 系统设置 → 通用 → 关于本机 → 证书信任设置 中信任证书。
 
-> 升级到 v3.2 后：闲鱼、淘宝、百度贴吧删除重装一次，百度网盘清理缓存（清掉旧开屏缓存）。
+> 旧开屏仍出现时先清理 App 缓存；如确需重装闲鱼、淘宝或贴吧，先确认账号和本地数据已备份。
 > 贴吧需关闭 HTTPS 解密里的「通过 HTTP/2 进行中间人攻击」，否则可能提示未登录。
 > 全量模块与单 App 模块不要同时开启（内容重复）。
 
@@ -41,7 +49,7 @@ iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去
 | 外链直跳 / Safari 网页去打扰 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/direct-link.sgmodule`、`https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/safari-clean.sgmodule` |
 | AI 服务分流 / 海外常用分流（给使用其它分流配置的用户） | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/ai-services.sgmodule`、`https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/overseas-top500.sgmodule` |
 
-番茄小说、网易大神、WakeUp 课程表、山姆、创客贴等少量规则只在全量模块里。抖音、TikTok、微信、BoxJs 等模块为独立维护的静态模块，见 `modules/`。
+番茄小说、网易大神、WakeUp 课程表、山姆、创客贴等少量规则只在全量模块里。抖音、TikTok、微信、BoxJs 等模块为独立维护的静态模块，不包含在全量模块内，见 `modules/`。TikTok 的 US / CA / JP / TW 地区版四选一；`douyin-web` 与 `douyin-watermark` 二选一，避免重复执行。抖音电商拦截可能影响购物；微信广告与正常内容可能共用素材域名，遇到异常请停用独立模块排查。BoxJS 仅在需要管理脚本数据时启用，勿公开面板、Cookie 或脚本持久化数据。
 
 ## Loon 版
 
@@ -90,10 +98,13 @@ src/
 modules/scripts/   脚本
 scripts/build.js   生成两个分流配置与全部模块
 scripts/loon.js    生成 Loon 配置、插件（loon/plugins）与远程规则（loon/rules）
+scripts/check-remotes.js  远程规则健康检查
+.github/workflows/validate.yml  提交 / PR 回归和每周远程规则检查
 tests/             校验、脚本行为、jq 改写与 App 分流清单测试
 ```
 
 ```bash
 npm run build   # 修改 src/ 后重新生成
-npm test        # 产物同步、正则、MITM 安全边界、脚本行为
+npm test        # 全部生成 / 静态模块安全边界、脚本沙箱语法、异常与行为回归（完整测试需要 jq）
+npm run check:remotes # 联网检查 42 个上游规则 URL、非空内容及基本格式（数量随规则变更）
 ```

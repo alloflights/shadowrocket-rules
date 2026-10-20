@@ -10,21 +10,35 @@ class Any$Type extends MessageType{constructor(){super("google.protobuf.Any",[{n
 // bili
 class ViewReply$Type extends MessageType{constructor(){super("ViewReply",[{no:7,name:"cm",kind:"message",T:()=>CM}])}create(e){var n={};return globalThis.Object.defineProperty(n,MESSAGE_TYPE,{enumerable:!1,value:this}),void 0!==e&&reflectionMergePartial(this,n,e),n}internalBinaryRead(e,n,t,r){for(var i=null!=r?r:this.create(),a=e.pos+n;e.pos<a;){var[o,l]=e.tag();if(7===o)i.cm=CM.internalBinaryRead(e,e.uint32(),t,i.cm);else{var s=t.readUnknownField;if("throw"===s)throw new globalThis.Error(`Unknown field ${o} (wire type ${l}) for `+this.typeName);var d=e.skip(l);!1!==s&&(!0===s?UnknownFieldHandler.onRead:s)(this.typeName,i,o,l,d)}}return i}internalBinaryWrite(e,n,t){e.cm&&CM.internalBinaryWrite(e.cm,n.tag(7,WireType.LengthDelimited).fork(),t).join();t=t.writeUnknownFields;return!1!==t&&(1==t?UnknownFieldHandler.onWrite:t)(this.typeName,e,n),n}}let ViewReply=new ViewReply$Type;class CM$Type extends MessageType{constructor(){super("CM",[{no:3,name:"sourceContent",kind:"message",repeat:1,T:()=>Any},{no:5,name:"sourceContentItem",kind:"message",repeat:1,T:()=>SourceContentItem}])}create(e){var n={sourceContent:[],sourceContentItem:[]};return globalThis.Object.defineProperty(n,MESSAGE_TYPE,{enumerable:!1,value:this}),void 0!==e&&reflectionMergePartial(this,n,e),n}internalBinaryRead(e,n,t,r){for(var i=null!=r?r:this.create(),a=e.pos+n;e.pos<a;){var[o,l]=e.tag();switch(o){case 3:i.sourceContent.push(Any.internalBinaryRead(e,e.uint32(),t));break;case 5:i.sourceContentItem.push(SourceContentItem.internalBinaryRead(e,e.uint32(),t));break;default:var s=t.readUnknownField;if("throw"===s)throw new globalThis.Error(`Unknown field ${o} (wire type ${l}) for `+this.typeName);var d=e.skip(l);!1!==s&&(!0===s?UnknownFieldHandler.onRead:s)(this.typeName,i,o,l,d)}}return i}internalBinaryWrite(n,t,r){for(let e=0;e<n.sourceContent.length;e++)Any.internalBinaryWrite(n.sourceContent[e],t.tag(3,WireType.LengthDelimited).fork(),r).join();for(let e=0;e<n.sourceContentItem.length;e++)SourceContentItem.internalBinaryWrite(n.sourceContentItem[e],t.tag(5,WireType.LengthDelimited).fork(),r).join();var e=r.writeUnknownFields;return!1!==e&&(1==e?UnknownFieldHandler.onWrite:e)(this.typeName,n,t),t}}let CM=new CM$Type;class SourceContentItem$Type extends MessageType{constructor(){super("SourceContentItem",[{no:1,name:"sourceContent",kind:"message",T:()=>Any}])}create(e){var n={};return globalThis.Object.defineProperty(n,MESSAGE_TYPE,{enumerable:!1,value:this}),void 0!==e&&reflectionMergePartial(this,n,e),n}internalBinaryRead(e,n,t,r){for(var i=null!=r?r:this.create(),a=e.pos+n;e.pos<a;){var[o,l]=e.tag();if(1===o)i.sourceContent=Any.internalBinaryRead(e,e.uint32(),t,i.sourceContent);else{var s=t.readUnknownField;if("throw"===s)throw new globalThis.Error(`Unknown field ${o} (wire type ${l}) for `+this.typeName);var d=e.skip(l);!1!==s&&(!0===s?UnknownFieldHandler.onRead:s)(this.typeName,i,o,l,d)}}return i}internalBinaryWrite(e,n,t){e.sourceContent&&Any.internalBinaryWrite(e.sourceContent,n.tag(1,WireType.LengthDelimited).fork(),t).join();t=t.writeUnknownFields;return!1!==t&&(1==t?UnknownFieldHandler.onWrite:t)(this.typeName,e,n),n}}let SourceContentItem=new SourceContentItem$Type;class DynAllReply$Type extends MessageType{constructor(){super("DynAllReply",[{no:2,name:"upList",kind:"message",T:()=>CardVideoUpList}])}create(e){var n={};return globalThis.Object.defineProperty(n,MESSAGE_TYPE,{enumerable:!1,value:this}),void 0!==e&&reflectionMergePartial(this,n,e),n}internalBinaryRead(e,n,t,r){for(var i=null!=r?r:this.create(),a=e.pos+n;e.pos<a;){var[o,l]=e.tag();if(2===o)i.upList=CardVideoUpList.internalBinaryRead(e,e.uint32(),t,i.upList);else{var s=t.readUnknownField;if("throw"===s)throw new globalThis.Error(`Unknown field ${o} (wire type ${l}) for `+this.typeName);var d=e.skip(l);!1!==s&&(!0===s?UnknownFieldHandler.onRead:s)(this.typeName,i,o,l,d)}}return i}internalBinaryWrite(e,n,t){e.upList&&CardVideoUpList.internalBinaryWrite(e.upList,n.tag(2,WireType.LengthDelimited).fork(),t).join();t=t.writeUnknownFields;return!1!==t&&(1==t?UnknownFieldHandler.onWrite:t)(this.typeName,e,n),n}}let DynAllReply=new DynAllReply$Type;class CardVideoUpList$Type extends MessageType{constructor(){super("CardVideoUpList",[{no:1,name:"title",kind:"scalar",T:9}])}create(e){var n={title:""};return globalThis.Object.defineProperty(n,MESSAGE_TYPE,{enumerable:!1,value:this}),void 0!==e&&reflectionMergePartial(this,n,e),n}internalBinaryRead(e,n,t,r){for(var i=null!=r?r:this.create(),a=e.pos+n;e.pos<a;){var[o,l]=e.tag();if(1===o)i.title=e.string();else{var s=t.readUnknownField;if("throw"===s)throw new globalThis.Error(`Unknown field ${o} (wire type ${l}) for `+this.typeName);var d=e.skip(l);!1!==s&&(!0===s?UnknownFieldHandler.onRead:s)(this.typeName,i,o,l,d)}}return i}internalBinaryWrite(e,n,t){""!==e.title&&n.tag(1,WireType.LengthDelimited).string(e.title);t=t.writeUnknownFields;return!1!==t&&(1==t?UnknownFieldHandler.onWrite:t)(this.typeName,e,n),n}}let CardVideoUpList=new CardVideoUpList$Type;
 // ---
+
+// 代理运行时脚本不是 CommonJS；入口封装也避免顶层 return 语法错误。
+(function safeBinaryResponse() {
+try {
 const url = $request.url;
 const method = $request.method;
 if (method !== "POST") {
     /* silent */
 }
-let headers = $response.headers;
+let headers = Object.assign({}, $response.headers || {});
 const isQuanX = typeof $task !== "undefined";
-const binaryBody = isQuanX ? new Uint8Array($response.bodyBytes) : $response.body;
+const rawBinary = isQuanX ? $response.bodyBytes : $response.body;
+const binaryBody = ArrayBuffer.isView(rawBinary)
+    ? new Uint8Array(rawBinary.buffer, rawBinary.byteOffset, rawBinary.byteLength)
+    : Object.prototype.toString.call(rawBinary) === '[object ArrayBuffer]'
+        ? new Uint8Array(rawBinary) : Array.isArray(rawBinary) ? new Uint8Array(rawBinary) : null;
+if (!binaryBody) return $done({});
+// 只处理单个完整 gRPC 消息，损坏 / 多帧 / trailer 响应原样放行。
+if (!(binaryBody instanceof Uint8Array) || binaryBody.length < 5 || binaryBody[0] > 1) return $done({});
+const frameLength = new DataView(binaryBody.buffer, binaryBody.byteOffset + 1, 4).getUint32(0, false);
+if (frameLength !== binaryBody.length - 5) return $done({});
 let gzipStrName = 'grpc-encoding';
 if(!headers[gzipStrName]){
     // Loon QX做调整
     console.log('响应头首字母大写');
     gzipStrName = 'Grpc-Encoding';
 }
-const isGzipCompress = headers[gzipStrName] === 'gzip';
+const isGzipCompress = binaryBody[0] === 1;
+if (isGzipCompress && headers[gzipStrName] !== 'gzip') return $done({});
 console.log(`isGzipCompress:${isGzipCompress}`);
 const unGzipBody = isGzipCompress ? pako.ungzip(binaryBody.slice(5)) : binaryBody.slice(5);
 headers[gzipStrName] = 'identity';
@@ -76,3 +90,5 @@ function intToUint8Array (num) {
     view.setUint32(0, num, false); // byteOffset = 0; litteEndian = false
     return new Uint8Array(arr);
 }
+} catch (error) { $done({}); }
+})();

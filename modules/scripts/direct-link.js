@@ -1,72 +1,45 @@
-/**
- * 全网外链“零等待”直接跳转脚本 (Direct Link Bypass)
- * 功能：自动拦截知乎、CSDN、简书、掘金、微博、贴吧、QQ、少数派、Gitee、语雀等中间拦截确认页，
- *       以 0.05ms 本地直出 302 重定向到真实目标地址，零网络往返与零流量消耗。
- * 遵循: Ponytail 极简原则 (原生 WHATWG URL + 递归解码)
- * 作者: allofights
- */
-
+/** 外链确认页直跳：仅 HTTP(S)，只解外层包装，不依赖 URL / URLSearchParams。 */
 (function directLinkBypass() {
-    const rawUrl = $request ? $request.url : null;
-    if (!rawUrl) {
-        $done({});
-        return;
-    }
-
     try {
-        const urlObj = new URL(rawUrl);
-        const candidateKeys = ["target", "url", "u", "pfurl", "dest", "to", "link", "goto"];
-        let target = null;
-
-        for (const key of candidateKeys) {
-            const val = urlObj.searchParams.get(key);
-            if (val) {
-                target = val;
-                break;
-            }
-        }
-
-        if (!target) {
-            $done({});
-            return;
-        }
-
-        let decoded = target;
-        // 递归解码最多 3 层以解开嵌套编码
-        for (let i = 0; i < 3; i++) {
-            if (/^https?:\/\//i.test(decoded)) {
-                if (!/%[0-9a-fA-F]{2}/.test(decoded.split("?")[0])) {
-                    break;
-                }
-            }
-            try {
-                decoded = decodeURIComponent(decoded);
-            } catch (e) {
-                break;
-            }
-        }
-
-        // 补全协议前缀
-        if (!/^https?:\/\//i.test(decoded)) {
-            if (decoded.startsWith("//")) {
-                decoded = "https:" + decoded;
-            } else if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(decoded)) {
-                decoded = "https://" + decoded;
-            }
-        }
-
-        // 校验合法性并直出 302 重定向
-        new URL(decoded);
-        $done({
-            response: {
-                status: 302,
-                headers: {
-                    "Location": decoded,
-                    "Cache-Control": "no-cache, no-store, must-revalidate"
-                }
-            }
+        var raw = typeof $request !== 'undefined' && $request ? String($request.url || '') : '';
+        var source = raw.match(/^https?:\/\/([^/?#]+)([^?#]*)(?:\?([^#]*))?(?:#.*)?$/i);
+        if (!source) return $done({});
+        var host = source[1].toLowerCase();
+        var routes = {
+            'link.zhihu.com': /^\/?$/, 'link.csdn.net': /^\/?$/, 'link.juejin.cn': /^\/?$/,
+            'www.jianshu.com': /^\/go-wild\/?$/, 'weibo.cn': /^\/sinaurl\/?$/,
+            'jump.bdimg.com': /^\/safecheck(?:\/|$)/, 'jump2.bdimg.com': /^\/safecheck(?:\/|$)/,
+            'c.pc.qq.com': /^\/middlem(?:\.html)?\/?$/, 'sspai.com': /^\/link\/?$/,
+            'gitee.com': /^\/link\/?$/, 'www.yuque.com': /^\/r\/goto\/?$/
+        };
+        if (!routes[host] || !routes[host].test(source[2])) return $done({});
+        var params = Object.create(null);
+        (source[3] || '').split('&').forEach(function (part) {
+            var i = part.indexOf('=');
+            if (i < 0) return;
+            var key = decodeURIComponent(part.slice(0, i).replace(/\+/g, ' '));
+            if (!(key in params)) params[key] = decodeURIComponent(part.slice(i + 1).replace(/\+/g, ' '));
         });
-    } catch (err) {
+        var keys = ['target', 'url', 'u', 'pfurl', 'dest', 'to', 'link', 'goto'];
+        var target = '';
+        for (var k = 0; k < keys.length; k++) if (params[keys[k]]) { target = params[keys[k]]; break; }
+        if (!target) return $done({});
+        // 查询参数已解一层；仅当整体仍被编码时继续解码，绝不解目标内部的路径 / 签名参数。
+        for (var n = 0; n < 3 && !/^(?:https?:\/\/|\/\/|[a-z0-9.-]+\.[a-z]{2,}(?::\d+)?(?:[/?#]|$))/i.test(target); n++) {
+            var decoded = decodeURIComponent(target);
+            if (decoded === target) break;
+            target = decoded;
+        }
+        if (/^\/\//.test(target)) target = 'https:' + target;
+        else if (/^[a-z0-9.-]+\.[a-z]{2,}(?::\d+)?(?:[/?#]|$)/i.test(target)) target = 'https://' + target;
+        if (/[\x00-\x20\x7f\\]/.test(target)) return $done({});
+        var http = target.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
+        if (!http) return $done({});
+        var authority = http[1].match(/^(\[[0-9a-f:]+\]|[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)(?::(\d{1,5}))?$/i);
+        if (!authority || (authority[2] && (+authority[2] === 0 || +authority[2] > 65535))) return $done({});
+        if (authority[1].includes('..')) return $done({});
+        $done({ response: { status: 302, headers: { Location: target, 'Cache-Control': 'no-cache, no-store, must-revalidate' } } });
+    } catch (e) {
         $done({});
     }
 })();

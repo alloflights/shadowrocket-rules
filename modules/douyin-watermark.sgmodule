@@ -1,10 +1,15 @@
 #!name=抖音无水印直存与评论区保护模块 (Douyin Safe Watermark-Free Pro)
-#!desc=【评论区 100% 正常】严禁解密抖音 App 内部强证书绑定域名(amemv/snssdk)以保障评论区与推荐流零断连；拦截 Safari 打开的抖音分享链接(v.douyin.com / iesdouyin.com / douyin.com)，顶部直接弹出 1080P 无水印视频下载与全部原画图集长按保存面板
+#!desc=仅处理抖音分享落地网页并提取可用媒体链接，不解密 App API。与 douyin-web 功能重叠，二选一；模块另含广告和电商域名拦截，可能影响购物功能。
 #!author=allofights
 #!system=ios
+# Shadowrocket v3.3.3 · 独立维护模块，统一纳入安全与脚本回归检查
 #!category=应用增强
 
 [Rule]
+# HTTPS 解密主机禁用 UDP/443，避免 QUIC 绕过重写 / 脚本
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,www.iesdouyin.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,m.douyin.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,www.douyin.com)),REJECT
 # 仅在网络层拦截穿山甲与电商小黄车域名，绝不阻断抖音核心 QUIC/HTTPDNS，保障评论区秒开
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
 DOMAIN-SUFFIX,pangle-ads.com,REJECT
@@ -13,7 +18,7 @@ DOMAIN-SUFFIX,ecombdpage.com,REJECT
 
 [Script]
 # 拦截 Safari 打开的抖音分享短链落地页 (iesdouyin.com / m.douyin.com / www.douyin.com)，自动注入顶部无水印视频与原图直存面板
-抖音_分享页无水印直存 = type=http-response,pattern=^https?:\/\/(www\.iesdouyin|m\.douyin|www\.douyin)\.com\/(share\/(video|note|slides)|video|note)\/,requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=86400
+抖音_分享页无水印直存 = type=http-response,pattern=^https?:\/\/(www\.iesdouyin|m\.douyin|www\.douyin)\.com\/(share\/(video|note|slides)|video|note)\/,requires-body=1,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=86400,timeout=10
 
 [MITM]
 # 仅解密网页分享端域名，绝不触碰 amemv.com / snssdk.com
