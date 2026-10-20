@@ -2,7 +2,19 @@
 
 iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去广告。Loon 版见[下方](#loon-版)。
 
-## 小火箭 v3.3.3：分流 + 去广告维护版
+## 小火箭 v3.3.4：Apple 服务统一直连
+
+按最新选择，**所有 Apple 服务固定 `DIRECT`**：Apple Music、iCloud、App Store、Apple Account、APNs 推送、iMessage、FaceTime、接力关联域、地图、查找、天气、Siri、系统更新，以及 **Developer / WWDC / TestFlight**。不再保留 Apple 代理例外，也不再依赖可切到代理的「苹果服务」组。
+
+- 补齐 `applemusic.com`、`apzones.com`、`.apple`（含 `networking.apple` / `safebrowsing.apple`）等显式保护，增加 Apple 完整域名集直连兜底；基础服务的代表域名不依赖远程列表下载。
+- 恢复 `*.apple.com` 与 Apple 公网 `17.0.0.0/8` 旁路；保留并补齐本地、IPv6 链路本地 / ULA 和组播规则，避免接力、AirDrop、AirPlay 的本地连接进入代理。
+- 全量、广告联盟、AWAvenue 三个聚合模块中的 Apple 保护先于广告列表；全量模块增加 Apple 根域名和子域名的 MITM 排除。不改变其它去广告脚本或隐私设置。
+- 主配置和已启用的聚合去广告模块都要更新，地址不变。更新后重新连接小火箭，关闭并重开音乐以建立新连接；无需卸载 App。使用全局代理模式或自行添加更高优先级模块时，需另外检查运行模式 / 模块规则。
+- 本补丁仅调整 Shadowrocket。Loon 生成产物保持原样，因此两端 Apple 策略现在有意不同；测试分别验证，不能再宣称全量等价。
+
+官方网络清单：[Apple 服务域名](https://support.apple.com/101555)、[本地发现和服务端口](https://support.apple.com/103229)。直连不能替代接力本身的蓝牙、Wi-Fi、账号及设备兼容性条件，也不保证特定网络上的所有 Apple 端点均可达。尚未做用户设备的真机验证。
+
+### v3.3.3 历史维护记录
 
 本轮维护覆盖两个 Shadowrocket 主配置、全部 43 个模块和 21 个脚本的静态 / 安全检查。Loon 配置、插件和规则产物未改动；两端共用的脚本修复也会作用于引用同一脚本的 Loon 插件。
 
@@ -53,7 +65,7 @@ iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去
 
 ## Loon 版
 
-分流规则与 Shadowrocket 懒人版完全一致（测试逐域名比对），去广告整合了[可莉插件](https://hub.kelee.one)。
+分流共用基础规则；自 Shadowrocket v3.3.4 起 Apple 服务策略有意不同（两端分别测试），去广告整合了[可莉插件](https://hub.kelee.one)。
 
 **1. 配置**：配置 → 从 URL 下载配置，粘贴：
 
@@ -77,7 +89,7 @@ iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去
 
 ## 分流说明
 
-- 按 App 清单逐个校验（`tests/fixtures/app-routing.json`）：Google / YouTube / Telegram / X / Meta / TikTok / Steam / Spotify / PayPal / Edge / Apple Developer / AltStore 等走代理；Klook / Price / B&O / Lightroom / Canva / Zoom / Notion / Xmind / Bark / TestFlight / Kimi / B站国际版及国内 App 直连。
+- 按 App 清单逐个校验（`tests/fixtures/app-routing.json`）：Google / YouTube / Telegram / X / Meta / TikTok / Steam / Spotify / PayPal / Edge / AltStore 等走代理；Apple Developer 自 v3.3.4 起随全部 Apple 服务直连；Klook / Price / B&O / Lightroom / Canva / Zoom / Notion / Xmind / Bark / TestFlight / Kimi / B站国际版及国内 App 直连。
 - 测试同时禁止策略互相矛盾、被更宽规则遮蔽而不生效的规则。
 - 直连提速：国内域名由 3700+ 条 `China_Domain`（DOMAIN-SET）直接命中，无需先做 DNS 再走 GEOIP；所有远程规则集的 IP 规则都带 `no-resolve`；测速组每 30 分钟测一次，减少后台唤醒。
 
@@ -90,6 +102,7 @@ iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去
 ```
 src/
   meta.js          版本号、CDN 地址
+  apple.js         仅小火箭：Apple 全直连、模块保护和本地链路规则
   profile.js       [General] / [Proxy Group] / [Host]
   loon.js          Loon 版：可莉插件清单、策略组、节点筛选
   rules/00,20-99   分流规则分段（进主配置）
@@ -106,5 +119,5 @@ tests/             校验、脚本行为、jq 改写与 App 分流清单测试
 ```bash
 npm run build   # 修改 src/ 后重新生成
 npm test        # 全部生成 / 静态模块安全边界、脚本沙箱语法、异常与行为回归（完整测试需要 jq）
-npm run check:remotes # 联网检查 42 个上游规则 URL、非空内容及基本格式（数量随规则变更）
+npm run check:remotes # 联网检查 43 个上游规则 URL、非空内容及基本格式（数量随规则变更）
 ```

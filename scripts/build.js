@@ -12,6 +12,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const meta = require(path.join(SRC, 'meta.js'));
 const profile = require(path.join(SRC, 'profile.js'));
+const apple = require(path.join(SRC, 'apple.js'));
 const loon = require(path.join(SRC, 'loon.js'));
 const buildLoon = require('./loon.js');
 
@@ -146,9 +147,10 @@ function mitmExcludes() {
 }
 
 // 主配置只负责分流；去广告（拒绝规则 / 重写 / 脚本 / MITM）全部在 adblock-ultimate 模块里
-function confRules(policyMap) {
+function confRules(policyMap, { appleProtection = true } = {}) {
   const routing = listFiles().filter((f) => !/^(00|10)-/.test(f)).flatMap((f) => ['', ...readList(f)]);
   let lines = [...readList('00-protect.list'), ...routing];
+  if (appleProtection) lines = apple.protect(lines);
   if (policyMap) lines = lines.map((l) => mapPolicy(l, policyMap));
   return dedupe(lines);
 }
@@ -265,25 +267,25 @@ function buildModules() {
     name: '全量去广告 (AdBlock Ultimate)',
     desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、拼多多、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含同源生成的 App 与浏览增强模块，请勿重复叠加；抖音 / TikTok / 微信 / BoxJS 等静态模块独立按需开启。需开启 HTTPS 解密。',
     category: '去广告',
-    rules: dedupe([...section('HTTPS 解密主机 QUIC 回落 TCP'), ...quicRules(units), ...criticalGuard(adblockRules(units)), ...adblockRules(units)]),
+    rules: dedupe([...apple.guardRules(), ...section('HTTPS 解密主机 QUIC 回落 TCP'), ...quicRules(units), ...criticalGuard(adblockRules(units)), ...adblockRules(units)]),
     rewrites: rewriteBody(units),
     bodyRewrites: bodyRewriteBody(units),
     scripts: scriptBody(units),
     // 末尾追加关键服务排除（-*.域名），即使叠加了其它带通配解密的模块，也不会解密银行 / 支付 / 12306 / 政务
-    mitm: [...mitmHosts(units), ...mitmExcludes()],
+    mitm: [...mitmHosts(units), ...mitmExcludes(), ...apple.mitmExcludes()],
   });
   files['modules/adblock.sgmodule'] = moduleText({
     name: '广告联盟拦截 (AdBlock Lite)',
     desc: '仅分流层拦截：AWAvenue 秋风规则 + 穿山甲 / 优量汇 / 百青藤 / 快手 / Sigmob 等广告联盟与遥测。无需 HTTPS 解密，零额外延迟。',
     category: '去广告',
-    rules: dedupe([...criticalGuard(readList('10-adblock.list')), AWAVENUE_RULE, ...readList('10-adblock.list')]),
+    rules: dedupe([...apple.guardRules(), ...criticalGuard(readList('10-adblock.list')), AWAVENUE_RULE, ...readList('10-adblock.list')]),
   });
   files['modules/awavenue.sgmodule'] = moduleText({
     name: 'AWAvenue 秋风广告规则',
     desc: '直接引用上游 TG-Twilight/AWAvenue-Ads-Rule 规则集（自动更新，不再内置过期副本）。',
     author: 'TG-Twilight',
     category: '去广告',
-    rules: [...criticalGuard([]), AWAVENUE_RULE],
+    rules: [...apple.guardRules(), ...criticalGuard([]), AWAVENUE_RULE],
   });
   const toProxy = (l) => mapPolicy(l, profile.AIO_POLICY);
   files['modules/ai-services.sgmodule'] = moduleText({
@@ -345,4 +347,4 @@ if (require.main === module) {
 }
 
 module.exports = {
-  AMDC_REWRITE, buildAll, loadApps, quicRule, mitmHosts, scriptLine, bodyLine, jqExpr, SCRIPT_BASE };
+  AMDC_REWRITE, buildAll, confRules, loadApps, quicRule, mitmHosts, scriptLine, bodyLine, jqExpr, SCRIPT_BASE };

@@ -1,0 +1,14 @@
+{
+  "sources": ["https://support.apple.com/101555", "https://support.apple.com/103229", "https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/AppleMusic/AppleMusic.list"],
+  "services": [
+    {"name":"Apple Developer / WWDC（无代理例外）", "hosts":["developer.apple.com","devimages-cdn.apple.com","devstreaming-cdn.apple.com","download.developer.apple.com"]},
+    {"name":"Apple Music 播放、封面、订阅", "hosts":["music.apple.com","amp-api.music.apple.com","aod-ssl.itunes.apple.com","aod.itunes.apple.com","audio-ssl.itunes.apple.com","audio.itunes.apple.com","mvod.itunes.apple.com","streamingaudio.itunes.apple.com","blobstore.apple.com","applemusic.com","www.applemusic.com","is1-ssl.mzstatic.com"]},
+    {"name":"Apple Account、认证、App Store、TestFlight", "hosts":["account.apple.com","appleid.apple.com","idmsa.apple.com","gsa.apple.com","identity.apple.com","apps.apple.com","itunes.apple.com","buy.itunes.apple.com","sandbox.itunes.apple.com","testflight.apple.com","appleid.cdn-apple.com"]},
+    {"name":"iCloud 云盘、照片、钥匙串、CloudKit 与国内服务", "hosts":["setup.icloud.com","gateway.icloud.com","p01-ckdatabase.icloud.com","www.icloud.com.cn","gateway.icloud.com.cn","cvws.icloud-content.com","api.apple-cloudkit.com","apple-livephotoskit.com","www.apzones.com","www.apple-dns.net"]},
+    {"name":"接力关联域、通用链接", "hosts":["app-site-association.cdn-apple.com","app-site-association.networking.apple"]},
+    {"name":"APNs 推送、iMessage 与 FaceTime", "hosts":["courier.push.apple.com","api.push.apple.com","init.push.apple.com","identity.ess.apple.com","init.ess.apple.com","configuration.apple.com"]},
+    {"name":"系统更新、激活、时间同步与联网检测", "hosts":["albert.apple.com","gs.apple.com","gdmf.apple.com","mesu.apple.com","appldnld.apple.com","updates.cdn-apple.com","time.apple.com","time-ios.apple.com","captive.apple.com"]},
+    {"name":"定位、地图、查找、天气与 Siri", "hosts":["gs-loc.apple.com","gsp-ssl.ls.apple.com","gspe1-ssl.ls.apple.cn","gateway.icloud.com","weather-data.apple.com","guzzoni.apple.com","api.smoot.apple.com"]},
+    {"name":"Safari 安全浏览与 Apple 专用计算中继", "hosts":["token.safebrowsing.apple","apple-relay.apple.com","apple-relay.cloudflare.com","apple-relay.fastly-edge.com","cp4.cloudflare.com"]}
+  ]
+}

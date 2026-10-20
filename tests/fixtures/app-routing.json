@@ -61,7 +61,8 @@
   },
   {
    "app": "Developer",
-   "expect": "PROXY",
+   "expect": "DIRECT",
+   "loonExpect": "PROXY",
    "hosts": [
     "developer.apple.com",
     "devstreaming-cdn.apple.com",

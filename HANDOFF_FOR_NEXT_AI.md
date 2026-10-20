@@ -1,5 +1,13 @@
 # 维护说明（v3）
 
+## v3.3.4：最新决定——Shadowrocket Apple 一律 DIRECT
+- `src/apple.js` 为 SR 专用保护来源：所有 Apple 服务包括 Developer / WWDC 均直连，不再有代理例外；历史 v3.3.2 的反向旁路修复策略已被本次用户决定覆盖。
+- `confRules()` 默认施加 Apple 补丁，`appleProtection: false` 仅用于测试 Loon 的既有共享基线，不用于 SR 产物。Loon 产物保持不变，不能再宣传两端 Apple 策略完全一致。
+- 基础服务使用显式 DIRECT + real IP；Apple_Domain 完整域名集补充其它 Apple 域名；Apple.list 也固定 DIRECT。不要恢复可切换到 PROXY 的苹果策略组。
+- `apple.guardRules()` 也置于三个聚合去广告模块最前，以免模块先于主配置抢先拒绝；全量模块附加 Apple MITM 根域及子域排除。
+- 17/8 和 *.apple.com 恢复旁路，增加 IPv6 ULA / 回环旁路；不以全网端口直连替代本地网络保护。不改动本轮无关的 STUN / 隐私设置。
+- `tests/apple-services.js` 和 `tests/fixtures/apple-services.json` 必须验证 DIRECT 本身，不能只接受某个策略组“默认直连”。Developer 在 app-routing.json 的 expect 为 DIRECT，loonExpect 保留 Loon 原基线 PROXY。
+
 ## v3.3.3：Shadowrocket 全组件维护
 - `meta.shadowrocketVersion` 同时用于 SR 主配置和生成模块；`meta.version` 继续只控制 Loon 产物。不要升级 Loon 产物版本来发布 SR 补丁。
 - `tests/maintenance.js` 发现并检查全部 `.sgmodule`，包含不参与构建的 9 个静态模块；新静态模块必须满足脚本超时、更新间隔、资源限制和 MITM / QUIC 安全边界。

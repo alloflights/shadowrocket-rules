@@ -1,6 +1,7 @@
 // [General] / [Proxy Group] / [Host] 的唯一数据源
 const fs = require('fs');
 const path = require('path');
+const apple = require('./apple');
 
 // 关键服务域名：唯一来源 src/rules/05-critical.list
 const CRITICAL = fs.readFileSync(path.join(__dirname, 'rules', '05-critical.list'), 'utf8')
@@ -34,23 +35,28 @@ const TUN_EXCLUDED = [
   'fe80::/10', 'ff00::/8', 'ff02::fb/128',
 ];
 
-// 仅 Shadowrocket 使用：显式代理域名必须能进入规则引擎。
-// Loon 仍使用上面的共享基础列表，本补丁不改变其生成产物。
-const SR_SKIP_PROXY = SKIP_PROXY.filter((p) => !['*.apple.com', '17.0.0.0/8'].includes(p));
-const SR_TUN_EXCLUDED = TUN_EXCLUDED.filter((p) => p !== '17.0.0.0/8');
+// SR 最新用户决策：Apple 一律直连；共享基础列表继续供 Loon 使用。
+const SR_SKIP_PROXY = [...new Set([
+  ...SKIP_PROXY,
+  ...apple.DIRECT_SUFFIXES.flatMap((d) => [d, `*.${d}`]), ...apple.DIRECT_HOSTS,
+])];
+const SR_REAL_IP = [...new Set([
+  ...ALWAYS_REAL_IP, ...apple.DIRECT_SUFFIXES.flatMap((d) => [d, `*.${d}`]), ...apple.DIRECT_HOSTS,
+])];
+const SR_TUN_EXCLUDED = [...new Set([...TUN_EXCLUDED, '::1/128', 'fc00::/7'])];
 
 function general(updateUrl) {
   return `[General]
 bypass-system = true
 
 # 跳过代理：局域网、部分 Apple 核心主机及银行 / 支付等关键服务。
-# 不整站旁路 *.apple.com：Developer / WWDC CDN 按规则走代理，其余 Apple 服务默认直连。
+# Apple 全直连：包括 Developer / WWDC；恢复 apple.com 与 Apple 公网段旁路，不保留代理例外。
 skip-proxy = ${[...SR_SKIP_PROXY, ...criticalPatterns()].join(', ')}
 
 # 真实 IP：Apple 认证 / 推送、微软邮件、NTP / STUN 不使用虚拟 IP，避免握手失败与时间同步异常。
-always-real-ip = ${ALWAYS_REAL_IP.join(', ')}
+always-real-ip = ${SR_REAL_IP.join(', ')}
 
-# TUN 旁路：保留局域网、链路本地和组播；Apple 公网不整段旁路，避免覆盖显式代理规则。
+# TUN 旁路：Apple 公网 17/8、局域网、IPv6 链路本地 / ULA 与组播不进入隧道。
 tun-excluded-routes = ${SR_TUN_EXCLUDED.join(', ')}
 
 # DNS：直连流量用运营商级 UDP 公共 DNS（阿里 + 腾讯），首包无需 TLS/HTTP 握手，比 DoH 少 1~2 个 RTT。
@@ -120,7 +126,6 @@ Facebook = select,PROXY,${ALL},policy-select-name=PROXY
 PayPal = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
 Amazon = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
 # ---------- 平台服务 ----------
-苹果服务 = select,DIRECT,PROXY,${ALL},policy-select-name=DIRECT
 谷歌服务 = select,PROXY,${ALL},policy-select-name=PROXY
 微软服务 = select,DIRECT,PROXY,${ALL},policy-select-name=DIRECT
 哔哩哔哩 = select,DIRECT,PROXY,香港节点,台湾节点,policy-select-name=DIRECT

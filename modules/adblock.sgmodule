@@ -4,9 +4,51 @@
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!category=去广告
 #!system=ios
-# v3.3.3 · 由 scripts/build.js 自动生成，请勿直接修改
+# v3.3.4 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
+# Apple 基础服务固定 DIRECT；不受旧「苹果服务」策略选择影响
+DOMAIN,captive.apple.com,DIRECT
+DOMAIN-SUFFIX,push.apple.com,DIRECT
+DOMAIN,developer.apple.com,DIRECT
+DOMAIN,devimages-cdn.apple.com,DIRECT
+DOMAIN,devstreaming-cdn.apple.com,DIRECT
+DOMAIN-SUFFIX,apple.com,DIRECT
+DOMAIN-SUFFIX,apple.com.cn,DIRECT
+DOMAIN-SUFFIX,apple.cn,DIRECT
+DOMAIN-SUFFIX,apple,DIRECT
+DOMAIN-SUFFIX,icloud.com,DIRECT
+DOMAIN-SUFFIX,icloud.com.cn,DIRECT
+DOMAIN-SUFFIX,icloud-content.com,DIRECT
+DOMAIN-SUFFIX,apzones.com,DIRECT
+DOMAIN-SUFFIX,me.com,DIRECT
+DOMAIN-SUFFIX,itunes.com,DIRECT
+DOMAIN-SUFFIX,applemusic.com,DIRECT
+DOMAIN-SUFFIX,mzstatic.com,DIRECT
+DOMAIN-SUFFIX,cdn-apple.com,DIRECT
+DOMAIN-SUFFIX,aaplimg.com,DIRECT
+DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT
+DOMAIN-SUFFIX,apple-dns.net,DIRECT
+DOMAIN-SUFFIX,apple-livephotoskit.com,DIRECT
+DOMAIN-SUFFIX,apple-mapkit.com,DIRECT
+DOMAIN,apple-relay.cloudflare.com,DIRECT
+DOMAIN,apple-relay.fastly-edge.com,DIRECT
+DOMAIN,cp4.cloudflare.com,DIRECT
+# 接力 / AirDrop / AirPlay：局域网、AWDL 链路本地与组播直连，不全局放行特定端口
+DOMAIN-SUFFIX,local,DIRECT
+IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+IP-CIDR6,::1/128,DIRECT,no-resolve
+IP-CIDR6,fe80::/10,DIRECT,no-resolve
+IP-CIDR6,fc00::/7,DIRECT,no-resolve
+IP-CIDR6,ff00::/8,DIRECT,no-resolve
+IP-CIDR,17.0.0.0/8,DIRECT,no-resolve
+DOMAIN-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Apple/Apple_Domain.list,DIRECT
 # ==================== 关键服务保护（先于第三方广告规则，防止误杀登录 / 支付 / 购票） ====================
 DOMAIN,ad.12306.cn,REJECT
 DOMAIN-SUFFIX,m1.ad.10010.com,REJECT

@@ -232,31 +232,27 @@ const globMatches = (pattern, host) => new RegExp('^' + pattern.replace(/[.+?^${
 for (const rel of CONFS) {
   const text = files[rel];
   const setting = (key) => (sectionOf(text, 'General').find((l) => l.startsWith(`${key} = `)) || '').split(' = ')[1].split(',').map((x) => x.trim());
-  test(`${rel}: Apple Developer 代理域名不被 skip-proxy 提前旁路`, () => {
+  test(`${rel}: Apple Developer / WWDC 也直连，不保留代理例外`, () => {
     const rules = body(sectionOf(text, 'Rule'));
     const skip = setting('skip-proxy');
     for (const host of ['developer.apple.com', 'devimages-cdn.apple.com', 'devstreaming-cdn.apple.com']) {
-      assert(routeOf(rules, host).policy === 'PROXY', `${host} 应走代理`);
-      assert(!skip.some((p) => globMatches(p, host)), `${host} 被 skip-proxy 旁路`);
+      assert(routeOf(rules, host).policy === 'DIRECT', `${host} 应直连`);
+      assert(skip.some((p) => globMatches(p, host)), `${host} 应旁路`);
     }
   });
-  test(`${rel}: Apple 公网不整段绕过 TUN，保留局域网和链路本地保护`, () => {
+  test(`${rel}: Apple 公网、局域网、链路本地保留 TUN 旁路`, () => {
     const excluded = setting('tun-excluded-routes');
     const skip = setting('skip-proxy');
-    for (const ip of ['17.1.2.3', '17.253.144.10']) {
-      for (const entry of [...excluded, ...skip].filter((p) => /^\d+\.\d+\.\d+\.\d+\/\d+$/.test(p))) {
-        assert(!ipInCidr(ip, entry), `${ip} 被 ${entry} 整段旁路`);
-      }
-    }
-    for (const entry of ['10.0.0.0/8', '192.168.0.0/16', 'fe80::/10', 'ff00::/8']) assert(excluded.includes(entry), `缺少 ${entry}`);
+    assert(excluded.includes('17.0.0.0/8') && skip.includes('17.0.0.0/8'), 'Apple 公网段未旁路');
+    for (const entry of ['10.0.0.0/8', '192.168.0.0/16', '169.254.0.0/16', 'fe80::/10', 'fc00::/7', 'ff00::/8']) assert(excluded.includes(entry), `缺少 ${entry}`);
   });
-  test(`${rel}: Apple 核心服务仍显式直连或使用默认直连策略`, () => {
+  test(`${rel}: Apple 核心服务固定 DIRECT，不受策略组选择影响`, () => {
     const rules = body(sectionOf(text, 'Rule'));
     for (const host of ['captive.apple.com', 'courier.push.apple.com', 'gsa.apple.com', 'apps.apple.com', 'testflight.apple.com', 'setup.icloud.com']) {
       const hit = routeOf(rules, host);
-      assert(hit && ['DIRECT', '苹果服务'].includes(hit.policy), `${host} 未受保护`);
+      assert(hit && hit.policy === 'DIRECT', `${host} 未受保护`);
     }
-    if (rel.includes('LazyGroup')) assert(text.includes('苹果服务 = select,DIRECT,'), '苹果服务应默认直连');
+    assert(!rules.some((l) => /,苹果服务(?:,|$)/.test(l)), '不应引用可切换策略组');
   });
 }
 test('Shadowrocket：Claude / Gemini 默认使用 fallback 稳定线路而非 url-test 测速组', () => {
@@ -654,11 +650,11 @@ test('Loon：自研远程规则文件只含域名 / IP 规则，不带策略，I
   }
 });
 
-// 路由等价：Shadowrocket 懒人版按顺序匹配；Loon 依次匹配 本地 → 远程（插件只有拒绝规则，比较时忽略拒绝）。
+// 路由等价：Loon 与共享基线比较；SR 的 Apple 全直连补丁由 apple-services.js 独立验证。
 // 两边都跳过 RULE-SET（内容未知），再单独校验每条显式规则前面「不同策略的规则集」完全相同。
 const srPol = (pol) => (pol === 'PROXY' ? loonSrc.PROXY : pol);
 const srSeq = [];
-for (const l of body(sectionOf(files['Shadowrocket_LazyGroup_Merged.conf'], 'Rule'))) {
+for (const l of body(build.confRules(null, { appleProtection: false }))) {
   const p = l.split(',');
   if (p[0] === 'RULE-SET' || p[0] === 'DOMAIN-SET') srSeq.push({ ruleSet: p[1].replace('/rule/Shadowrocket/', '/rule/Loon/').replace('/rule/QuantumultX/', '/rule/Loon/'), policy: srPol(p[2]) });
   else if (/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN)$/.test(p[0])) srSeq.push({ type: p[0], value: p[1], policy: srPol(p[2]) });
@@ -679,7 +675,7 @@ for (const r of loonRemote.slice(1)) {
   }
 }
 const toLines = (seq) => seq.filter((e) => !e.ruleSet).map((e) => `${e.type},${e.value},${e.policy}`);
-test('Loon：分流与 Shadowrocket 懒人版逐域名等价', () => {
+test('Loon：按共享基线逐域名等价（SR Apple 全直连补丁单独验证）', () => {
   const sr = toLines(srSeq);
   const lo = toLines(loonSeq);
   const hosts = new Set(appRouting.apps.flatMap((a) => a.hosts));
@@ -697,7 +693,7 @@ test('Loon：分流与 Shadowrocket 懒人版逐域名等价', () => {
   }
   assert(n > 1500, `样本过少: ${n}`);
 });
-test('Loon：规则集顺序不变，且每条显式规则之前的不同策略规则集与 Shadowrocket 一致', () => {
+test('Loon：保持共享基线的规则集及屏障顺序（SR Apple 补丁独立）', () => {
   const rs = (seq) => seq.filter((e) => e.ruleSet).map((e) => e.ruleSet);
   assert(JSON.stringify(rs(srSeq)) === JSON.stringify(rs(loonSeq)), '规则集顺序不同');
   const before = (seq) => {
@@ -727,11 +723,12 @@ test('Loon：分块合并逻辑（不同策略的重叠规则不会被跨越）'
 {
   const AIO = { ...require('../src/profile.js').AIO_POLICY, [loonSrc.PROXY]: 'PROXY', DIRECT: 'DIRECT' };
   const lo = toLines(loonSeq);
-  test('Loon：用户应用清单分流全部正确', () => {
-    for (const { app, expect, hosts } of appRouting.apps) {
+  test('Loon：用户应用清单按其客户端基线分流正确', () => {
+    for (const { app, expect, loonExpect, hosts } of appRouting.apps) {
+      const target = loonExpect || expect;
       for (const host of hosts) {
         const r = routeOf(lo, host);
-        assert(r && AIO[r.policy] === expect, `${app} ${host}: ${r && r.rule} 应为 ${expect}`);
+        assert(r && AIO[r.policy] === target, `${app} ${host}: ${r && r.rule} 应为 ${target}`);
       }
     }
   });
@@ -814,6 +811,7 @@ test('Loon：可莉插件地址规范，不含解密关键服务的插件', () =
 }
 
 require('./maintenance')({ test, assert, ROOT, files, read, body, sectionOf });
+require('./apple-services')({ test, assert, files, read, body, sectionOf, routeOf, globMatches });
 
 console.log(`\n${pass} 通过, ${fail} 失败`);
 process.exit(fail ? 1 : 0);
