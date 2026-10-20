@@ -63,7 +63,7 @@ DOMAIN-SUFFIX,qpic.cn,DIRECT
 DOMAIN-SUFFIX,gtimg.cn,DIRECT
 DOMAIN-SUFFIX,gtimg.com,DIRECT
 RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Tencent/Tencent.list,DIRECT
-RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/QuantumultX/WeChat/WeChat.list,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/WeChat/WeChat.list,DIRECT
 
 # 6. 美团 / 大众点评 / 猫眼
 DOMAIN-SUFFIX,meituan.com,DIRECT

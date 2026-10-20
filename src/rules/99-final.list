@@ -2,8 +2,10 @@
 RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/TikTok/TikTok.list,TikTok
 
 # 局域网 / 国内 / 海外 大规则集（域名优先匹配，绝大多数国内流量在这里就以 DIRECT 命中，无需额外 DNS 查询）
+# China.list 上游只含 IP/UA 等少量规则，3700+ 国内域名在 China_Domain（DOMAIN-SET，查找为哈希/后缀树，比逐条 RULE-SET 更省电）
 RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Lan/Lan.list,DIRECT
 RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/China/China.list,DIRECT
+DOMAIN-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/China/China_Domain.list,DIRECT
 RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Global/Global.list,PROXY
 
 # 规则都没命中的域名：本地解析一次，解析到中国大陆 IP 就直连（保证冷门国内服务 / 政务 / 银行仍走直连）

@@ -81,7 +81,7 @@ const ALL = REGIONS.map(([n]) => n).join(',');
 const proxyGroup = `[Proxy Group]
 # ---------- 总出口（对应 Shadowrocket 的 PROXY） ----------
 ${PROXY} = select,自动选择,${ALL},手动切换,DIRECT
-自动选择 = url-test,全部,url=${TEST_URL},interval=600,tolerance=100
+自动选择 = url-test,全部,url=${TEST_URL},interval=1800,tolerance=100
 手动切换 = select,全部
 # ---------- AI 专线（固定节点，避免 IP 漂移触发风控；Gemini / Claude 不要用香港） ----------
 OpenAI = select,AI稳定线路,美国节点,日本节点,新加坡节点,台湾节点,${PROXY}
@@ -113,7 +113,7 @@ Amazon = select,${PROXY},DIRECT,${ALL}
 # AI稳定线路：fallback（按顺序取第一个可用节点，不按延迟跳变），排除香港与信息节点
 AI稳定线路 = fallback,AI可用,url=${TEST_URL},interval=1800,max-timeout=3000
 # 地区自动测速：公差 100ms，避免频繁切线
-${REGIONS.map(([n, f]) => `${n} = url-test,${f},url=${TEST_URL},interval=600,tolerance=100`).join('\n')}
+${REGIONS.map(([n, f]) => `${n} = url-test,${f},url=${TEST_URL},interval=1800,tolerance=100`).join('\n')}
 `;
 
 module.exports = { KELEE_PLUGINS, PROXY, SLUG, remoteFilter, proxyGroup, TEST_URL };

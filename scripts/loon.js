@@ -186,7 +186,7 @@ module.exports = function buildLoon(h) {
       const t = raw.trim();
       if (!t || t.startsWith('#')) continue;
       const p = t.split(',');
-      if (p[0] === 'RULE-SET') entries.push({ ruleSet: toLoonRuleSet(p[1]), policy: mapPol(p[2]) });
+      if (p[0] === 'RULE-SET' || p[0] === 'DOMAIN-SET') entries.push({ ruleSet: toLoonRuleSet(p[1]), policy: mapPol(p[2]) });
       else if (p[0] === 'DST-PORT') localTail.push(`DEST-PORT,${p[1]},${mapPol(p[2])}`);
       else if (p[0] === 'GEOIP' || p[0] === 'FINAL') localTail.push(t.split(',').map((x, i) => (i === p.length - 1 || (p[0] === 'GEOIP' && i === 2) ? mapPol(x) : x)).join(','));
       else if (isDomainType(p[0]) || isIpType(p[0])) entries.push({ ...parseRule(t, f), policy: mapPol(p[2]) });

@@ -85,13 +85,24 @@ for (const [rel, text] of allTexts) {
   });
   test(`${rel}: 规则格式`, () => {
     for (const l of rules) {
-      assert(/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN|GEOIP|USER-AGENT|URL-REGEX|RULE-SET|AND|OR|NOT|FINAL|DST-PORT),/.test(l), `未知规则: ${l}`);
+      assert(/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN|GEOIP|USER-AGENT|URL-REGEX|RULE-SET|DOMAIN-SET|AND|OR|NOT|FINAL|DST-PORT),/.test(l), `未知规则: ${l}`);
       if (/^(IP-CIDR6?|IP-ASN),/.test(l) && !/^IP-CIDR,(127|10|192\.168|172\.16|100\.64|17)\./.test(l)) {
         // IP 规则放在前面但不带 no-resolve 会让每个域名都先做一次 DNS 查询
         assert(/no-resolve$/.test(l), `IP 规则缺少 no-resolve: ${l}`);
       }
       assert(!/^DOMAIN-KEYWORD,(muse|colab|developerprofiles|gtimg|qpic),/.test(l), `过宽的关键词规则: ${l}`);
     }
+  });
+  test(`${rel}: 远程规则集均为 Shadowrocket 格式，国内域名集完整`, () => {
+    for (const l of rules.filter((x) => /^(RULE-SET|DOMAIN-SET),/.test(x))) {
+      // QuantumultX 格式（HOST/IP-ASN 无 no-resolve）在小火箭里会让后续所有请求先做 DNS 查询
+      assert(!/\/rule\/(QuantumultX|Loon|Surge|Clash)\//.test(l), `非 Shadowrocket 格式规则集: ${l}`);
+    }
+    if (!rel.endsWith('.conf')) return;
+    const ci = rules.findIndex((x) => x.includes('/China/China.list,DIRECT'));
+    const di = rules.findIndex((x) => x.startsWith('DOMAIN-SET,') && x.includes('/China/China_Domain.list,DIRECT'));
+    const gi = rules.findIndex((x) => x.startsWith('GEOIP,CN'));
+    assert(ci >= 0 && di > ci && di < gi, 'China_Domain 应紧跟 China.list 且在 GEOIP 之前');
   });
   test(`${rel}: 规则无重复`, () => {
     const seen = new Set();
@@ -599,7 +610,7 @@ const srPol = (pol) => (pol === 'PROXY' ? loonSrc.PROXY : pol);
 const srSeq = [];
 for (const l of body(sectionOf(files['Shadowrocket_LazyGroup_Merged.conf'], 'Rule'))) {
   const p = l.split(',');
-  if (p[0] === 'RULE-SET') srSeq.push({ ruleSet: p[1].replace('/rule/Shadowrocket/', '/rule/Loon/').replace('/rule/QuantumultX/', '/rule/Loon/'), policy: srPol(p[2]) });
+  if (p[0] === 'RULE-SET' || p[0] === 'DOMAIN-SET') srSeq.push({ ruleSet: p[1].replace('/rule/Shadowrocket/', '/rule/Loon/').replace('/rule/QuantumultX/', '/rule/Loon/'), policy: srPol(p[2]) });
   else if (/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|IP-CIDR6|IP-ASN)$/.test(p[0])) srSeq.push({ type: p[0], value: p[1], policy: srPol(p[2]) });
 }
 const loonSeq = [];

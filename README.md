@@ -62,6 +62,7 @@ iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去
 
 - 按 App 清单逐个校验（`tests/fixtures/app-routing.json`）：Google / YouTube / Telegram / X / Meta / TikTok / Steam / Spotify / PayPal / Edge / Apple Developer / AltStore 等走代理；Klook / Price / B&O / Lightroom / Canva / Zoom / Notion / Xmind / Bark / TestFlight / Kimi / B站国际版及国内 App 直连。
 - 测试同时禁止策略互相矛盾、被更宽规则遮蔽而不生效的规则。
+- 直连提速：国内域名由 3700+ 条 `China_Domain`（DOMAIN-SET）直接命中，无需先做 DNS 再走 GEOIP；所有远程规则集的 IP 规则都带 `no-resolve`；测速组每 30 分钟测一次，减少后台唤醒。
 
 ## 致谢
 

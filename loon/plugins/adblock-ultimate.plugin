@@ -3,7 +3,7 @@
 #!author=alloflights
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!tag=去广告
-#!date=v3.3.0
+#!date=v3.3.1
 # 由 scripts/build.js 根据 src/ 自动生成，请勿直接修改
 
 [Rule]

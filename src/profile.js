@@ -125,7 +125,7 @@ Amazon = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
 # AI稳定线路：fallback（非测速跳变），排除香港与信息节点，除非节点彻底超时否则不换 IP
 AI稳定线路 = fallback,url=http://www.gstatic.com/generate_204,interval=1800,timeout=5,policy-regex-filter=${filter(NON_HK_AI)}
 # 地区自动测速组：公差 100ms，避免频繁切线
-${REGIONS.map(([n, k]) => `${n} = url-test,url=http://www.gstatic.com/generate_204,interval=600,tolerance=100,timeout=5,select=0,policy-regex-filter=${filter(k)}`).join('\n')}
+${REGIONS.map(([n, k]) => `${n} = url-test,url=http://www.gstatic.com/generate_204,interval=1800,tolerance=100,timeout=5,select=0,policy-regex-filter=${filter(k)}`).join('\n')}
 `;
 
 // AllInOne（无策略组）版本的策略映射
