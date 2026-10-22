@@ -420,7 +420,7 @@ test('阿里系 AMDC：全局阻断明文调度与调度域名，支付宝不受
 });
 test('去广告总模块包含全部 App 的重写 / 脚本 / MITM', () => {
   const text = files['modules/adblock-ultimate.sgmodule'];
-  for (const u of build.loadApps()) {
+  for (const u of build.loadApps().map(require('../src/shadowrocket').adapt)) {
     for (const r of u.rewrites || []) assert(text.includes(r), `${u.id} 重写缺失: ${r}`);
     for (const sc of u.scripts || []) assert(text.includes(`${sc.name} = `), `${u.id} 脚本缺失: ${sc.name}`);
     for (const b of u.bodyRewrites || []) assert(text.includes(build.bodyLine(b)), `${u.id} Body Rewrite 缺失: ${b.pattern}`);
@@ -801,15 +801,17 @@ test('Loon：可莉插件地址规范，不含解密关键服务的插件', () =
       }
     });
   }
-  test('Loon：全量插件的重写 / jq / 脚本条数与 Shadowrocket 全量模块一致', () => {
-    const sr = files['modules/adblock-ultimate.sgmodule'];
+  test('Loon：全量插件仍完整覆盖共享基线，不引入小火箭专用覆盖', () => {
     const lo = files['loon/plugins/adblock-ultimate.plugin'];
     const count = (t, sec) => body(sectionOf(t, sec)).length;
-    assert(count(lo, 'Rewrite') === count(sr, 'URL Rewrite') + count(sr, 'Body Rewrite'), '重写条数不一致');
-    assert(count(lo, 'Script') === count(sr, 'Script'), '脚本条数不一致');
+    assert(count(lo, 'Rewrite') === 1 + units.reduce((n, u) => n + (u.rewrites || []).length + (u.bodyRewrites || []).length, 0), 'Loon 基线重写缺失');
+    assert(count(lo, 'Script') === units.reduce((n, u) => n + (u.scripts || []).length, 0), 'Loon 基线脚本缺失');
+    assert(!/-sr\.js/.test(lo), 'Loon 引用了 SR 专用脚本');
+    for (const u of units) for (const sc of u.scripts || []) assert(lo.includes(`/${sc.script},`), `Loon 缺少原脚本 ${sc.script}`);
   });
 }
 
+require('./app-fixes')({ test, assert, ROOT, files, read, body, sectionOf });
 require('./maintenance')({ test, assert, ROOT, files, read, body, sectionOf });
 require('./apple-services')({ test, assert, files, read, body, sectionOf, routeOf, globMatches });
 

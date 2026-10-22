@@ -4,7 +4,7 @@
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!category=去广告
 #!system=ios
-# v3.3.4 · 由 scripts/build.js 自动生成，请勿直接修改
+# v3.3.5 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
 # Apple 基础服务固定 DIRECT；不受旧「苹果服务」策略选择影响
@@ -49,6 +49,20 @@ IP-CIDR6,fc00::/7,DIRECT,no-resolve
 IP-CIDR6,ff00::/8,DIRECT,no-resolve
 IP-CIDR,17.0.0.0/8,DIRECT,no-resolve
 DOMAIN-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/Apple/Apple_Domain.list,DIRECT
+# QQ / 微信原生解析与共用媒体保护；不放行整个 qq.com / weixin.qq.com
+DOMAIN,dns.weixin.qq.com,DIRECT
+DOMAIN,dns.weixin.qq.com.cn,DIRECT
+DOMAIN,aedns.weixin.qq.com,DIRECT
+DOMAIN-SUFFIX,qpic.cn,DIRECT
+DOMAIN-SUFFIX,qlogo.cn,DIRECT
+DOMAIN-SUFFIX,wx.qq.com,DIRECT
+DOMAIN-SUFFIX,wxapp.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,vweixinf.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,vweixinthumb.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,up-hl.3g.qq.com,DIRECT
+DOMAIN-SUFFIX,yun-hl.3g.qq.com,DIRECT
+DOMAIN-SUFFIX,wx.gtimg.com,DIRECT
+DOMAIN-SUFFIX,wxs.qq.com,DIRECT
 # ==================== 关键服务保护（先于第三方广告规则，防止误杀登录 / 支付 / 购票） ====================
 DOMAIN,ad.12306.cn,REJECT
 DOMAIN-SUFFIX,m1.ad.10010.com,REJECT
@@ -323,8 +337,6 @@ DOMAIN-SUFFIX,wmzfylgdsz.com,REJECT
 # 5. 百度网盘、肯德基、微信朋友圈广告阻断与第三方ADX
 DOMAIN,sofire.baidu.com,REJECT
 DOMAIN,dynamicad.kfc.com.cn,REJECT
-DOMAIN-SUFFIX,wxsnsdy.wxs.qq.com,REJECT
-DOMAIN-SUFFIX,wxsnsdythumb.wxs.qq.com,REJECT
 DOMAIN-SUFFIX,oth.eve.mdt.qq.com,REJECT
 DOMAIN,badjs.weixin.qq.com,REJECT
 DOMAIN,ad.weixin.qq.com,REJECT
@@ -482,9 +494,6 @@ DOMAIN,httpdns-v6.gslb.yy.com,REJECT
 URL-REGEX,"^http:\/\/103\.44\.58\.64\/md\?",REJECT
 URL-REGEX,"^http:\/\/cdn\.wup\.huya\.com\/launch\/queryHttpDns",REJECT
 DOMAIN,dns2.q2cdn.com,REJECT
-DOMAIN,dns.weixin.qq.com,REJECT
-DOMAIN,dns.weixin.qq.com.cn,REJECT
-DOMAIN,aedns.weixin.qq.com,REJECT
 IP-CIDR,39.156.140.30/32,REJECT,no-resolve
 IP-CIDR,39.156.140.47/32,REJECT,no-resolve
 IP-CIDR,39.156.140.245/32,REJECT,no-resolve

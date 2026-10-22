@@ -1,5 +1,16 @@
 # 维护说明（v3）
 
+## v3.3.5：Shadowrocket 应用兼容修复
+- `src/shadowrocket.js` 只在 SR 构建应用：`adapt()` 派生 App 覆盖，不修改 `src/apps` 源对象；`guardRules()` / `realIP()` 保护原生微信 DNS 和 QQ / 微信共用媒体；`filterAdRules()` 只移除五条已替代误拦截，保留 Loon 共享广告源。
+- `routing()` 同时将已返回 403 的 DouYin jsDelivr 链接换成 GitHub raw；不要为了 SR 变更修改 Loon 基线。
+- `zhihu-sr.js`、`xiaohongshu-sr.js`、`goofish-sr.js`、`ali-splash-sr.js` 为新分叉，Loon 继续引用原脚本。原文件必须保持不变，除非用户另行授权维护 Loon。
+- QQ / 微信不再封共享素材 CDN；保留 GDT 等明确广告域。主配置和聚合模块都必须有前置保护，独立微信静态模块也必须同步；不允许通过全站 skip-proxy、禁用公众号 MITM 或关闭 STUN 隐私机制实现“加速”。
+- 淘宝的三条 jq 替换为专用响应脚本，不能同时执行 jq 和 JS。视频查询只延续 guide-acs 原作用域，不扩展到普通商品视频；交易 / 聊天不接新脚本。闲鱼开屏保留成功信封，条件缓存只在已限定的开屏端点处理。未知结构和错误响应放行，不能声称离线缓存广告已被清除。
+- 小红书评论接口和媒体类型依据 README 中固定版本参考，独立实现；不修改作者标识，不删除签名参数，不维护跨笔记评论媒体缓存。烘焙水印无法在没有原图时还原，不承诺全版本。
+- 知乎空追踪字段与通用槽位不作为广告证据，正常问题附件 / 导航和分页必须保留；明确商业标记、SDK / MCN / 商品广告仍过滤。未知 commercial_api 不清空，分支匹配不读查询参数。
+- `tests/app-fixes.js` 新增合成行为回归；全量模块完整性按 SR 派生单元检查，Loon 按原始单元计数，不再要求两个客户端脚本数量相同。当前 816 项通过，43 个公开规则源可用；不代表用户真机已验证。
+
+
 ## v3.3.4：最新决定——Shadowrocket Apple 一律 DIRECT
 - `src/apple.js` 为 SR 专用保护来源：所有 Apple 服务包括 Developer / WWDC 均直连，不再有代理例外；历史 v3.3.2 的反向旁路修复策略已被本次用户决定覆盖。
 - `confRules()` 默认施加 Apple 补丁，`appleProtection: false` 仅用于测试 Loon 的既有共享基线，不用于 SR 产物。Loon 产物保持不变，不能再宣传两端 Apple 策略完全一致。

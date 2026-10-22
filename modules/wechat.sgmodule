@@ -1,14 +1,25 @@
 #!name=微信朋友圈与公众号广告阻断 (WeChat Moments Safe)
-#!desc=屏蔽微信朋友圈广告素材、视频流推流、广告追踪打点与优量汇投放。仅使用网络层规则，不解密微信主域名。广告和正常内容可能共用素材域名，如出现图片 / 视频异常请停用排查
+#!desc=屏蔽明确的优量汇广告投放与追踪；放行共用图片视频 CDN 和原生 DNS，不解密微信主域名。朋友圈共用 CDN 的广告不能安全地整域封禁。
 #!author=allofights
 #!system=ios
-# Shadowrocket v3.3.3 · 独立维护模块，统一纳入安全与脚本回归检查
+# Shadowrocket v3.3.5 · 独立维护模块，统一纳入安全与脚本回归检查
 #!category=应用净化
 
 [Rule]
-# 微信朋友圈广告动图与视频流 CDN 拦截
-DOMAIN-SUFFIX,wxsnsdy.wxs.qq.com,REJECT
-DOMAIN-SUFFIX,wxsnsdythumb.wxs.qq.com,REJECT
+# 共用媒体与原生 DNS 保护（必须先于广告规则）
+DOMAIN,dns.weixin.qq.com,DIRECT
+DOMAIN,dns.weixin.qq.com.cn,DIRECT
+DOMAIN,aedns.weixin.qq.com,DIRECT
+DOMAIN-SUFFIX,qpic.cn,DIRECT
+DOMAIN-SUFFIX,qlogo.cn,DIRECT
+DOMAIN-SUFFIX,wxs.qq.com,DIRECT
+DOMAIN-SUFFIX,wx.qq.com,DIRECT
+DOMAIN-SUFFIX,wxapp.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,vweixinf.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,vweixinthumb.tc.qq.com,DIRECT
+DOMAIN-SUFFIX,up-hl.3g.qq.com,DIRECT
+DOMAIN-SUFFIX,yun-hl.3g.qq.com,DIRECT
+DOMAIN-SUFFIX,wx.gtimg.com,DIRECT
 # 腾讯优量汇 (GDT) 商业广告投放与素材服务器
 DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT
 DOMAIN-SUFFIX,adsmind.ugdtimg.com,REJECT

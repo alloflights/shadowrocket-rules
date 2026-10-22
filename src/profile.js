@@ -41,7 +41,7 @@ const SR_SKIP_PROXY = [...new Set([
   ...apple.DIRECT_SUFFIXES.flatMap((d) => [d, `*.${d}`]), ...apple.DIRECT_HOSTS,
 ])];
 const SR_REAL_IP = [...new Set([
-  ...ALWAYS_REAL_IP, ...apple.DIRECT_SUFFIXES.flatMap((d) => [d, `*.${d}`]), ...apple.DIRECT_HOSTS,
+  ...ALWAYS_REAL_IP, ...require('./shadowrocket').realIP(), ...apple.DIRECT_SUFFIXES.flatMap((d) => [d, `*.${d}`]), ...apple.DIRECT_HOSTS,
 ])];
 const SR_TUN_EXCLUDED = [...new Set([...TUN_EXCLUDED, '::1/128', 'fc00::/7'])];
 
