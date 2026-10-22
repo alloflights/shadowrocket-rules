@@ -499,12 +499,13 @@
   },
   {
    "app": "Notion",
-   "expect": "DIRECT",
+   "expect": "PROXY",
    "hosts": [
     "www.notion.so",
     "www.notion.com",
     "img.notionusercontent.com"
-   ]
+   ],
+   "loonExpect": "DIRECT"
   },
   {
    "app": "OneDrive",

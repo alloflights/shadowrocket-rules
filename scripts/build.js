@@ -298,10 +298,10 @@ function buildModules() {
   });
   files['modules/overseas-top500.sgmodule'] = moduleText({
     name: '海外常用应用与网站分流',
-    desc: '海外资讯、学术、开发者云服务、流媒体、Edge / 必应与常见海外 TLD 走代理；Klook / Adobe / Canva / Zoom / Notion / Xmind 等国内可直连的境外品牌直连。',
+    desc: '海外资讯、学术、开发者云服务（含 Notion）、流媒体、Edge / 必应与常见海外 TLD 走代理；Klook / Adobe / Canva / Zoom / Xmind 等国内可直连的境外品牌直连。',
     category: '分流',
-    rules: dedupe(['30-academic.list', '40-overseas-apps.list', '50-dev-cloud.list', '60-global-media.list', '70-intl-tld.list']
-      .flatMap((f) => ['', ...readList(f)]).map(toProxy)),
+    rules: dedupe(sr.notionProxy(['30-academic.list', '40-overseas-apps.list', '50-dev-cloud.list', '60-global-media.list', '70-intl-tld.list']
+      .flatMap((f) => ['', ...readList(f)])).map(toProxy)),
   });
   return files;
 }

@@ -34,10 +34,40 @@ function adapt(u) {
 // Remove only the five obsolete SR rejections now explicitly protected above.
 // Keep the shared ad source byte-identical for Loon.
 const obsolete = new Set(['DOMAIN,dns.weixin.qq.com,REJECT', 'DOMAIN,dns.weixin.qq.com.cn,REJECT', 'DOMAIN,aedns.weixin.qq.com,REJECT', 'DOMAIN-SUFFIX,wxsnsdy.wxs.qq.com,REJECT', 'DOMAIN-SUFFIX,wxsnsdythumb.wxs.qq.com,REJECT']);
-const filterAdRules = lines => lines.filter(line => !obsolete.has(line.trim()));
+// Douyin / ByteDance ad, lead-form and telemetry hosts. Never touch feed,
+// comment, video, image, live or config hosts (feed cannot be MITM'd on 38.x).
+const DOUYIN_ADS = [
+  '# 抖音 / 字节系广告、线索表单与遥测补充（仅小火箭；不拦推荐、评论、视频、图片、直播和配置接口）',
+  'DOMAIN-SUFFIX,ad.zijieapi.com,REJECT', 'DOMAIN-SUFFIX,dsp.toutiao.com,REJECT', 'DOMAIN-SUFFIX,track.toutiao.com,REJECT',
+  'DOMAIN-SUFFIX,temai.snssdk.com,REJECT', 'DOMAIN-SUFFIX,pangle-b.io,REJECT', 'DOMAIN,lf-leads-fe-scm.bytecdn.com,REJECT',
+  'DOMAIN,log0-misc-lf.amemv.com,REJECT', 'DOMAIN,log0-misc-hl.amemv.com,REJECT', 'DOMAIN,mon0-misc-lf.amemv.com,REJECT',
+  'DOMAIN,logbk.amemv.com,REJECT', 'DOMAIN,log-hl.snssdk.com,REJECT', 'DOMAIN,xlog.snssdk.com,REJECT',
+  'DOMAIN,mon.zijieapi.com,REJECT', 'DOMAIN,os-mon.zijieapi.com,REJECT', 'DOMAIN,mcs.zijieapi.com,REJECT',
+  'DOMAIN,apmplus.volces.com,REJECT', 'DOMAIN,gator.volces.com,REJECT',
+];
+const filterAdRules = lines => [...lines.filter(line => !obsolete.has(line.trim())), ...DOUYIN_ADS];
+// Notion goes through the proxy on Shadowrocket (user decision); Loon keeps its baseline.
+const NOTION = ['notion.so', 'notion.site', 'notion.com', 'notion-static.com', 'notionusercontent.com'];
+const NOTION_EXTRA = ['DOMAIN-SUFFIX,notion.new,PROXY', 'DOMAIN-SUFFIX,makenotion.com,PROXY',
+  'DOMAIN,prod-files-secure.s3.us-west-2.amazonaws.com,PROXY', 'DOMAIN,http-inputs-notion.splunkcloud.com,PROXY'];
+function notionProxy(lines) {
+  const out = [];
+  for (const line of lines) {
+    const t = line.trim();
+    if (/^#\s*Notion /.test(t)) { out.push('# Notion 走代理'); continue; }
+    const m = t.match(/^DOMAIN-SUFFIX,([^,]+),DIRECT$/);
+    if (m && NOTION.includes(m[1])) {
+      out.push(`DOMAIN-SUFFIX,${m[1]},PROXY`);
+      if (m[1] === NOTION[NOTION.length - 1]) out.push(...NOTION_EXTRA);
+      continue;
+    }
+    out.push(line);
+  }
+  return out;
+}
 // jsDelivr currently returns 403 for this single list; SR uses the verified
 // upstream raw endpoint. Leave Loon's shared list and emitted files unchanged.
 function routing(lines) {
-  return [...guardRules(), ...lines.map(line => line.replace('https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/DouYin/DouYin.list', 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/DouYin/DouYin.list'))];
+  return [...guardRules(), ...notionProxy(lines).map(line => line.replace('https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/DouYin/DouYin.list', 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/DouYin/DouYin.list'))];
 }
-module.exports = { routing, filterAdRules, adapt, guardRules, realIP, MEDIA_SUFFIXES, DNS_HOSTS };
+module.exports = { routing, filterAdRules, notionProxy, DOUYIN_ADS, NOTION, NOTION_EXTRA, adapt, guardRules, realIP, MEDIA_SUFFIXES, DNS_HOSTS };
