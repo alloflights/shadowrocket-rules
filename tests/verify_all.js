@@ -813,6 +813,7 @@ test('Loon：可莉插件地址规范，不含解密关键服务的插件', () =
 
 require('./app-fixes')({ test, assert, ROOT, files, read, body, sectionOf });
 require('./maintenance')({ test, assert, ROOT, files, read, body, sectionOf });
+require('./douyin-probe')({ test, assert, files, read, body, sectionOf });
 require('./apple-services')({ test, assert, files, read, body, sectionOf, routeOf, globMatches });
 
 console.log(`\n${pass} 通过, ${fail} 失败`);

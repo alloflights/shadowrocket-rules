@@ -77,3 +77,9 @@
 - 直连提速：`dns-server = system,223.5.5.5,119.29.29.29`，**不要加 doh-server**（Loon 配了加密 DNS 就优先用它）；`ip-mode = ipv4-only`；`domain-reject-mode = DNS`。
 - jq 改写用 Loon 旧语法 `response-body-json-jq '...'`，脚本用旧语法 `http-response <正则> script-path=..., requires-body=true, binary-body-mode=true, timeout=10, tag=...`，脚本文件与 Shadowrocket 共用 `modules/scripts/`。尚未真机验证 Loon 的 jq 是否支持 `try ... catch`（只影响默认关闭的全量插件）。
 - 已知：blackmatrix7 的 `China.list` 上游目前只有 74 行（头部写 3752 条），两个客户端都靠自研 90-domestic 与 GEOIP,CN 兜底。
+
+## 抖音推荐接口临时测试（未发版、未接入全量模块）
+
+- `modules/douyin-probe.sgmodule` + `modules/scripts/douyin-probe-sr.js`：用户在 iOS 抖音 38.4.0 上临时开启，只读记录推荐接口能否解密、数据格式，以及带链接 / 广告标记视频的字段样本；不修改任何请求或响应，不保存查询参数、Cookie、链接地址。
+- 只解密 `api*-normal-*.amemv.com`、`aggr*-normal-*.amemv.com`；不碰 `api5-social-*`、视频 CDN、直播主机。报告页：Safari 打开 `https://api5-normal-zb.amemv.com/__sr_probe__/report`（`?reset=1` 清空）。
+- 目的：确认能否按“挂游戏下载链接”精确过滤推广视频而不误伤普通游戏视频。拿到真机报告前，不要据此发布过滤规则；测完应让用户关闭该模块，验证结束后可删除。
