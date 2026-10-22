@@ -1,139 +1,79 @@
-# Shadowrocket / Loon 分流 + 去广告
+# Shadowrocket / Loon 分流与去广告
 
-iPhone 用 Shadowrocket / Loon 配置：精确分流，App 开屏与信息流去广告。Loon 版见[下方](#loon-版)。
+适用于 iPhone 的分流配置与去广告模块，提供国内外应用分流、常见 App 去广告及浏览体验优化。
 
-## 小火箭 v3.3.5：聊天媒体、知乎可用性与去广告兼容修复
+## 功能概览
 
-**只更新 Shadowrocket；Loon 配置、插件、规则以及它们引用的原共享脚本均未改动。** Apple 服务继续全部直连，STUN / 隐私设置不变。
+- **智能分流**：国内应用直连，海外应用按规则使用代理；支持 AI、流媒体、社交等独立策略组。
+- **Apple 服务直连**：小火箭版的 Apple Music、iCloud、App Store、系统推送等 Apple 服务统一直连。
+- **应用去广告**：覆盖闲鱼、淘宝、京东、拼多多、知乎、微博、B 站、小红书等常见应用的部分开屏、信息流和弹窗广告。
+- **浏览与保存增强**：提供外链直跳、网页去打扰，以及部分应用的图片、视频保存优化。
+- **灵活选择**：可以使用全量去广告，也可以按需启用单 App 模块。
 
-- **QQ / 微信**：原生微信 DNS 及 QQ / 微信共用图片、视频 CDN 在第三方广告表之前 `DIRECT`，并使用真实 IP；移除小火箭中 3 条原生 DNS 和 2 条共用媒体误拦截。独立 `wechat.sgmodule` 同步修复。不旁路整个 `qq.com` / `weixin.qq.com`，优量汇、明确广告域名和公众号广告接口继续拦截。这能消除已定位的规则冲突，但不能保证所有网络的传输延迟。
-- **知乎**：空广告对象、空追踪数组、普通点击追踪、布局槽位和字符串 `"false"` 不再导致正常热榜卡片被删除；保留问题关联、正常附件和推荐分页。继续过滤显式广告、SDK / 商业卡、MCN 商品卡与广告跳转。接口分支只看路径，未知 `commercial_api` 不再一律清空；补齐 v4 热榜匹配。
-- **淘宝 / 闲鱼**：开屏兼容 ACS / H5 备用网关、对象和字符串型 MTop 数据；保留 `api` / `v` / `ret` 成功信封，不改错误响应。闲鱼开屏不再直接返回空 `{}`；继续抑制已识别的开屏素材、次数及冷热启动开关。专用开屏请求移除条件缓存头，已修改响应禁止缓存；淘宝 PopLayer 和原有明确广告接口继续处理。普通订单、聊天和普通商品视频不接入新开屏脚本。单独使用时，闲鱼请用闲鱼模块，不依赖淘宝模块代管。
-- **小红书**：补齐 `/note/comment/list` 和 `/note/comment/sub_comments`，处理评论 / 子评论图片保存配置及原生媒体类型；保留作者、分页和图片签名参数。不进行全图片 CDN 解密，不上传图片，也不伪造原图。**若服务端只给出已烘焙水印的图片，没有原图则无法仅靠网络规则还原**；实况 / 视频下载和其它接口变体仍需对应响应验证。
-- 联网检查发现抖音分流列表的 jsDelivr 地址返回 403；仅小火箭改用已验证的 GitHub 原始源（部分网络可能需要可用代理获取），Loon 原链接未改。
+> 本项目不提供代理节点，需自行准备节点或订阅。Shadowrocket 与 Loon 请使用各自对应的配置和模块，功能覆盖可能不同。
 
-**升级步骤**：更新当前使用的主配置和已启用模块；使用全量模块只需更新 `adblock-ultimate.sgmodule`，不要再叠加同源 App 单模块。若额外启用了独立微信模块，也要更新它。刷新远程脚本后重新连接，并彻底关闭再打开相关 App。配置地址不变，新脚本为 `*-sr.js`；脚本自动更新间隔仍为 24 小时。已有离线开屏素材可能需要在应用内清缓存；不要求卸载 App，清缓存前留意草稿等本地数据。
+## Shadowrocket 部署
 
-验证：`npm run build`、`npm run check`、`CI=true npm test`（**816 项通过**）、`npm run check:remotes`（**43 个规则源通过**）、`git diff --check`。新增应用兼容用例均为合成回归，不是假称真机抓包；未在用户 iPhone 上实测。共享 CDN 无法安全整域封禁，这类广告不能承诺全部消失；其余明确广告拦截保留并有回归覆盖。
+### 1. 导入分流配置
 
-评论类型兼容参考：[fmz200/wool_scripts 固定版本](https://github.com/fmz200/wool_scripts/blob/5d5f63fcf98bc69d5f8f1b1bae6f86a01ee4bb97/Scripts/xiaohongshu/xiaohongshu.js)，本项目独立实现，不包含改写用户标识或营销跳转逻辑。
+在小火箭的「配置」页面，从 URL 下载以下配置，**二选一**：
 
-### v3.3.4 历史记录：Apple 服务统一直连
-
-按最新选择，**所有 Apple 服务固定 `DIRECT`**：Apple Music、iCloud、App Store、Apple Account、APNs 推送、iMessage、FaceTime、接力关联域、地图、查找、天气、Siri、系统更新，以及 **Developer / WWDC / TestFlight**。不再保留 Apple 代理例外，也不再依赖可切到代理的「苹果服务」组。
-
-- 补齐 `applemusic.com`、`apzones.com`、`.apple`（含 `networking.apple` / `safebrowsing.apple`）等显式保护，增加 Apple 完整域名集直连兜底；基础服务的代表域名不依赖远程列表下载。
-- 恢复 `*.apple.com` 与 Apple 公网 `17.0.0.0/8` 旁路；保留并补齐本地、IPv6 链路本地 / ULA 和组播规则，避免接力、AirDrop、AirPlay 的本地连接进入代理。
-- 全量、广告联盟、AWAvenue 三个聚合模块中的 Apple 保护先于广告列表；全量模块增加 Apple 根域名和子域名的 MITM 排除。不改变其它去广告脚本或隐私设置。
-- 主配置和已启用的聚合去广告模块都要更新，地址不变。更新后重新连接小火箭，关闭并重开音乐以建立新连接；无需卸载 App。使用全局代理模式或自行添加更高优先级模块时，需另外检查运行模式 / 模块规则。
-- 本补丁仅调整 Shadowrocket。Loon 生成产物保持原样，因此两端 Apple 策略现在有意不同；测试分别验证，不能再宣称全量等价。
-
-官方网络清单：[Apple 服务域名](https://support.apple.com/101555)、[本地发现和服务端口](https://support.apple.com/103229)。直连不能替代接力本身的蓝牙、Wi-Fi、账号及设备兼容性条件，也不保证特定网络上的所有 Apple 端点均可达。尚未做用户设备的真机验证。
-
-### v3.3.3 历史维护记录
-
-本轮维护覆盖两个 Shadowrocket 主配置、全部 43 个模块和 21 个脚本的静态 / 安全检查。Loon 配置、插件和规则产物未改动；两端共用的脚本修复也会作用于引用同一脚本的 Loon 插件。
-
-- 继承 v3.3.2 分流修复：Apple Developer / WWDC CDN 不再被 Apple 整站旁路覆盖；Claude / Gemini 默认使用 fallback 稳定线路，但不保证固定出口 IP。
-- 外链直跳不再依赖浏览器 URL API；保留路径和签名参数编码，只允许 HTTP(S)，校验来源主机，拒绝危险协议、凭据及响应头注入。
-- 高德、微博、小红书、喜马拉雅和 protobuf 脚本补齐异常放行；B 站 / 网易云修复非 CommonJS 沙箱的顶层 return；B 站增加完整单帧 gRPC 检查与 ArrayBuffer 支持。
-- 完美电竞不再因 `thread` / `download` 等类型、普通福利标签或正文标题误删内容；小红书不再仅因普通 `card_icon` 删除笔记。
-- 小火箭公众号模块取消 `wxs.qq.com` 整域拦截，继续按具体广告接口处理；全量模块补齐关键服务根域名排除；阿里系单模块加入支付宝前置保护。
-- 独立抖音模块移除全局 `-*` 解密排除与 `bytegecko.com` 整域拦截；独立模块补齐解密主机 QUIC 回落和脚本资源上限。
-- 网页净化仅处理 HTML、避免重复注入，保留普通按钮和登录框；不覆盖只读 Location 方法，不移除 CSP。网站 CSP 可能阻止内联脚本，主动 `location` 跳转不保证拦截。
-- `npm test` 覆盖所有生成及静态模块；CI 强制安装 jq，提交 / PR 自动测试，每周或手动运行远程规则源检查。
-
-**升级**：更新主配置和已启用模块，并刷新远程脚本（默认更新间隔 24 小时）；地址不变。已有客户端如保留旧选择，可把 Claude / Gemini 手动切到「AI稳定线路」。不要为本版本直接卸载 App；缓存问题优先清缓存，重装前先备份本地数据。
-
-> 这是离线回归和规则源验证后的维护版本，不代表所有 App 版本均已真机验证；广告接口、证书绑定和上游脚本变化仍可能影响效果。
-
-## 使用方式：分流配置 + 去广告模块
-
-**1. 分流配置（二选一，纯分流，不含任何去广告）**
-
-| 配置 | 说明 | 订阅地址 |
+| 配置 | 适用方式 | 地址 |
 | :--- | :--- | :--- |
-| **懒人策略组版（推荐）** | AI 专线、流媒体、社交、地区自动测速等策略组 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/Shadowrocket_LazyGroup_Merged.conf` |
-| **大一统精简版** | 规则相同，只有 PROXY / DIRECT 两种出口 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/Shadowrocket_AllInOne_Ultimate.conf` |
+| **懒人策略组版（推荐）** | 可分别选择 AI、流媒体、社交等服务的线路 | [导入地址](https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/Shadowrocket_LazyGroup_Merged.conf) |
+| **大一统精简版** | 只区分代理和直连，设置更简单 | [导入地址](https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/Shadowrocket_AllInOne_Ultimate.conf) |
 
-**2. 去广告模块（配置 → 模块 → 右上角 + 添加）**
+导入并选用配置后，添加自己的节点订阅，选择可用节点或策略组，使用「配置」模式连接。
 
-| 模块 | 地址 |
-| :--- | :--- |
-| **全量去广告（推荐，含同源生成的 App / 浏览增强模块）** | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock-ultimate.sgmodule` |
-| 仅广告联盟拦截 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock.sgmodule` |
+### 2. 添加去广告模块
 
-全量去广告需要 HTTPS 解密：配置文件 ⓘ → HTTPS 解密 → 生成并安装 CA 证书 → 系统设置 → 通用 → 关于本机 → 证书信任设置 中信任证书。
+主配置只负责分流，去广告需要另行添加模块。进入「配置 → 模块 → +」，复制对应链接添加并启用：
 
-> 旧开屏仍出现时先清理 App 缓存；如确需重装闲鱼、淘宝或贴吧，先确认账号和本地数据已备份。
-> 贴吧需关闭 HTTPS 解密里的「通过 HTTP/2 进行中间人攻击」，否则可能提示未登录。
-> 全量模块与单 App 模块不要同时开启（内容重复）。
+| 模块 | 适用方式 | 地址 |
+| :--- | :--- | :--- |
+| **全量去广告（推荐）** | 常见应用一起净化 | [模块地址](https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock-ultimate.sgmodule) |
+| **轻量去广告** | 仅需基础广告拦截 | [模块地址](https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/adblock.sgmodule) |
 
-## 单 App / 其它模块（只想净化个别 App 时用，与全量模块二选一）
+以上模块选择一个即可。只想净化个别应用时，可改用[单 App 模块](./modules/)，不要与全量模块重复开启。
 
-| 模块 | 地址 |
-| :--- | :--- |
-| 酷安 / 闲鱼 / 淘宝（含飞猪、淘票票）/ 京东 / 拼多多 / 滴滴 / 知乎 / 微博 / B站 / 小红书 / 贴吧 / 百度网盘 / 高德 / 夸克 / 斗鱼 / 转转 / 微店 / 小黑盒 / 公众号文章 / 网易云 / 喜马拉雅 / 起点 / 虎扑 / 航旅纵横 / 肯德基 / 麦当劳 / 完美电竞 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/<coolapk\|goofish\|taobao\|jd\|pdd\|didi\|zhihu\|weibo\|bilibili\|xiaohongshu\|tieba\|baidunetdisk\|amap\|quark\|douyu\|zhuanzhuan\|weidian\|xiaoheihe\|wechat-mp\|netease\|ximalaya\|qidian\|hupu\|umetrip\|kfc\|mcdonald\|pwesports>.sgmodule` |
-| 外链直跳 / Safari 网页去打扰 | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/direct-link.sgmodule`、`https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/safari-clean.sgmodule` |
-| AI 服务分流 / 海外常用分流（给使用其它分流配置的用户） | `https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/ai-services.sgmodule`、`https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/overseas-top500.sgmodule` |
+抖音、TikTok、微信等独立模块按需添加，未包含在全量模块内。TikTok 地区模块四选一；`douyin-web` 与 `douyin-watermark` 二选一。BoxJS 仅在明确需要时启用。
 
-番茄小说、网易大神、WakeUp 课程表、山姆、创客贴等少量规则只在全量模块里。抖音、TikTok、微信、BoxJs 等模块为独立维护的静态模块，不包含在全量模块内，见 `modules/`。TikTok 的 US / CA / JP / TW 地区版四选一；`douyin-web` 与 `douyin-watermark` 二选一，避免重复执行。抖音电商拦截可能影响购物；微信广告与正常内容可能共用素材域名，遇到异常请停用独立模块排查。BoxJS 仅在需要管理脚本数据时启用，勿公开面板、Cookie 或脚本持久化数据。
+### 3. 安装并信任证书
 
-## Loon 版
+全量及多数单 App 去广告模块需要开启 HTTPS 解密：
 
-分流共用基础规则；自 Shadowrocket v3.3.4 起 Apple 服务策略有意不同（两端分别测试），去广告整合了[可莉插件](https://hub.kelee.one)。
+1. 打开当前配置的详情，进入「HTTPS 解密」。
+2. 生成并安装本设备的 CA 证书，按系统提示完成描述文件安装。
+3. 前往 iPhone「设置 → 通用 → 关于本机 → 证书信任设置」，信任刚安装的证书。
+4. 返回小火箭开启 HTTPS 解密，重新连接。
 
-**1. 配置**：配置 → 从 URL 下载配置，粘贴：
+轻量去广告模块不需要安装证书。仅安装并信任自己生成、来源明确的证书。
 
-`https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/Loon_LazyGroup.conf`
+## Loon 部署
 
-然后在「订阅节点」里添加机场订阅。
+1. 在「配置 → 从 URL 下载配置」中导入 [Loon 懒人配置](https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/Loon_LazyGroup.conf)。
+2. 在「订阅节点」中添加自己的订阅，选择可用线路。
+3. 保持配置预设的插件组合：默认启用可莉插件与自研补充插件。
+4. 如改用自研全量去广告插件，先关闭可莉插件和自研补充插件，避免重复开启。
+5. 前往「配置 → MitM」生成并安装证书，在系统「证书信任设置」中信任，然后开启 MitM；使用 YouTube 插件时同时开启「MitM over HTTP/2」。
 
-**2. 插件**：配置里已带好，默认开启：
+可莉插件请在 Loon 内下载和更新。
 
-| 插件 | 说明 |
-| :--- | :--- |
-| 自研补充去广告 | 广告联盟 / HTTPDNS / 阿里 AMDC 拦截，以及可莉没覆盖的 App（肯德基、麦当劳、山姆、NGA、外链直跳等） |
-| 可莉插件 35 个 | 广告平台拦截器、HTTPDNS 拦截器、可莉广告过滤器、YouTube、Spotify，以及闲鱼、淘宝、京东、拼多多、微博、知乎、小红书、B站、贴吧、高德、滴滴、微信公众号 / 小程序等 |
-| 自研全量去广告（默认关闭） | 内容同 Shadowrocket 全量模块。不想用可莉时开它，同时关掉可莉插件和「自研补充」 |
+## 日常更新与注意事项
 
-**3. MitM**：配置 → MitM → 生成并安装证书，在 设置 → 通用 → 关于本机 → 证书信任设置 中信任；同页开启「MitM over HTTP/2」（YouTube 需要）。
-
-- 直连更快：系统 DNS 与阿里 / 腾讯 UDP DNS 并发取最快结果（不配 DoH）；只用 IPv4；国内域名直接按规则直连，不额外查 DNS；广告域名在 DNS 阶段返回 127.0.0.1，不等超时。
-- 银行、支付、12306、政务、运营商等关键服务放在本地规则最前面直连，并在 MitM 里排除，即使插件写了这些主机也不会解密。
-- 可莉插件只能在 Loon 里下载（kelee.one 会拦截其它客户端）。
-
-## 分流说明
-
-- 按 App 清单逐个校验（`tests/fixtures/app-routing.json`）：Google / YouTube / Telegram / X / Meta / TikTok / Steam / Spotify / PayPal / Edge / AltStore 等走代理；Apple Developer 自 v3.3.4 起随全部 Apple 服务直连；Klook / Price / B&O / Lightroom / Canva / Zoom / Notion / Xmind / Bark / TestFlight / Kimi / B站国际版及国内 App 直连。
-- 测试同时禁止策略互相矛盾、被更宽规则遮蔽而不生效的规则。
-- 直连提速：国内域名由 3700+ 条 `China_Domain`（DOMAIN-SET）直接命中，无需先做 DNS 再走 GEOIP；所有远程规则集的 IP 规则都带 `no-resolve`；测速组每 30 分钟测一次，减少后台唤醒。
+- **更新**：同步更新正在使用的主配置、模块或插件及远程脚本，再重新连接。更新前建议备份自己的配置和节点设置。
+- **避免叠加**：全量模块与同源单 App 模块不要重复开启；使用其他项目的去广告模块时，也请留意重复或冲突。
+- **缓存广告**：旧开屏仍出现时，可先在应用内清理缓存并重开应用。清理前注意备份草稿等本地数据，不必直接卸载重装。
+- **功能异常**：可暂时停用对应模块排查。贴吧出现登录异常时，可尝试关闭 HTTPS 解密中的「通过 HTTP/2 进行中间人攻击」选项。
+- **效果范围**：广告拦截和媒体保存效果会随 App 版本变化，不能保证清除所有广告或水印；部分净化选项可能影响购物等功能，请按需开启。
+- **隐私保护**：不要公开自己的节点订阅、Cookie、脚本数据或 BoxJS 面板。
 
 ## 致谢
 
-规则与接口参考了 [可莉 luestr/ProxyResource](https://github.com/luestr/ProxyResource)（hub.kelee.one 插件）、[fmz200/wool_scripts](https://github.com/fmz200/wool_scripts)、[ack20a/sr-ad-plugins](https://github.com/ack20a/sr-ad-plugins)、[blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script)、[TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule)；本仓库只取已核对的部分并做了 Shadowrocket 适配与回归测试；Loon 版直接引用可莉插件。
+感谢以下项目提供的规则、插件与参考：
 
-## 目录结构
-
-```
-src/
-  meta.js          版本号、CDN 地址
-  apple.js         仅小火箭：Apple 全直连、模块保护和本地链路规则
-  profile.js       [General] / [Proxy Group] / [Host]
-  loon.js          Loon 版：可莉插件清单、策略组、节点筛选
-  rules/00,20-99   分流规则分段（进主配置）
-  rules/10-adblock 广告联盟拦截（进去广告模块）
-  apps/*.js        每个 App 的去广告规则 / 重写 / Body Rewrite(jq) / 脚本 / MITM（进全量模块和单 App 模块）
-modules/scripts/   脚本
-scripts/build.js   生成两个分流配置与全部模块
-scripts/loon.js    生成 Loon 配置、插件（loon/plugins）与远程规则（loon/rules）
-scripts/check-remotes.js  远程规则健康检查
-.github/workflows/validate.yml  提交 / PR 回归和每周远程规则检查
-tests/             校验、脚本行为、jq 改写与 App 分流清单测试
-```
-
-```bash
-npm run build   # 修改 src/ 后重新生成
-npm test        # 全部生成 / 静态模块安全边界、脚本沙箱语法、异常与行为回归（完整测试需要 jq）
-npm run check:remotes # 联网检查 43 个上游规则 URL、非空内容及基本格式（数量随规则变更）
-```
+- [可莉 / luestr/ProxyResource](https://github.com/luestr/ProxyResource) · [插件主页](https://hub.kelee.one)
+- [fmz200/wool_scripts](https://github.com/fmz200/wool_scripts)
+- [ack20a/sr-ad-plugins](https://github.com/ack20a/sr-ad-plugins)
+- [blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script)
+- [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule)
