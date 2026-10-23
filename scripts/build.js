@@ -247,7 +247,7 @@ function moduleText({ name, desc, author, category, rules, rewrites, bodyRewrite
 
 function buildModules() {
   // SR 中模块规则先于主配置；公众号只按广告接口拒绝，不封 wxs.qq.com 整个资源域。
-  const units = loadApps().map(sr.adapt);
+  const units = sr.srUnits(loadApps());
   const srAds = sr.filterAdRules(adblockRules(units));
   const srGlobalAds = sr.filterAdRules(readList('10-adblock.list'));
   const files = {};
@@ -267,7 +267,7 @@ function buildModules() {
   }
   files['modules/adblock-ultimate.sgmodule'] = moduleText({
     name: '全量去广告 (AdBlock Ultimate)',
-    desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、拼多多、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含同源生成的 App 与浏览增强模块，请勿重复叠加；抖音 / TikTok / 微信 / BoxJS 等静态模块独立按需开启。需开启 HTTPS 解密。',
+    desc: '与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含同源生成的 App 与浏览增强模块，请勿重复叠加；抖音 / TikTok / 微信 / BoxJS 等静态模块独立按需开启。需开启 HTTPS 解密。',
     category: '去广告',
     rules: dedupe([...apple.guardRules(), ...sr.guardRules(), ...section('HTTPS 解密主机 QUIC 回落 TCP'), ...quicRules(units), ...criticalGuard(srAds), ...srAds]),
     rewrites: rewriteBody(units),

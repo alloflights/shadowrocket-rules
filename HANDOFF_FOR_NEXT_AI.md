@@ -84,3 +84,8 @@
 - 因此推荐流里的广告、带货和挂游戏下载链接的推广视频，无法在小火箭里按字段过滤；它们和正常视频共用推荐接口与 `douyinvod.com`。
 - `src/shadowrocket.js` 的 `DOUYIN_ADS` 只给小火箭两个广告模块追加广告 / 线索表单 / 遥测主机；用户真实请求记录中的推荐、评论、视频、图片、直播、配置主机由 `tests/sr-douyin-notion.js` 保护。`p3-developer.bytemaimg.com`（小程序 / 小游戏图标）故意不拦。
 - Notion：用户改为走代理。`notionProxy()` 只改小火箭主配置和海外分流模块；Loon 保持原直连基线（fixture `loonExpect`）。
+
+## 拼多多（v3.3.7）
+
+- 用户反馈拼多多加载慢且本身广告少，要求小火箭去掉拼多多相关的重写和分流。`src/shadowrocket.js` 的 `SR_DROPPED` 让小火箭不再生成 pdd 单元（无重写 / jq / 解密 / QUIC 阻断 / titan 等拒绝），`filterAdRules` 与 `routing` 去掉拼多多显式规则；`modules/pdd.sgmodule` 已撤下。拼多多域名交给 China_Domain / GEOIP 直连。
+- `src/apps/pdd.js` 与 Loon 的拼多多插件保持原样（Loon 不动）。上游 AWAvenue 自带的两条拼多多广告投放域名不在本仓库控制范围内。不要再给小火箭加回拼多多处理。

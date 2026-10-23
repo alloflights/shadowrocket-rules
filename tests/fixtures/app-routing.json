@@ -869,7 +869,8 @@
    "hosts": [
     "api.pinduoduo.com",
     "mobile.yangkeduo.com"
-   ]
+   ],
+   "srImplicit": true
   },
   {
    "app": "携程旅行",

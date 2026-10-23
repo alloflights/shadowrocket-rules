@@ -45,7 +45,13 @@ const DOUYIN_ADS = [
   'DOMAIN,mon.zijieapi.com,REJECT', 'DOMAIN,os-mon.zijieapi.com,REJECT', 'DOMAIN,mcs.zijieapi.com,REJECT',
   'DOMAIN,apmplus.volces.com,REJECT', 'DOMAIN,gator.volces.com,REJECT',
 ];
-const filterAdRules = lines => [...lines.filter(line => !obsolete.has(line.trim())), ...DOUYIN_ADS];
+// Pinduoduo: user decision on Shadowrocket — no rewrite / jq / MITM / reject / explicit
+// routing at all (it loaded slowly and had little ads). Domains fall through to the
+// China_Domain set / GEOIP and stay DIRECT. Loon keeps its baseline plugin.
+const SR_DROPPED = new Set(['pdd']);
+const PDD = /(?:^|[.,(])(?:pinduoduo\.com|pinduoduo\.net|pddpic\.com|pddugc\.com|yangkeduo\.com)(?:[,)]|$)|com\.xunmeng\.pinduoduo/i;
+const srUnits = apps => apps.filter(u => !SR_DROPPED.has(u.id)).map(adapt);
+const filterAdRules = lines => [...lines.filter(line => !obsolete.has(line.trim()) && !PDD.test(line)), ...DOUYIN_ADS];
 // Notion goes through the proxy on Shadowrocket (user decision); Loon keeps its baseline.
 const NOTION = ['notion.so', 'notion.site', 'notion.com', 'notion-static.com', 'notionusercontent.com'];
 const NOTION_EXTRA = ['DOMAIN-SUFFIX,notion.new,PROXY', 'DOMAIN-SUFFIX,makenotion.com,PROXY',
@@ -68,6 +74,6 @@ function notionProxy(lines) {
 // jsDelivr currently returns 403 for this single list; SR uses the verified
 // upstream raw endpoint. Leave Loon's shared list and emitted files unchanged.
 function routing(lines) {
-  return [...guardRules(), ...notionProxy(lines).map(line => line.replace('https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/DouYin/DouYin.list', 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/DouYin/DouYin.list'))];
+  return [...guardRules(), ...notionProxy(lines).filter(line => !(/^DOMAIN-SUFFIX,[^,]+,DIRECT$/.test(line.trim()) && PDD.test(line)) && !/^#.*拼多多/.test(line.trim())).map(line => line.replace('https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/DouYin/DouYin.list', 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/DouYin/DouYin.list'))];
 }
-module.exports = { routing, filterAdRules, notionProxy, DOUYIN_ADS, NOTION, NOTION_EXTRA, adapt, guardRules, realIP, MEDIA_SUFFIXES, DNS_HOSTS };
+module.exports = { routing, filterAdRules, srUnits, SR_DROPPED, PDD, notionProxy, DOUYIN_ADS, NOTION, NOTION_EXTRA, adapt, guardRules, realIP, MEDIA_SUFFIXES, DNS_HOSTS };

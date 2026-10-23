@@ -1,10 +1,10 @@
 #!name=全量去广告 (AdBlock Ultimate)
-#!desc=与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、拼多多、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含同源生成的 App 与浏览增强模块，请勿重复叠加；抖音 / TikTok / 微信 / BoxJS 等静态模块独立按需开启。需开启 HTTPS 解密。
+#!desc=与主配置配套的去广告总模块：AWAvenue + 广告联盟/遥测/HTTPDNS/阿里 AMDC 拦截 + 全部 App 专项去广告（闲鱼、淘宝、京东、滴滴、酷安、知乎、微博、B站、小红书、贴吧、网盘、高德、斗鱼、夸克、转转、微店、公众号等）。已包含同源生成的 App 与浏览增强模块，请勿重复叠加；抖音 / TikTok / 微信 / BoxJS 等静态模块独立按需开启。需开启 HTTPS 解密。
 #!author=alloflights
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!category=去广告
 #!system=ios
-# v3.3.6 · 由 scripts/build.js 自动生成，请勿直接修改
+# v3.3.7 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
 # Apple 基础服务固定 DIRECT；不受旧「苹果服务」策略选择影响
@@ -116,7 +116,6 @@ AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api.wakeup.fun)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api-sams.walmartmobile.cn)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,gw.chuangkit.com)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,music.163.com)),REJECT
-AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api.pinduoduo.com)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,api.pwesports.cn)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,app.pwesports.cn)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,client.pwesports.cn)),REJECT
@@ -1001,7 +1000,6 @@ DOMAIN,ad.21cn.com,REJECT
 DOMAIN,ad.k.21cn.com,REJECT
 DOMAIN,admarket.21cn.com,REJECT
 DOMAIN,adshows.21cn.com,REJECT
-DOMAIN,t-dsp.pinduoduo.com,REJECT
 
 # ==================== 去广告 · App 专项 ====================
 # 高德地图净化
@@ -1032,22 +1030,6 @@ DOMAIN,mon11-misc.fqnovel.com,REJECT
 DOMAIN,mon11-misc-lq.fqnovel.com,REJECT
 DOMAIN,ads3-normal.zijieapi.com,REJECT
 DOMAIN,ads5-normal.zijieapi.com,REJECT
-# 拼多多净化
-AND,((URL-REGEX,"^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/d(\d)?"),(USER-AGENT,"*com.xunmeng.pinduoduo*")),REJECT
-AND,((URL-REGEX,"^http:\/\/\[[0-9a-fA-F:]+\]\/d(\d)?\?"),(USER-AGENT,"*com.xunmeng.pinduoduo*")),REJECT
-DOMAIN,titan.pinduoduo.com,REJECT
-DOMAIN,xg.pinduoduo.com,REJECT
-DOMAIN,apm.pinduoduo.com,REJECT
-DOMAIN,apm-a.pinduoduo.com,REJECT
-DOMAIN,th.pinduoduo.com,REJECT
-DOMAIN,th-a.pinduoduo.com,REJECT
-DOMAIN,th-b.pinduoduo.com,REJECT
-DOMAIN,ta.pinduoduo.com,REJECT
-DOMAIN,ta-a.pinduoduo.com,REJECT
-DOMAIN,meta.pinduoduo.com,REJECT
-DOMAIN,cdl-1.pddpic.com,REJECT
-DOMAIN,cdl-p2.pddpic.com,REJECT
-DOMAIN,cd-1.pddpic.com,REJECT
 # 完美世界电竞净化
 DOMAIN,ad.pwesports.cn,REJECT
 DOMAIN,advert.pwesports.cn,REJECT
@@ -1189,29 +1171,6 @@ DOMAIN,gator.volces.com,REJECT
 ^https?:\/\/interface\d?\.music\.163\.com\/w?eapi\/(resource-exposure\/)?activity - reject-200
 ^https?:\/\/interface\d?\.music\.163\.com\/e?api\/comment\/feed\/inserted\/resources - reject-200
 ^https?:\/\/interface\d?\.music\.163\.com\/e?api\/resource-exposure\/config - reject-200
-
-# --- 拼多多净化 ---
-^https:\/\/api\.pinduoduo\.com\/api\/cappuccino\/splash - reject
-^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/unrated_order_for_unreceived_tab\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/query_order_list_tabs_element\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/aquarius\/hungary\/global\/homepage\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_express_group\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/search_hotquery\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/zaire_biz\/chat\/resource\/get_list_data\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/new_chat_group\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/alexa\/goods\/back_up\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/personal\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/brand-olay\/goods_detail\/bybt_guide\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/engels\/reviews\/require\/append\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/my_order_group\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/likes\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/phantom\/gbdbpdv\/extra\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/manufacturer\/cross\/shortcut\/list\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/dunkirk\/liveactivity\/push\/create\/url\/report\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/growth\/nagato\/app\/index\/gather\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/engels\/wait\/receive\/review\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/buffon\/nasus\/recommend\? - reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v2\/query\/goods_detail_with_tags\? - reject-dict
 
 # --- 完美世界电竞净化 ---
 ^https?:\/\/((api|app|client)\.pwesports\.cn|(api\.)?esports\.wanmei\.com)\/.*(feed\/ad|promote|popup|banner_ad) - reject-dict
@@ -1357,15 +1316,6 @@ http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=personin
 # --- WakeUp 课程表净化 ---
 http-response-jq ^https:\/\/api\.wakeup\.fun\/wakeup\/user\/mine$ '(. as $o | try (del(.data.bannerItems)) catch $o)'
 
-# --- 拼多多净化 ---
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? '(. as $o | try (del(.result.dy_module.irregular_banner_dy)) catch $o) | (. as $o | try (del(.result.search_bar_hot_query)) catch $o)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/search\? '(. as $o | try (del(.expansion)) catch $o)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? '(. as $o | try (del(.monthly_card_entrance, .personal_center_style_v2_vo, .personal_banner)) catch $o)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/oak\/integration\/render\? '(. as $o | try (del(.bottom_section_list)) catch $o) | (. as $o | try (del(.ui.bottom_section)) catch $o) | (. as $o | try (del(.ui.live_section.float_info)) catch $o)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_detail_group\? '(. as $o | try (del(.data.goods_list)) catch $o)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/order\/ '(. as $o | try (del(.marketing_banner_vo)) catch $o) | (. as $o | try (del(.shipping.banner_above_recommend)) catch $o)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/order_list_v4\? '(. as $o | try (.orders |= map(if (.order_buttons | type) == "array" then .order_buttons |= map(del(.order_growth_tip)) else . end)) catch $o)'
-
 # --- 夸克净化 ---
 http-response-jq ^https:\/\/open-cms-api\.quark\.cn\/open-cms\? '(. as $o | try (if (.result | type) == "object" then .result |= delpaths([["cms_homepage_push_banner_config"],["cms_as_home_capsule_entry"],["cms_home_appstore_comment"],["cms_home_festival_style_enable"],["cms_sK_home_top_banner"],["cms_quark_maizeng_feature_config"],["cms_quark_buygive_home_modal_config"],["cms_quark_buygive_documentation_config"],["cms_quark_lottery_maizeng_config"],["cms_cloud_drive_activity_window"],["cms_cloud_drive_vip_pop_url"],["qk_vip_pay_modal"],["camear_vip_retain_pop"],["cms_quark_year_modal_config"],["cms_lottery_banner"],["camera_member_lottery_on_off"],["cms_cloud_drive_transport_download_pop"],["cms_camera_asset_popup_activity_new"],["cms_video_app_grade_config"],["cms_video_cloud_play_app_grade_config"],["cms_quark_coupon_experiment"],["qkscan_member_coupon"],["cms_cloud_backup_free_benefit_config"],["qk_novel_noah_sdk_slot_chapter_middle"],["qk_novel_noah_sdk_slot_bottom_banner"],["qk_novel_noah_sdk_slot_chapter_middle_reward"],["cms_novel_member_activity"],["cms_novel_bookshelf_banner"],["cms_novel_download_banner_config"],["cms_novel_speaker_page_banner_config"],["novel_paid_book_ad_density_newuser"],["cms_player_svipup_loop_config"],["cms_player_svipup_loopani_show"],["cms_reward_advideo_auto_trigger"],["cms_cloud_home_tool_banner"],["quark_wenku_doc_activity_tpl"],["cms_quark_full_pan_new_year"],["cms_quark_planet_tab_banner"],["h5_ai_studio_past_activity_list"],["cms_user_center_welfare_config"],["cms_user_center_welfare_farm_entry_config"],["cms_babafarm_gray_config"],["cms_quark_ios_panel_alipay_coupon_banner"],["cms_cloud_share_benefit"],["noah_search_mid_ad_enable"],["questionscpagebanner"],["qkscan_coupon_time"],["cms_ai_vip_product_banner_config"],["cms_as_zone_operation_banner_create"],["camera_pay_detention"],["cms_quark_ios_alipay_coupon_banner"],["camera_member_lottery_on_off_new"],["learning_home_popup_op_test"],["cms_quark_doodle"],["cms_camera_asset_activity_banner_list"],["camera_keep_modal"],["cms_quark_88vip_verify_modal"],["minipg_ads_whitelist"],["cms_video_app_grade_operaion_enable"],["cms_novel_coin_reward_config"],["cms_alipay_marketing_banner"],["cd_not_in_use_repurchase"],["enable_miniframe_prefetch_ad"],["cms_camera_big_float_window"],["cms_player_svipup_enterani_show"],["cms_history_login_banner_and_bubble_config"],["clouddrive_backup_benefit_config_album"],["camera_vip_union_activity"],["cms_quark_panel_coupon_archive"],["cms_bookmarkAndHistory_banner_ad"],["cms_ai_write_operation_banner_config"],["novel_ad_flbanner_close"],["noah_content_embed_ad_hc_vertical_scale_style"],["cms_scanking_home_bubble"],["cms_poplayer_main"],["cms_big_float_window"],["camera_vip_coupon_discount_test"],["h5_ai_studio_activity_list"],["cms_homepage_bubble_config"],["novel_farm_reader_remain_dialog_switch"],["cms_scanking_pay_vip_retain_switch"],["qks_deep_souti_pop"],["cms_user_center_renewal_config"],["clouddrive_backup_benefit_config"],["cms_player_reward_trace_enable"],["camera_vip_lottery_checked_goods"],["cms_novel_audio_reward_config"],["cms_quark_luckin_coupon_text"],["as_publisher_activity_entry"],["cms_reflow_activity_jump_deeplink"],["cms_user_center_welfare_switch"],["paisou_benefit_banner"],["scan_svip_first_buy_pop"],["cd_not_in_use_djtest_choujiang"],["cms_subscribre_renew_modal_experimental"],["cms_player_reward_video_config"],["cms_clouddrive_vip_extra_pay_banner"],["cms_ai_vip_product_activity_config"],["cms_cloud_drive_activity_id"],["cms_quark_pay_full_page_first_modal_month"],["cms_wenku_vip_pop_experiment"],["cms_as_zone_operation_banner_creat"],["cms_home_appstore_comment_native_item"],["cms_quark_user_agreement_activity"],["minipg_ads_switch_quark"],["cms_novel_free_ad_config"],["novel_farm_welfare_switch"],["qkscan_year_more_coupon"],["cms_novel_reader_insert_page_banner_config"],["cms_quark_pay_modal_down_taobao"],["cms_player_top_bo_taobao_not_aac_config"],["cms_cloud_drive_file_tree_banner"],["quark_miaosha_c_test"],["cms_cloud_common_page_banner"],["cms_feed_bubble_in_home_page_bottom"],["cms_sm_ad_request_handle_enable"],["cms_asr_main_activity_window"],["qk_correction_recommend_modal"],["cms_cloud_backup_free_space_benefit"],["cd_not_in_use_annual_repurchase_coupon"],["cms_cloud_player_av_quailty_88vip_uselimit"],["novel_ad_space_count"],["cloud_drive_home_tool_banner"],["cms_navi_study_bubble_booklist"],["cms_quark_pay_panel_video_banner_switch"],["cms_quark_anniversary_2023_main"],["cms_quark_miaosha_test"],["qks_feedback_lottery_switch"],["cms_cloud_drive_transport_header_banner"],["cms_user_center_welfare_farm_new_config"],["cms_quark_member_center_bannerList"],["cms_cloud_drive_audio_tree_banner"],["camera_teachers_day_goods_banner"],["noah_search_mid_page_ad_list"],["qk_novel_noah_sdk_chapter_middle_enable"],["test_zhifubao_miaosha"],["cms_quark_cloud_anniversary_modal_show"],["cms_quark_cloud_drive_first_screen_monthly_popup_config"],["cd_not_in_use_djtest_cms_player_top_bo_taobao_not_aac_config"],["cms_as_zone_operation_banner_feed"],["cms_camera_my_activity_banner"],["cms_home_doodle_res_font"],["cms_cloud_drive_user_banner"],["cms_quark_clouddrive_member_anniversay"],["cms_quark_pan_activity"],["cms_qkvip_act_banner"],["cms_novel_tts_ad_cover_config"],["cms_novel_tts_cover_ad_config"],["cms_camera_member_banner"],["cms_camera_asset_activity_banner"],["cms_camera_asset_popup_activity"],["cms_camera_show_coupon_popup"],["cms_ai_vip_product_floating_angle"],["cms_cloud_transport_svip_banner_show_top"],["cms_user_center_bussiness_banner_config"],["cms_quark_pay_update_banner"],["cms_sc_ad_request_handle_enable"],["noah_content_embed_ad_vertical_scale_style"],["cms_quark_modal_year_modal_config"],["cms_quark_keep_modal_config"],["cms_bubble"],["cd_not_in_use_counter_lottery"]]) else . end) catch $o)'
 
@@ -1457,4 +1407,4 @@ zhihu_clean = type=http-response,pattern=^https?:\/\/(api|www|appcloud2|appcloud
 
 
 [MITM]
-hostname = %APPEND% m5.amap.com, m5-zb.amap.com, oss.amap.com, sns.amap.com, pan.baidu.com, ndstatic.cdn.bcebos.com, staticsns.cdn.bcebos.com, issuecdn.baidupcs.com, app.bilibili.com, grpc.biliapi.net, api.coolapk.com, api2.coolapk.com, as.xiaojukeji.com, conf.diditaxi.com.cn, common.diditaxi.com.cn, res.xiaojukeji.com, api.udache.com, daijia.kuaidadi.com, htwkop-st.xiaojukeji.com, htwkop.xiaojukeji.com, freight.xiaojukeji.com, poi.map.xiaojukeji.com, rtbapi.douyucdn.cn, apiv2.douyucdn.cn, venus.douyucdn.cn, acs.m.goofish.com, g-acs.m.goofish.com, acs.m.taobao.com, guide-acs.m.taobao.com, h5api.m.taobao.com, h5api.m.goofish.com, *.mobileapi.hupu.com, api.m.jd.com, res.kfc.com.cn, api.mcd.cn, api2.mcd.cn, g.cn, www.g.cn, google.cn, www.google.cn, bbs.nga.cn, nga.178.com, api.dongqiudi.com, business.msorpack.huya.com, api.500px.com.cn, api.tuchong.com, www.icourse163.org, god.gameyw.netease.com, api.wakeup.fun, api-sams.walmartmobile.cn, gw.chuangkit.com, interface*.music.163.com, api.pinduoduo.com, api.pwesports.cn, app.pwesports.cn, client.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, magev6.if.qidian.com, open-cms-api.quark.cn, stars.shuqireader.com, poplayer.template.alibaba.com, tiebac.baidu.com, c.tieba.baidu.com, tieba.baidu.com, oss.umetrip.com, link.zhihu.com, link.csdn.net, link.juejin.cn, www.jianshu.com, weibo.cn, jump.bdimg.com, jump2.bdimg.com, c.pc.qq.com, sspai.com, gitee.com, www.yuque.com, m.zhihu.com, blog.csdn.net, m.weibo.cn, mp.weixin.qq.com, api.weibo.cn, *.uve.weibo.com, card.weibo.com, weibo.com, thor.weidian.com, api.xiaoheihe.cn, edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, *.ximalaya.com, api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com, appcloud2.in.zhihu.com, zhuanlan.zhihu.com, app.zhuanzhuan.com, -12306.cn, -*.12306.cn, -95306.cn, -*.95306.cn, -gov.cn, -*.gov.cn, -edu.cn, -*.edu.cn, -chsi.com.cn, -*.chsi.com.cn, -pbccrc.org.cn, -*.pbccrc.org.cn, -alipay.com, -*.alipay.com, -alipay.cn, -*.alipay.cn, -alipayobjects.com, -*.alipayobjects.com, -antfortune.com, -*.antfortune.com, -mybank.cn, -*.mybank.cn, -tenpay.com, -*.tenpay.com, -pay.weixin.qq.com, -unionpay.com, -*.unionpay.com, -unionpaysecure.com, -*.unionpaysecure.com, -95516.com, -*.95516.com, -chinaums.com, -*.chinaums.com, -jdpay.com, -*.jdpay.com, -ecny.cn, -*.ecny.cn, -cfca.com.cn, -*.cfca.com.cn, -icbc.com.cn, -*.icbc.com.cn, -ccb.com, -*.ccb.com, -abchina.com, -*.abchina.com, -abchina.com.cn, -*.abchina.com.cn, -boc.cn, -*.boc.cn, -bankofchina.com, -*.bankofchina.com, -bankcomm.com, -*.bankcomm.com, -psbc.com, -*.psbc.com, -cmbchina.com, -*.cmbchina.com, -cmbimg.com, -*.cmbimg.com, -citicbank.com, -*.citicbank.com, -cebbank.com, -*.cebbank.com, -cmbc.com.cn, -*.cmbc.com.cn, -cib.com.cn, -*.cib.com.cn, -spdb.com.cn, -*.spdb.com.cn, -pingan.com, -*.pingan.com, -pingan.com.cn, -*.pingan.com.cn, -hxb.com.cn, -*.hxb.com.cn, -cgbchina.com.cn, -*.cgbchina.com.cn, -czbank.com, -*.czbank.com, -bankofbeijing.com.cn, -*.bankofbeijing.com.cn, -bosc.cn, -*.bosc.cn, -webank.com, -*.webank.com, -zj96596.com, -*.zj96596.com, -zjrc.com, -*.zjrc.com, -gffunds.com.cn, -*.gffunds.com.cn, -nffund.com, -*.nffund.com, -10086.cn, -*.10086.cn, -chinamobile.com, -*.chinamobile.com, -10010.com, -*.10010.com, -chinaunicom.cn, -*.chinaunicom.cn, -189.cn, -*.189.cn, -chinatelecom.com.cn, -*.chinatelecom.com.cn, -3gppnetwork.org, -*.3gppnetwork.org, -anticheatexpert.com, -*.anticheatexpert.com, -apple.com, -*.apple.com, -apple.com.cn, -*.apple.com.cn, -apple.cn, -*.apple.cn, -apple, -*.apple, -icloud.com, -*.icloud.com, -icloud.com.cn, -*.icloud.com.cn, -icloud-content.com, -*.icloud-content.com, -apzones.com, -*.apzones.com, -me.com, -*.me.com, -itunes.com, -*.itunes.com, -applemusic.com, -*.applemusic.com, -mzstatic.com, -*.mzstatic.com, -cdn-apple.com, -*.cdn-apple.com, -aaplimg.com, -*.aaplimg.com, -apple-cloudkit.com, -*.apple-cloudkit.com, -apple-dns.net, -*.apple-dns.net, -apple-livephotoskit.com, -*.apple-livephotoskit.com, -apple-mapkit.com, -*.apple-mapkit.com, -apple-relay.cloudflare.com, -apple-relay.fastly-edge.com, -cp4.cloudflare.com
+hostname = %APPEND% m5.amap.com, m5-zb.amap.com, oss.amap.com, sns.amap.com, pan.baidu.com, ndstatic.cdn.bcebos.com, staticsns.cdn.bcebos.com, issuecdn.baidupcs.com, app.bilibili.com, grpc.biliapi.net, api.coolapk.com, api2.coolapk.com, as.xiaojukeji.com, conf.diditaxi.com.cn, common.diditaxi.com.cn, res.xiaojukeji.com, api.udache.com, daijia.kuaidadi.com, htwkop-st.xiaojukeji.com, htwkop.xiaojukeji.com, freight.xiaojukeji.com, poi.map.xiaojukeji.com, rtbapi.douyucdn.cn, apiv2.douyucdn.cn, venus.douyucdn.cn, acs.m.goofish.com, g-acs.m.goofish.com, acs.m.taobao.com, guide-acs.m.taobao.com, h5api.m.taobao.com, h5api.m.goofish.com, *.mobileapi.hupu.com, api.m.jd.com, res.kfc.com.cn, api.mcd.cn, api2.mcd.cn, g.cn, www.g.cn, google.cn, www.google.cn, bbs.nga.cn, nga.178.com, api.dongqiudi.com, business.msorpack.huya.com, api.500px.com.cn, api.tuchong.com, www.icourse163.org, god.gameyw.netease.com, api.wakeup.fun, api-sams.walmartmobile.cn, gw.chuangkit.com, interface*.music.163.com, api.pwesports.cn, app.pwesports.cn, client.pwesports.cn, esports.wanmei.com, api.esports.wanmei.com, magev6.if.qidian.com, open-cms-api.quark.cn, stars.shuqireader.com, poplayer.template.alibaba.com, tiebac.baidu.com, c.tieba.baidu.com, tieba.baidu.com, oss.umetrip.com, link.zhihu.com, link.csdn.net, link.juejin.cn, www.jianshu.com, weibo.cn, jump.bdimg.com, jump2.bdimg.com, c.pc.qq.com, sspai.com, gitee.com, www.yuque.com, m.zhihu.com, blog.csdn.net, m.weibo.cn, mp.weixin.qq.com, api.weibo.cn, *.uve.weibo.com, card.weibo.com, weibo.com, thor.weidian.com, api.xiaoheihe.cn, edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, *.ximalaya.com, api.zhihu.com, www.zhihu.com, appcloud2.zhihu.com, appcloud2.in.zhihu.com, zhuanlan.zhihu.com, app.zhuanzhuan.com, -12306.cn, -*.12306.cn, -95306.cn, -*.95306.cn, -gov.cn, -*.gov.cn, -edu.cn, -*.edu.cn, -chsi.com.cn, -*.chsi.com.cn, -pbccrc.org.cn, -*.pbccrc.org.cn, -alipay.com, -*.alipay.com, -alipay.cn, -*.alipay.cn, -alipayobjects.com, -*.alipayobjects.com, -antfortune.com, -*.antfortune.com, -mybank.cn, -*.mybank.cn, -tenpay.com, -*.tenpay.com, -pay.weixin.qq.com, -unionpay.com, -*.unionpay.com, -unionpaysecure.com, -*.unionpaysecure.com, -95516.com, -*.95516.com, -chinaums.com, -*.chinaums.com, -jdpay.com, -*.jdpay.com, -ecny.cn, -*.ecny.cn, -cfca.com.cn, -*.cfca.com.cn, -icbc.com.cn, -*.icbc.com.cn, -ccb.com, -*.ccb.com, -abchina.com, -*.abchina.com, -abchina.com.cn, -*.abchina.com.cn, -boc.cn, -*.boc.cn, -bankofchina.com, -*.bankofchina.com, -bankcomm.com, -*.bankcomm.com, -psbc.com, -*.psbc.com, -cmbchina.com, -*.cmbchina.com, -cmbimg.com, -*.cmbimg.com, -citicbank.com, -*.citicbank.com, -cebbank.com, -*.cebbank.com, -cmbc.com.cn, -*.cmbc.com.cn, -cib.com.cn, -*.cib.com.cn, -spdb.com.cn, -*.spdb.com.cn, -pingan.com, -*.pingan.com, -pingan.com.cn, -*.pingan.com.cn, -hxb.com.cn, -*.hxb.com.cn, -cgbchina.com.cn, -*.cgbchina.com.cn, -czbank.com, -*.czbank.com, -bankofbeijing.com.cn, -*.bankofbeijing.com.cn, -bosc.cn, -*.bosc.cn, -webank.com, -*.webank.com, -zj96596.com, -*.zj96596.com, -zjrc.com, -*.zjrc.com, -gffunds.com.cn, -*.gffunds.com.cn, -nffund.com, -*.nffund.com, -10086.cn, -*.10086.cn, -chinamobile.com, -*.chinamobile.com, -10010.com, -*.10010.com, -chinaunicom.cn, -*.chinaunicom.cn, -189.cn, -*.189.cn, -chinatelecom.com.cn, -*.chinatelecom.com.cn, -3gppnetwork.org, -*.3gppnetwork.org, -anticheatexpert.com, -*.anticheatexpert.com, -apple.com, -*.apple.com, -apple.com.cn, -*.apple.com.cn, -apple.cn, -*.apple.cn, -apple, -*.apple, -icloud.com, -*.icloud.com, -icloud.com.cn, -*.icloud.com.cn, -icloud-content.com, -*.icloud-content.com, -apzones.com, -*.apzones.com, -me.com, -*.me.com, -itunes.com, -*.itunes.com, -applemusic.com, -*.applemusic.com, -mzstatic.com, -*.mzstatic.com, -cdn-apple.com, -*.cdn-apple.com, -aaplimg.com, -*.aaplimg.com, -apple-cloudkit.com, -*.apple-cloudkit.com, -apple-dns.net, -*.apple-dns.net, -apple-livephotoskit.com, -*.apple-livephotoskit.com, -apple-mapkit.com, -*.apple-mapkit.com, -apple-relay.cloudflare.com, -apple-relay.fastly-edge.com, -cp4.cloudflare.com

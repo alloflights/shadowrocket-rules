@@ -275,10 +275,11 @@ test('Shadowrocket 配置 / 模块版本独立，不提升 Loon 版本', () => {
 const appRouting = JSON.parse(read('tests/fixtures/app-routing.json'));
 {
   const rules = body(sectionOf(files['Shadowrocket_AllInOne_Ultimate.conf'], 'Rule'));
-  for (const { app, expect, hosts } of appRouting.apps) {
+  for (const { app, expect, hosts, srImplicit } of appRouting.apps) {
     test(`应用分流：${app} → ${expect}`, () => {
       for (const host of hosts) {
         const r = routeOf(rules, host);
+        if (srImplicit) { assert(!r, `${host} 不应有显式规则（交给国内域名集直连）：${r && r.rule}`); continue; }
         assert(r, `${host} 没有命中任何显式规则`);
         assert(r.policy === expect, `${host} 命中 ${r.rule}，应为 ${expect}`);
       }
@@ -420,7 +421,7 @@ test('阿里系 AMDC：全局阻断明文调度与调度域名，支付宝不受
 });
 test('去广告总模块包含全部 App 的重写 / 脚本 / MITM', () => {
   const text = files['modules/adblock-ultimate.sgmodule'];
-  for (const u of build.loadApps().map(require('../src/shadowrocket').adapt)) {
+  for (const u of require('../src/shadowrocket').srUnits(build.loadApps())) {
     for (const r of u.rewrites || []) assert(text.includes(r), `${u.id} 重写缺失: ${r}`);
     for (const sc of u.scripts || []) assert(text.includes(`${sc.name} = `), `${u.id} 脚本缺失: ${sc.name}`);
     for (const b of u.bodyRewrites || []) assert(text.includes(build.bodyLine(b)), `${u.id} Body Rewrite 缺失: ${b.pattern}`);
@@ -814,6 +815,7 @@ test('Loon：可莉插件地址规范，不含解密关键服务的插件', () =
 require('./app-fixes')({ test, assert, ROOT, files, read, body, sectionOf });
 require('./maintenance')({ test, assert, ROOT, files, read, body, sectionOf });
 require('./sr-douyin-notion')({ test, assert, files, read, body, sectionOf, routeOf });
+require('./sr-pdd')({ test, assert, files, read, body, sectionOf, routeOf });
 require('./apple-services')({ test, assert, files, read, body, sectionOf, routeOf, globMatches });
 
 console.log(`\n${pass} 通过, ${fail} 失败`);
