@@ -57,6 +57,7 @@ function adapt(u) {
 const obsolete = new Set(['DOMAIN,dns.weixin.qq.com,REJECT', 'DOMAIN,dns.weixin.qq.com.cn,REJECT', 'DOMAIN,aedns.weixin.qq.com,REJECT', 'DOMAIN-SUFFIX,wxsnsdy.wxs.qq.com,REJECT', 'DOMAIN-SUFFIX,wxsnsdythumb.wxs.qq.com,REJECT']);
 // Douyin / ByteDance ad, lead-form and telemetry hosts. Never touch feed,
 // comment, video, image, live or config hosts (feed cannot be MITM'd on 38.x).
+// v3.3.8: user asked to kill everything killable at the network layer.
 const DOUYIN_ADS = [
   '# 抖音 / 字节系广告、线索表单与遥测补充（仅小火箭；不拦推荐、评论、视频、图片、直播和配置接口）',
   'DOMAIN-SUFFIX,ad.zijieapi.com,REJECT', 'DOMAIN-SUFFIX,dsp.toutiao.com,REJECT', 'DOMAIN-SUFFIX,track.toutiao.com,REJECT',
@@ -65,6 +66,11 @@ const DOUYIN_ADS = [
   'DOMAIN,logbk.amemv.com,REJECT', 'DOMAIN,log-hl.snssdk.com,REJECT', 'DOMAIN,xlog.snssdk.com,REJECT',
   'DOMAIN,mon.zijieapi.com,REJECT', 'DOMAIN,os-mon.zijieapi.com,REJECT', 'DOMAIN,mcs.zijieapi.com,REJECT',
   'DOMAIN,apmplus.volces.com,REJECT', 'DOMAIN,gator.volces.com,REJECT',
+  '# v3.3.8 加强：广告投放 / 增长任务 / 日志监控的全部机房变体，小程序 / 小游戏推广图标',
+  'DOMAIN-KEYWORD,ads3-normal,REJECT', 'DOMAIN-KEYWORD,ads5-normal,REJECT',
+  'DOMAIN-KEYWORD,polaris3-normal,REJECT', 'DOMAIN-KEYWORD,polaris5-normal,REJECT',
+  'DOMAIN-KEYWORD,log0-misc,REJECT', 'DOMAIN-KEYWORD,log3-misc,REJECT', 'DOMAIN-KEYWORD,mon0-misc,REJECT', 'DOMAIN-KEYWORD,mon3-misc,REJECT',
+  'DOMAIN-KEYWORD,-developer.bytemaimg.com,REJECT',
 ];
 // Pinduoduo: user decision on Shadowrocket — no rewrite / jq / MITM / reject / explicit
 // routing at all (it loaded slowly and had little ads). Domains fall through to the

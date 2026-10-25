@@ -7,15 +7,22 @@ module.exports = function ({ test, assert, files, read, body, sectionOf, routeOf
   const KEEP = ['api5-normal-zb.amemv.com', 'api-normal-m.amemv.com', 'aggr26-normal-s19.amemv.com', 'api5-social-m-hl.amemv.com',
     'webcast3-normal-c-lf.amemv.com', 'frontier-aweme-zjg-ipainner.amemv.com', 'v5-gzb-jltc-x.douyinvod.com', 'p3-sign.douyinpic.com',
     'pull-flv-l13.douyincdn.com', 'lf26-dy-cdn-tos.bytegecko.com', 'p26-im-emoticon-sign.byteimg.com', 'tnc0-alisc1.zijieapi.com',
-    'vcs-lf.zijieapi.com', 'saveu5-normal-hl.zijieapi.com', 'relation.zijieapi.com', 'polaris3-normal-zb.zijieapi.com',
-    'lf3-static.bytednsdoc.com', 'p3-developer.bytemaimg.com', 'n98-lf-effect-aweme-302-ncdn.byteeffecttos.com', 'api5-hl.qishui.com', 'm.baike.com'];
+    'vcs-lf.zijieapi.com', 'saveu5-normal-hl.zijieapi.com', 'relation.zijieapi.com',
+    'lf3-static.bytednsdoc.com', 'n98-lf-effect-aweme-302-ncdn.byteeffecttos.com', 'api5-hl.qishui.com', 'm.baike.com'];
   for (const rel of SR_MODULES) {
     const rules = body(sectionOf(files[rel], 'Rule'));
     test(`${rel}：抖音补充拦截全部生效`, () => {
       for (const line of sr.DOUYIN_ADS.filter((l) => !l.startsWith('#'))) {
-        const host = line.split(',')[1];
+        const v = line.split(',')[1];
+        const host = line.startsWith('DOMAIN-KEYWORD') ? (v.startsWith('-') ? `p3${v}` : `${v}-hl.zijieapi.com`) : v;
         const hit = routeOf(rules, host);
         assert(hit && /^REJECT/.test(hit.policy), `${host} 未拦截：${hit && hit.rule}`);
+      }
+    });
+    test(`${rel}：抖音增长任务、广告机房变体与推广图标被拦截`, () => {
+      for (const host of ['polaris3-normal-zb.zijieapi.com', 'polaris5-normal-lq.zijieapi.com', 'ads5-normal-zb.zijieapi.com', 'log3-misc-hl.amemv.com', 'mon0-misc-hl.amemv.com', 'p3-developer.bytemaimg.com', 'p26-developer.bytemaimg.com']) {
+        const hit = routeOf(rules, host);
+        assert(hit && /^REJECT/.test(hit.policy), `${host} 未拦截`);
       }
     });
     test(`${rel}：抖音推荐 / 评论 / 视频 / 图片 / 直播 / 配置主机不被拦截`, () => {
