@@ -4,22 +4,35 @@
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!category=去广告
 #!system=ios
-# v3.3.7 · 由 scripts/build.js 自动生成，请勿直接修改
+# v3.3.8 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,edith.xiaohongshu.com)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,www.xiaohongshu.com)),REJECT
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,ci.xiaohongshu.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,rec.xiaohongshu.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,so.xiaohongshu.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,edith.rnote.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,www.rnote.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,ci.rnote.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,so.rnote.com)),REJECT
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,rec.rnote.com)),REJECT
+DOMAIN,ads-img-qc.xhscdn.com,REJECT
+DOMAIN,ads-img-al.xhscdn.com,REJECT
+DOMAIN,ads-video-al.xhscdn.com,REJECT
+DOMAIN,ads-video-qc.xhscdn.com,REJECT
+DOMAIN,t-ads.xiaohongshu.com,REJECT
 
 [URL Rewrite]
-^https?:\/\/ci\.xiaohongshu\.com\/system_config\/watermark - reject-img
-^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v1\/surprisebox\/(get_style|open|submit_action) - reject-dict
-^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v3\/note\/guide\? - reject-dict
-^https?:\/\/www\.xiaohongshu\.com\/api\/marketing\/box\/trigger\? - reject-dict
-^https?:\/\/www\.xiaohongshu\.com\/api\/sns\/(v1\/ads\/resource|v2\/hey\/\w+\/hey_gallery) - reject-dict
+^https?:\/\/ci\.(xiaohongshu|rnote)\.com\/system_config\/watermark - reject-img
+^https?:\/\/edith\.(xiaohongshu|rnote)\.com\/api\/sns\/v1\/surprisebox\/(get_style|open|submit_action) - reject-dict
+^https?:\/\/edith\.(xiaohongshu|rnote)\.com\/api\/sns\/v\d+\/note\/guide\? - reject-dict
+^https?:\/\/edith\.(xiaohongshu|rnote)\.com\/api\/sns\/v\d+\/guide\/user_banner - reject-dict
+^https?:\/\/www\.(xiaohongshu|rnote)\.com\/api\/marketing\/box\/trigger\? - reject-dict
+^https?:\/\/www\.(xiaohongshu|rnote)\.com\/api\/sns\/(v\d+\/ads\/resource|v\d+\/hey\/\w+\/hey_gallery) - reject-dict
 
 [Script]
-xiaohongshu_purify = type=http-response,pattern=^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v\d\/(note\/comment\/(list|sub_comments)|note\/(imagefeed|feed|videofeed|widgets|live_photo\/save|detail)|homefeed|system_service\/(splash_config|config)|search\/(banner|hot)_list|search\/notes|followfeed),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/xiaohongshu-sr.js,requires-body=1,max-size=2097152,timeout=10,script-update-interval=86400
+xiaohongshu_purify = type=http-response,pattern=^https?:\/\/(edith|rec|www|so)\.(xiaohongshu|rnote)\.com\/api\/sns\/v\d+\/(note\/comment\/(list|sub_comments)|note\/(imagefeed|feed|videofeed|widgets|live_photo\/save|video\/save|detail)|homefeed|system_service\/(splash_config|config)|search\/(banner_list|hot_list|hint|trending|notes)|followfeed),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/xiaohongshu-sr.js,requires-body=1,max-size=2097152,timeout=10,script-update-interval=86400
 
 [MITM]
-hostname = %APPEND% edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com
+hostname = %APPEND% edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, rec.xiaohongshu.com, so.xiaohongshu.com, edith.rnote.com, www.rnote.com, ci.rnote.com, so.rnote.com, rec.rnote.com

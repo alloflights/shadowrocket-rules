@@ -9,6 +9,26 @@ const ALI = r`^https?:\/\/(?:acs\.m\.taobao\.com|guide-acs\.m\.taobao\.com|(?:g-
 const SPLASH = ALI + r`mtop\.taobao\.(?:idlecommerce\.splash|idle\.local\.splash|idle\.home\.welcome)(?:[./?]|$)`;
 const TAO = `(?:${ALI}${r`mtop\.taobao\.wireless\.home\.splash\.awesome\.get(?:[/?]|$)`}|${r`^https:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.taobao\.cloudvideo\.video\.query(?:[/?]|$)`})`;
 const ALI_HOSTS = ['acs.m.taobao.com', 'guide-acs.m.taobao.com', 'acs.m.goofish.com', 'g-acs.m.goofish.com', 'h5api.m.taobao.com', 'h5api.m.goofish.com'];
+// Xiaohongshu SR-only refresh (ref fmz200 2026-10): rnote.com backup API hosts,
+// rec/so hosts, search hint/trending, generic note guide and user banner,
+// ad-only CDN hosts. Comment-video download and detailfeed/preload stay untouched.
+const XHS_ADS = ['ads-img-qc.xhscdn.com', 'ads-img-al.xhscdn.com', 'ads-video-al.xhscdn.com', 'ads-video-qc.xhscdn.com', 't-ads.xiaohongshu.com'];
+const XHS_MITM = ['rec.xiaohongshu.com', 'so.xiaohongshu.com', 'edith.rnote.com', 'www.rnote.com', 'ci.rnote.com', 'so.rnote.com', 'rec.rnote.com'];
+function xhsSR(u) {
+  const H = r`(xiaohongshu|rnote)\.com`;
+  u.rules = [...(u.rules || []), ...XHS_ADS.map(h => `DOMAIN,${h},REJECT`)];
+  u.rewrites = [
+    r`^https?:\/\/ci\.` + H + r`\/system_config\/watermark - reject-img`,
+    r`^https?:\/\/edith\.` + H + r`\/api\/sns\/v1\/surprisebox\/(get_style|open|submit_action) - reject-dict`,
+    r`^https?:\/\/edith\.` + H + r`\/api\/sns\/v\d+\/note\/guide\? - reject-dict`,
+    r`^https?:\/\/edith\.` + H + r`\/api\/sns\/v\d+\/guide\/user_banner - reject-dict`,
+    r`^https?:\/\/www\.` + H + r`\/api\/marketing\/box\/trigger\? - reject-dict`,
+    r`^https?:\/\/www\.` + H + r`\/api\/sns\/(v\d+\/ads\/resource|v\d+\/hey\/\w+\/hey_gallery) - reject-dict`,
+  ];
+  u.scripts = u.scripts.map(s => ({ ...s, pattern: r`^https?:\/\/(edith|rec|www|so)\.` + H + r`\/api\/sns\/v\d+\/(note\/comment\/(list|sub_comments)|note\/(imagefeed|feed|videofeed|widgets|live_photo\/save|video\/save|detail)|homefeed|system_service\/(splash_config|config)|search\/(banner_list|hot_list|hint|trending|notes)|followfeed)` }));
+  u.mitm = [...new Set([...(u.mitm || []), ...XHS_MITM])];
+  return u;
+}
 function adapt(u) {
   u = { ...u, rules: Array.isArray(u.shadowrocketRules) ? u.shadowrocketRules : u.rules };
   if (u.id === 'zhihu') {
@@ -17,6 +37,7 @@ function adapt(u) {
   if (u.id === 'xiaohongshu') {
     u.scripts = u.scripts.map(s => ({ ...s, script: 'xiaohongshu-sr.js', pattern: s.pattern.replace('(note\\/', '(note\\/comment\\/(list|sub_comments)|note\\/') }));
     u.desc += ' 小火箭额外处理评论与子评论的图片保存标记；不伪造无水印原图。';
+    u = xhsSR(u);
   }
   if (u.id === 'taobao' || u.id === 'goofish') {
     u.desc = u.desc.replace(/首次启用后请删除重装[^。]+。?/, '') + ' 小火箭兼容多网关开屏响应，保留 MTop 信封；若仍出现离线缓存广告，可先清理应用内广告缓存。';

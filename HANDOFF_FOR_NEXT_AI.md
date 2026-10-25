@@ -89,3 +89,10 @@
 
 - 用户反馈拼多多加载慢且本身广告少，要求小火箭去掉拼多多相关的重写和分流。`src/shadowrocket.js` 的 `SR_DROPPED` 让小火箭不再生成 pdd 单元（无重写 / jq / 解密 / QUIC 阻断 / titan 等拒绝），`filterAdRules` 与 `routing` 去掉拼多多显式规则；`modules/pdd.sgmodule` 已撤下。拼多多域名交给 China_Domain / GEOIP 直连。
 - `src/apps/pdd.js` 与 Loon 的拼多多插件保持原样（Loon 不动）。上游 AWAvenue 自带的两条拼多多广告投放域名不在本仓库控制范围内。不要再给小火箭加回拼多多处理。
+
+## 抖音 / 贴吧 / 小红书维护（v3.3.8）
+
+- 参考 fmz200/wool_scripts@c3f8128 与 app2smile/rules@df6366a（可莉站点被 Cloudflare 拦截，GitHub 已无插件）。
+- 小红书：`xhsSR()` 只改小火箭——增加 `rnote.com` 备用接口域名与 rec/so 主机，脚本覆盖 search/hint、search/trending、v10 note/video/save，重写拒绝任意版本 note/guide 与 guide/user_banner，拒绝 ads-img/ads-video xhscdn 与 t-ads 广告素材域名。故意不拦 `note/detailfeed/preload`，不处理评论视频下载。测试 `tests/sr-xiaohongshu.js`。
+- 贴吧：`tieba-proto.js` 与上游 2025-11-18 一致；`tieba-json.js`（Loon 也引用）的 sync 处理已是上游超集，未改。
+- 抖音：参考源只有分流列表，无新增可用广告域名；仍不解密 App。

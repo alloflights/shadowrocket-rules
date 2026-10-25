@@ -816,6 +816,7 @@ require('./app-fixes')({ test, assert, ROOT, files, read, body, sectionOf });
 require('./maintenance')({ test, assert, ROOT, files, read, body, sectionOf });
 require('./sr-douyin-notion')({ test, assert, files, read, body, sectionOf, routeOf });
 require('./sr-pdd')({ test, assert, files, read, body, sectionOf, routeOf });
+require('./sr-xiaohongshu')({ test, assert, files, body, sectionOf, run });
 require('./apple-services')({ test, assert, files, read, body, sectionOf, routeOf, globMatches });
 
 console.log(`\n${pass} 通过, ${fail} 失败`);
