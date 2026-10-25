@@ -95,4 +95,4 @@
 - 参考 fmz200/wool_scripts@c3f8128 与 app2smile/rules@df6366a（可莉站点被 Cloudflare 拦截，GitHub 已无插件）。
 - 小红书：`xhsSR()` 只改小火箭——增加 `rnote.com` 备用接口域名与 rec/so 主机，脚本覆盖 search/hint、search/trending、v10 note/video/save，重写拒绝任意版本 note/guide 与 guide/user_banner，拒绝 ads-img/ads-video xhscdn 与 t-ads 广告素材域名。故意不拦 `note/detailfeed/preload`，不处理评论视频下载。测试 `tests/sr-xiaohongshu.js`。
 - 贴吧：`tieba-proto.js` 与上游 2025-11-18 一致；`tieba-json.js`（Loon 也引用）的 sync 处理已是上游超集，未改。
-- 抖音：参考源只有分流列表，无新增可用广告域名；仍不解密 App。
+- 抖音（v3.3.9）：用户要求网络层能拦尽拦。`DOUYIN_ADS` 追加 ads3/ads5-normal、polaris3/polaris5-normal（增长任务）、log0/log3/mon0/mon3-misc 的 DOMAIN-KEYWORD，以及 `-developer.bytemaimg.com`（小程序 / 小游戏推广图标，原先故意放行，现按用户要求拦）。推荐、评论、视频、直播、配置、汽水音乐、百科仍放行；仍不解密 App。
