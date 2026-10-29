@@ -255,12 +255,20 @@ for (const rel of CONFS) {
     assert(!rules.some((l) => /,苹果服务(?:,|$)/.test(l)), '不应引用可切换策略组');
   });
 }
-test('Shadowrocket：Claude / Gemini 默认使用 fallback 稳定线路而非 url-test 测速组', () => {
+test('Shadowrocket：AI 专线策略组匹配用户配置（OpenAI->日本节点, Claude->新加坡节点, Gemini->PROXY）', () => {
   const text = files['Shadowrocket_LazyGroup_Merged.conf'];
-  for (const name of ['Claude', 'Gemini']) {
-    assert(text.includes(`${name} = select,AI稳定线路,`), `${name} 第一成员应为 AI稳定线路`);
+  const expected = {
+    OpenAI: '日本节点',
+    Claude: '新加坡节点',
+    Gemini: 'PROXY',
+    MetaAI: 'AI稳定线路',
+    AI: 'AI稳定线路',
+  };
+  for (const [name, defaultPolicy] of Object.entries(expected)) {
     const line = text.split('\n').find((l) => l.startsWith(`${name} = `));
-    assert(line.includes('policy-select-name=AI稳定线路'), `${name} 默认选择应为 AI稳定线路`);
+    assert(line, `未找到 ${name} 策略组`);
+    assert(line.includes(`select,${defaultPolicy},`), `${name} 第一成员应为 ${defaultPolicy}`);
+    assert(line.includes(`policy-select-name=${defaultPolicy}`), `${name} 默认选择应为 ${defaultPolicy}`);
   }
   assert(text.includes('AI稳定线路 = fallback,'), '稳定线路不应使用 url-test');
 });

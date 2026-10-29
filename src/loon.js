@@ -84,9 +84,9 @@ ${PROXY} = select,自动选择,${ALL},手动切换,DIRECT
 自动选择 = url-test,全部,url=${TEST_URL},interval=1800,tolerance=100
 手动切换 = select,全部
 # ---------- AI 专线（固定节点，避免 IP 漂移触发风控；Gemini / Claude 不要用香港） ----------
-OpenAI = select,AI稳定线路,美国节点,日本节点,新加坡节点,台湾节点,${PROXY}
+OpenAI = select,日本节点,AI稳定线路,美国节点,新加坡节点,台湾节点,${PROXY}
 Claude = select,新加坡节点,AI稳定线路,美国节点,日本节点,台湾节点,${PROXY}
-Gemini = select,新加坡节点,AI稳定线路,美国节点,日本节点,台湾节点,${PROXY}
+Gemini = select,${PROXY},新加坡节点,AI稳定线路,美国节点,日本节点,台湾节点
 MetaAI = select,AI稳定线路,美国节点,${PROXY},日本节点,新加坡节点
 AI = select,AI稳定线路,美国节点,日本节点,新加坡节点,台湾节点,${PROXY}
 # ---------- 流媒体 / 社交 ----------

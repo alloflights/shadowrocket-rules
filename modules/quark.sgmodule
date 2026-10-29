@@ -4,7 +4,7 @@
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!category=去广告
 #!system=ios
-# v3.3.9 · 由 scripts/build.js 自动生成，请勿直接修改
+# v3.3.10 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,open-cms-api.quark.cn)),REJECT

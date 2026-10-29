@@ -107,10 +107,10 @@ const ALL = '香港节点,台湾节点,日本节点,新加坡节点,韩国节点
 const NON_HK_AI = '🇺🇸|US|USA|America|United States|美国|🇯🇵|JP|Japan|日本|🇸🇬|SG|Singapore|新加坡|🇹🇼|TW|Taiwan|台湾';
 
 const proxyGroups = `[Proxy Group]
-# ---------- AI 专线（默认 fallback，减少测速切线；严格固定出口请手动选单节点） ----------
-OpenAI = select,AI稳定线路,美国节点,日本节点,新加坡节点,台湾节点,PROXY,policy-select-name=AI稳定线路
-Claude = select,AI稳定线路,新加坡节点,美国节点,日本节点,台湾节点,PROXY,policy-select-name=AI稳定线路
-Gemini = select,AI稳定线路,新加坡节点,美国节点,日本节点,台湾节点,PROXY,policy-select-name=AI稳定线路
+# ---------- AI 专线（匹配客户端自定义策略选择） ----------
+OpenAI = select,日本节点,AI稳定线路,美国节点,新加坡节点,台湾节点,PROXY,policy-select-name=日本节点
+Claude = select,新加坡节点,AI稳定线路,美国节点,日本节点,台湾节点,PROXY,policy-select-name=新加坡节点
+Gemini = select,PROXY,新加坡节点,AI稳定线路,美国节点,日本节点,台湾节点,policy-select-name=PROXY
 MetaAI = select,AI稳定线路,美国节点,PROXY,日本节点,新加坡节点,policy-select-name=AI稳定线路
 AI = select,AI稳定线路,美国节点,日本节点,新加坡节点,台湾节点,PROXY,policy-select-name=AI稳定线路
 # ---------- 流媒体 / 社交 ----------
