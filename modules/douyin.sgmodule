@@ -1,8 +1,8 @@
 #!name=抖音深度纯净版 (Douyin Pro - 网络层稳态版)
-#!desc=抖音独立网络层模块：广告联盟、遥测和电商入口拦截；可能影响购物功能，按需开启。不解密 App、不全局关闭其它模块的解密。
+#!desc=抖音独立网络层模块：拦截广告联盟、遥测、增长任务及部分电商接口；可能影响购物、任务和小程序图标。不开启 App 解密，无法按字段过滤同接口推荐广告。
 #!author=allofights
 #!system=ios
-# Shadowrocket v3.3.3 · 独立维护模块，统一纳入安全与脚本回归检查
+# Shadowrocket v3.3.12 · 独立维护模块，统一纳入安全与脚本回归检查
 #!category=应用净化
 
 [Rule]
@@ -28,7 +28,7 @@ DOMAIN-SUFFIX,log0-misc-lf.amemv.com,REJECT
 DOMAIN-SUFFIX,mon0-misc-lf.amemv.com,REJECT
 DOMAIN-SUFFIX,logbk.amemv.com,REJECT
 
-# 抖音电商小黄车、商品详情、SKU与规格弹窗深度绞杀 (彻底解决图1规格详情与小黄车)
+# 抖音电商接口拦截（可能影响购物，不保证移除推荐视频中的带货内容）
 DOMAIN-SUFFIX,ecombdapi.com,REJECT
 DOMAIN-SUFFIX,ecombdpage.com,REJECT
 DOMAIN-SUFFIX,ecombdimg.com,REJECT
@@ -36,7 +36,7 @@ DOMAIN-SUFFIX,ecombdstatic.com,REJECT
 DOMAIN,ecomuser.snssdk.com,REJECT
 DOMAIN-SUFFIX,render.ecombdpage.com,REJECT
 
-# 字节端侧智能投放大脑、广告转化归因与动态分流 (Pitaya & Polaris & MSSDK)
+# 字节端侧服务、广告归因与增长任务（可能影响相关功能）
 DOMAIN,pitaya.bytedance.com,REJECT
 DOMAIN-SUFFIX,polaris5-normal-zb.zijieapi.com,REJECT
 DOMAIN-SUFFIX,polaris.zijieapi.com,REJECT
@@ -45,8 +45,33 @@ DOMAIN-SUFFIX,mssdk3-normal-lf.zijieapi.com,REJECT
 DOMAIN-SUFFIX,neptune-api.volces.com,REJECT
 DOMAIN-SUFFIX,wmzfylgdsz.com,REJECT
 
-# 直播间推流、直播带货卡片与同城直播强插 (Webcast - 杀错不放过)
+# 直播：不按整个 Webcast 域拦截，以免影响正常直播
 # 不使用 DOMAIN-KEYWORD,webcast：会误伤正常直播正文，广告由接口/SDK规则与响应层处理
+
+# 与全量去广告模块同步：广告投放、线索表单、增长任务和日志监控
+# 规则也可能影响其他字节系应用；增长任务与小程序/小游戏图标可能失效。
+DOMAIN-SUFFIX,dsp.toutiao.com,REJECT
+DOMAIN-SUFFIX,track.toutiao.com,REJECT
+DOMAIN-SUFFIX,temai.snssdk.com,REJECT
+DOMAIN-SUFFIX,pangle-b.io,REJECT
+DOMAIN,lf-leads-fe-scm.bytecdn.com,REJECT
+DOMAIN,log0-misc-hl.amemv.com,REJECT
+DOMAIN,log-hl.snssdk.com,REJECT
+DOMAIN,xlog.snssdk.com,REJECT
+DOMAIN,mon.zijieapi.com,REJECT
+DOMAIN,os-mon.zijieapi.com,REJECT
+DOMAIN,mcs.zijieapi.com,REJECT
+DOMAIN,apmplus.volces.com,REJECT
+DOMAIN,gator.volces.com,REJECT
+DOMAIN-KEYWORD,ads3-normal,REJECT
+DOMAIN-KEYWORD,ads5-normal,REJECT
+DOMAIN-KEYWORD,polaris3-normal,REJECT
+DOMAIN-KEYWORD,polaris5-normal,REJECT
+DOMAIN-KEYWORD,log0-misc,REJECT
+DOMAIN-KEYWORD,log3-misc,REJECT
+DOMAIN-KEYWORD,mon0-misc,REJECT
+DOMAIN-KEYWORD,mon3-misc,REJECT
+DOMAIN-KEYWORD,-developer.bytemaimg.com,REJECT
 
 # 广告资源与行为埋点
 DOMAIN-KEYWORD,ad-pattern,REJECT-IMG
@@ -58,7 +83,7 @@ DOMAIN-KEYWORD,toblog,REJECT
 ^https?:\/\/(api.*\.amemv|aweme\.snssdk)\.com\/api\/ad\/ - reject-200
 ^https?:\/\/.*\.snssdk\.com\/api\/ad\/v\d\/ - reject-200
 
-# 视频内带货小黄车、商品浮窗与商业推广
+# 部分商业接口（HTTPS 需相应主机已由其它配置解密才生效）
 ^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/yellow_cart\/ - reject-dict
 ^https?:\/\/.*\.snssdk\.com\/aweme\/v\d\/commerce\/ - reject-dict
 ^https?:\/\/.*\.snssdk\.com\/live\/room\/pop_window - reject-dict
