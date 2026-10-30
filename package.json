@@ -1,6 +1,6 @@
 {
   "name": "shadowrocket-rules",
-  "version": "3.3.10",
+  "version": "3.3.11",
   "description": "Shadowrocket / Loon 分流 + 去广告配置（src/ 单一数据源自动生成）",
   "scripts": {
     "build": "node scripts/build.js",

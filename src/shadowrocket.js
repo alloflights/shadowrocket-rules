@@ -32,7 +32,15 @@ function xhsSR(u) {
 function adapt(u) {
   u = { ...u, rules: Array.isArray(u.shadowrocketRules) ? u.shadowrocketRules : u.rules };
   if (u.id === 'zhihu') {
-    u.scripts = u.scripts.map(s => ({ ...s, script: 'zhihu-sr.js', pattern: s.pattern.replace('topstory\\/hot-lists', '(?:v4\\/)?topstory\\/hot-lists') }));
+    // Known ad-only answer/article bottom endpoints; do not blanket-block commercial_api.
+    u.rewrites = [...(u.rewrites || []),
+      r`^https?:\/\/api\.zhihu\.com\/commercial_api\/(?:answer|article)\/\d+\/bottom-v2\/?(?:[?#]|$) - reject-dict`,
+      r`^https?:\/\/api\.zhihu\.com\/distribute\/rhea\/qa_ad_card\/h5\/recommendation\/?(?:[?#]|$) - reject-dict`,
+    ];
+    u.scripts = u.scripts.map(s => ({ ...s, script: 'zhihu-sr.js', pattern: s.pattern
+      .replace('topstory\\/hot-lists', '(?:v4\\/)?topstory\\/hot-lists')
+      .replace('|answers\\/\\d+', '|answers\\/(?:v2\\/)?\\d+')
+      .replace('|articles\\/\\d+', '|articles\\/(?:v2\\/)?\\d+') }));
   }
   if (u.id === 'xiaohongshu') {
     u.scripts = u.scripts.map(s => ({ ...s, script: 'xiaohongshu-sr.js', pattern: s.pattern.replace('(note\\/', '(note\\/comment\\/(list|sub_comments)|note\\/') }));
