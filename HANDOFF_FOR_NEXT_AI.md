@@ -101,3 +101,9 @@
 
 - 仅 SR 添加 `commercial_api/answer|article/<id>/bottom-v2` 和 `distribute/rhea/qa_ad_card/h5/recommendation` 两项精确广告接口 reject-dict；不清空其它 commercial_api。参考 lodepuly 的知乎规则和 QingRex/LoonKissSurge 的知乎规则。
 - `api.zhihu.com` 的 `answers/v2/<id>` 与 `articles/v2/<id>` 接入现有 SR 脚本，只清理已知广告标记并保留正文/导航；不扩大 MITM 主机。新增合成回归；用户设备和具体贴片响应尚未验证，不能保证覆盖所有贴片。Loon 保持不变。
+
+## 抖音独立模块同步（v3.3.12）
+
+- `modules/douyin.sgmodule` 为静态独立模块，补齐 v3.3.9 全量广告模块中的抖音 `DOUYIN_ADS`，无需解密 App；广告/增长任务/日志机房变体与小程序图标在独立使用时亦可拦截。规则可能影响其他字节应用及购物、增长任务、小程序/小游戏图标。
+- 若已启用全量去广告模块，这些新增域名本来就已被其拦截，不能宣称这次同步提高了该场景的覆盖。推荐流广告与正常内容共用接口，无解密条件下仍无法按字段筛选。
+- `tests/sr-douyin-notion.js` 将独立模块加入已有广告及真实请求记录中的正常主机保护回归；合成测试并非真机验证。
