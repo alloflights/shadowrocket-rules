@@ -82,6 +82,25 @@ module.exports = function ({ test, assert, ROOT, files, read, body, sectionOf })
       assert(out.data.length === 1 && out.data[0].id === 7 && out.paging.next === 'n', path);
     }
   });
+  test('知乎回答/文章底部：仅拒绝已知商业接口，不拦正文和其它商业接口', () => {
+    const unit = units.find(u => u.id === 'zhihu');
+    const rules = unit.rewrites.map(x => { const m = x.match(/^(\S+)\s+-\s+(\S+)$/); return { re: new RegExp(m[1]), action: m[2] }; });
+    const rejects = url => rules.some(x => x.action === 'reject-dict' && x.re.test(url));
+    for (const path of ['commercial_api/answer/42/bottom-v2?x=1', 'commercial_api/article/42/bottom-v2', 'distribute/rhea/qa_ad_card/h5/recommendation?answer_id=42']) assert(rejects(zh + path), `未拦 ${path}`);
+    for (const path of ['commercial_api/answer/42/bottom-v2-extra', 'commercial_api/answer/42/other', 'commercial_api/new_business', 'v4/answers/42', 'answers/42/recommendations', 'distribute/rhea/qa_ad_card/h5/recommendation-extra']) assert(!rejects(zh + path), `误拦 ${path}`);
+    for (const module of ['modules/zhihu.sgmodule', 'modules/adblock-ultimate.sgmodule']) {
+      const lines = body(sectionOf(files[module], 'URL Rewrite'));
+      for (const path of ['commercial_api/answer/42/bottom-v2?x=1', 'distribute/rhea/qa_ad_card/h5/recommendation?x=1']) assert(lines.some(l => { const m = l.match(/^(\S+)\s+-\s+reject-dict$/); return m && new RegExp(m[1]).test(zh + path); }), `${module} 未生成 ${path}`);
+    }
+    assert(!base.find(u => u.id === 'zhihu').rewrites.some(x => /qa_ad_card|bottom-v2/.test(x)), 'Loon 共享源被改动');
+  });
+  test('知乎新版回答/文章详情：接入现有脚本，保留正文及问题导航', () => {
+    for (const path of ['answers/v2/42?foo=1', 'articles/v2/42']) {
+      assert(matches(script('zhihu'), zh + path), `未接入 ${path}`);
+      const out = parse('zhihu-sr.js', zh + path, { data: { id: 42, content: '<p>正文</p><a class="ADLinkCard">广告</a>', question: { id: 7 }, link_cards: [{ type: 'question', id: 7 }, { type: 'mcn_link_card' }] } });
+      assert(out.data.question.id === 7 && out.data.content.includes('正文') && !out.data.content.includes('ADLinkCard') && out.data.link_cards.length === 1, path);
+    }
+  });
   test('知乎：查询参数不改变接口分支，未知 commercial_api 不清空', () => {
     const input = { data: [{ type: 'question', id: 7 }], marker: 1 };
     assert(parse('zhihu-sr.js', zh + 'topstory/hot-lists/total?redirect=/answers/1/recommendations', input).data[0].id === 7, 'query 分支污染');
