@@ -52,7 +52,7 @@ function loadApps() {
 function scriptLine(s) {
   const parts = [`type=http-${s.type}`, `pattern=${s.pattern}`, `script-path=${SCRIPT_BASE}/${s.script}`];
   if (s.type === 'response') {
-    parts.push('requires-body=1', `max-size=${s.maxSize || 1048576}`);
+    parts.push('requires-body=1', `max-size=${s.maxSize || 524288}`);
     if (s.binary) parts.push('binary-body-mode=1');
   } else {
     parts.push('requires-body=0');
@@ -66,7 +66,10 @@ function scriptLine(s) {
 function quicRule(host) {
   let matcher;
   if (host.startsWith('*.')) matcher = `DOMAIN-SUFFIX,${host.slice(2)}`;
-  else if (host.includes('*')) matcher = `DOMAIN-SUFFIX,${host.slice(host.indexOf('.', host.indexOf('*')) + 1)}`;
+  else if (host.includes('*')) {
+    const dotIdx = host.indexOf('.', host.indexOf('*'));
+    matcher = dotIdx !== -1 ? `DOMAIN-SUFFIX,${host.slice(dotIdx + 1)}` : `DOMAIN-KEYWORD,${host.replace(/\*/g, '')}`;
+  }
   else matcher = `DOMAIN,${host}`;
   return `AND,((PROTOCOL,UDP),(DST-PORT,443),(${matcher})),REJECT`;
 }

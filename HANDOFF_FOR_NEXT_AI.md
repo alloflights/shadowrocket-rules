@@ -1,5 +1,11 @@
 # 维护说明（v3）
 
+## v3.3.13：按 Ai_Commit_Handoff.md 提交
+- 依附件补充抖音无解密拦截规则，独立模块不启用 MITM，并保留原有 DOMAIN-KEYWORD 和源码旧规则。
+- 网页版模块采用附件给出的完整内容；QUIC 通配符边界、SR 默认响应上限 512KiB、节点筛选锚点按附件修改，保留 binary 参数支持。
+- 淘宝 AMDC 因 tests/verify_all.js 存在旧行精确断言，依附件条件保留原行；按指定名单精简同策略冗余域名和网段。
+- 按用户最终要求，仅重新构建产物，不再运行 check 或测试；不承诺真机去广告效果、延迟或耗电改善。
+
 ## v3.3.5：Shadowrocket 应用兼容修复
 - `src/shadowrocket.js` 只在 SR 构建应用：`adapt()` 派生 App 覆盖，不修改 `src/apps` 源对象；`guardRules()` / `realIP()` 保护原生微信 DNS 和 QQ / 微信共用媒体；`filterAdRules()` 只移除五条已替代误拦截，保留 Loon 共享广告源。
 - `routing()` 同时将已返回 403 的 DouYin jsDelivr 链接换成 GitHub raw；不要为了 SR 变更修改 Loon 基线。

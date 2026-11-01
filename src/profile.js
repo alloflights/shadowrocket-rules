@@ -102,7 +102,7 @@ const REGIONS = [
 ];
 // 订阅里的“剩余流量 / 到期时间 / 官网”等信息节点不参与测速
 const INFO = '剩余|到期|流量|官网|重置|过期|套餐|Expire|Traffic|官方|客服';
-const filter = (keys) => `(?=.*(${keys}))^((?!(${INFO})).)*$`;
+const filter = (keys) => `^(?=.*(${keys}))((?!(${INFO})).)*$`;
 const ALL = '香港节点,台湾节点,日本节点,新加坡节点,韩国节点,美国节点';
 const NON_HK_AI = '🇺🇸|US|USA|America|United States|美国|🇯🇵|JP|Japan|日本|🇸🇬|SG|Singapore|新加坡|🇹🇼|TW|Taiwan|台湾';
 

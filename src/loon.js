@@ -64,7 +64,7 @@ const REGIONS = [
 ];
 const INFO = '剩余|到期|流量|官网|重置|过期|套餐|Expire|Traffic|官方|客服';
 const NON_HK_AI = '🇺🇸|US|USA|America|United States|美国|🇯🇵|JP|Japan|日本|🇸🇬|SG|Singapore|新加坡|🇹🇼|TW|Taiwan|台湾';
-const only = (keys) => `(?=.*(${keys}))^((?!(${INFO})).)*$`;
+const only = (keys) => `^(?=.*(${keys}))((?!(${INFO})).)*$`;
 const TEST_URL = 'http://www.gstatic.com/generate_204';
 
 const remoteFilter = [
