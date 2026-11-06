@@ -68,13 +68,14 @@ dns-direct-system = true
 dns-direct-fallback-proxy = false
 hijack-dns = 8.8.8.8:53, 8.8.4.4:53
 private-ip-answer = true
+dns-cache = true
 
 # 关闭 IPv6：避免 AAAA 查询与蜂窝网络 IPv6 回落带来的额外等待
 ipv6 = false
 prefer-ipv6 = false
 
 icmp-auto-reply = true
-always-reject-url-rewrite = false
+always-reject-url-rewrite = true
 udp-policy-not-supported-behaviour = REJECT
 
 # 只对走代理的连接阻断 QUIC（去广告模块会对其解密的主机单独禁用 QUIC，其余直连不受影响）
@@ -159,6 +160,18 @@ const host = `[Host]
 *.office365.com = server:system
 *.office.com = server:system
 localhost = 127.0.0.1
+
+# 国内大厂高频媒体与 CDN：使用系统本地运营商 DNS 直连边缘机房，极速首包直达并降低反复缓冲耗电
+*.hdslb.com = server:system
+*.bilivideo.com = server:system
+*.bilivideo.cn = server:system
+*.douyincdn.com = server:system
+*.douyinvod.com = server:system
+*.qpic.cn = server:system
+*.qlogo.cn = server:system
+*.alicdn.com = server:system
+*.360buyimg.com = server:system
+*.meituan.net = server:system
 `;
 
 module.exports = { general, proxyGroups, AIO_POLICY, host, CRITICAL, criticalPatterns, SKIP_PROXY, ALWAYS_REAL_IP, TUN_EXCLUDED };

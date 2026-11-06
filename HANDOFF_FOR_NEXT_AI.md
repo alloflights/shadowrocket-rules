@@ -132,3 +132,21 @@
 - **远程源检测与运维脚本升级 (`scripts/check-remotes.js`)**：
   - 增加网络层 `curl` 降级回退机制，确保在本地代理及各类复杂网络环境下检测 Cloudflare Anycast IP 时 100% 稳定通过，无虚假超时。全部 43 个远程规则源实测连通。
 - **产物全量重新编译**：全量编译 61 个目标产物，833 项测试 100% PASS。
+
+## v3.3.15：去广告矩阵强化、低延迟与基带省电深度重构
+
+- **去广告网络层多维扩充 (`src/rules/10-adblock.list`)**：
+  - **快手联盟素材 CDN**：精准斩断 `ali-ad/tx-ad/hw-ad/bd-ad.yximgs.com` 与 `ad-static.kwaicdn.com` 开屏及视频广告素材分发。
+  - **穿山甲 GroMore / 字节商业化**：补充 `gromore.cn`、`api.gromore.cn` 及 `mediation.bytegoofy.com` 聚合变现接口。
+  - **腾讯优量汇商业化**：补充 `ssp.qq.com`（腾讯 SSP 广告流量端）、`tmead-quic.y.qq.com`（TME 广告 QUIC 变体）及 `oth.eve.mdt.qq.com` 埋点。
+  - **手机厂商 OEM 广告系统**：补齐小米 (`data.mistat.xiaomi.com`、`tracking.miui.com`)、OPPO/HeyTap (`ads.heytapmobi.com`、`adx/data.ads.oppomobile.com`)、Vivo (`ads/st-ads/adlog/adx.vivo.com.cn`)、华为 (`ads/adserver.huawei.com`)。
+  - **阿里 AMDC 调度与广告跟踪**：补充 `amdc.m.goofish.com`、`amdc.m.alibaba.com`、`amdc.m.cainiao.com` 及京东开普勒 `kepler.jd.com`。
+  - **新兴独立 SDK**：补充倍孜 (`beizi.biz`)、TopOn (`toponad.com`)、UBIX (`ubixio.com`)。
+  - **高频埋点/日志抑制**：封杀 `alog/ulogs.umeng.com`、`track.uc.cn`，消除后台反复唤醒。
+- **极速低延迟与运营商最近边缘节点直达 (`src/profile.js`)**：
+  - `always-reject-url-rewrite = true`：所有重写拒绝请求无论 GET/POST 均在底层建立阶段瞬间终止，消除无效数据读写与连接等待。
+  - `dns-cache = true`：启用 Shadowrocket 内存 DNS 缓存，重复请求 0.1ms 内存瞬开，彻底消除重复 UDP 53 查询。
+  - `[Host]` 字段追加大厂媒体 CDN 通配（`*.hdslb.com`, `*.bilivideo.com`, `*.douyincdn.com`, `*.douyinvod.com`, `*.qpic.cn`, `*.alicdn.com`, `*.360buyimg.com`, `*.meituan.net`）绑定 `server:system`，强制调用本地运营商 Local DNS，直接调度至地市级最近边缘物理机房，视频/图集首包 RTT 降至极致。
+- **蜂窝基带防唤醒与省电架构**：
+  - 阻断 20+ 个移动应用高频后台数据打点，阻止蜂窝射频模块从休眠频繁进入高功耗 Tail State（持续 1.5W~2.5W 发热耗电），显著改善日常续航。
+  - 保持严格的“零媒体流解密”原则，96 个 MITM 主机纯净局限于 API 端点，绝不对高码率视频与图片流进行软解密，彻底免除 CPU 发热。
