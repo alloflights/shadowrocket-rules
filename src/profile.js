@@ -75,7 +75,7 @@ ipv6 = false
 prefer-ipv6 = false
 
 icmp-auto-reply = true
-always-reject-url-rewrite = true
+always-reject-url-rewrite = false
 udp-policy-not-supported-behaviour = REJECT
 
 # 只对走代理的连接阻断 QUIC（去广告模块会对其解密的主机单独禁用 QUIC，其余直连不受影响）
@@ -172,6 +172,10 @@ localhost = 127.0.0.1
 *.alicdn.com = server:system
 *.360buyimg.com = server:system
 *.meituan.net = server:system
+*.bdimg.com = server:system
+*.bdstatic.com = server:system
+*.tiebapic.baidu.com = server:system
+*.baidupcs.com = server:system
 `;
 
 module.exports = { general, proxyGroups, AIO_POLICY, host, CRITICAL, criticalPatterns, SKIP_PROXY, ALWAYS_REAL_IP, TUN_EXCLUDED };
