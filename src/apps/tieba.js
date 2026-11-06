@@ -12,10 +12,12 @@ module.exports = {
   ],
   rewrites: [
     TBC + r`c\/s\/log - reject-200`,
-    TBC + r`c\/f\/forum\/getInterestClassList$ - reject-dict`,
-    r`^https?:\/\/(tiebac|tieba)\.baidu\.com\/c\/f\/search\/discover$ - reject-dict`,
-    TB + r`c\/f\/forum\/getForumAlbum$ - reject-dict`,
-    r`^http:\/\/c\.tieba\.baidu\.com\/c\/f\/forum\/hotforum$ - reject-dict`,
+    TBC + r`c\/f\/forum\/getInterestClassList - reject-dict`,
+    r`^https?:\/\/(tiebac|tieba)\.baidu\.com\/c\/f\/search\/discover - reject-dict`,
+    r`^https?:\/\/(tiebac|c\.tieba|tieba)\.baidu\.com\/c\/f\/forum\/getForumAlbum - reject-dict`,
+    r`^https?:\/\/c\.tieba\.baidu\.com\/c\/f\/forum\/hotforum - reject-dict`,
+    r`^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/f\/forum\/getAdInfo - reject-dict`,
+    r`^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/s\/splashSchedule - reject-dict`,
   ],
   bodyRewrites: [
     {
@@ -29,15 +31,14 @@ module.exports = {
         '.zone_info |= map(select(.type != "commerce" and .type != "banner" and .type != "game"))',
       ],
     },
-    { pattern: TB + r`c\/f\/forum\/forumGuide$`, jq: 'del(.hot_search)' },
-    { pattern: TB + r`c\/f\/frs\/frsBottom\?`, jq: 'del(.card_activity)' },
-    { pattern: TBC + r`c\/f\/frs\/frsBottom$`, jq: 'del(.card_activity)' },
-    { pattern: TBC + r`c\/f\/sidebar\/home$`, jq: 'del(.game_center, .task_list, .vip_banner)' },
-    { pattern: TB + r`mo\/q\/search\/startPage\?`, jq: '{"no": 0, "error": "success"}' },
+    { pattern: TB + r`c\/f\/forum\/forumGuide`, jq: 'del(.hot_search)' },
+    { pattern: r`^https?:\/\/(tiebac|tieba)\.baidu\.com\/c\/f\/frs\/frsBottom`, jq: 'del(.card_activity, .sidebar_card, .business_promot)' },
+    { pattern: TBC + r`c\/f\/sidebar\/home`, jq: 'del(.game_center, .task_list, .vip_banner)' },
+    { pattern: TB + r`mo\/q\/search\/startPage`, jq: '{"no": 0, "error": "success"}' },
   ],
   scripts: [
-    { name: 'tieba_json', type: 'response', pattern: r`^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))$|tiebaads\/commonbatch\?)`, script: 'tieba-json.js', maxSize: 1048576 },
-    { name: 'tieba_proto', type: 'response', pattern: r`^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?cmd`, script: 'tieba-proto.js', maxSize: 1048576, binary: true },
+    { name: 'tieba_json', type: 'response', pattern: r`^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))(\?|$)|tiebaads\/commonbatch\?)`, script: 'tieba-json.js', maxSize: 1048576 },
+    { name: 'tieba_proto', type: 'response', pattern: r`^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?.*cmd`, script: 'tieba-proto.js', maxSize: 1048576, binary: true },
   ],
   mitm: ['tiebac.baidu.com', 'c.tieba.baidu.com', 'tieba.baidu.com'],
 };

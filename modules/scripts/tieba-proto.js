@@ -30,7 +30,12 @@ if (!binaryBody) return $done({});
         console.log('贴吧-FrsPage');
         const frsPageResIdlObj = FrsPageResIdl.fromBinary(binaryBody,{readUnknownField: true});
 
-        removeGoodsInfo(frsPageResIdlObj.data.forum?.bannerList?.app);
+        if (frsPageResIdlObj.data.forum?.bannerList) {
+            frsPageResIdlObj.data.forum.bannerList = null;
+        }
+        if (frsPageResIdlObj.data.bannerList) {
+            frsPageResIdlObj.data.bannerList = null;
+        }
         frsPageResIdlObj.data.threadList = removeThread(frsPageResIdlObj.data.threadList, false);
 
         if (frsPageResIdlObj.data.liveFuseForum?.length) {
@@ -40,7 +45,7 @@ if (!binaryBody) return $done({});
             console.log(`无需处理吧头直播`);
         }
 
-        if(frsPageResIdlObj.data.activityhead?.isAd){
+        if(frsPageResIdlObj.data.activityhead){
             console.log('frs去除吧内header图片广告');
             frsPageResIdlObj.data.activityhead = null;
         } else {
@@ -113,16 +118,8 @@ if (!binaryBody) return $done({});
         } else {
             console.log('贴吧-PbPage');
             const pbPageResIdlObj = PbPageResIdl.fromBinary(binaryBody,{readUnknownField: true});
-            removeGoodsInfo(pbPageResIdlObj.data.bannerList?.app);
-
-            const bannerGoodsInfoLength = pbPageResIdlObj.data.bannerList?.pbBannerAd?.goodsInfo?.length;
-            if (bannerGoodsInfoLength) {
-                console.log(`去除pb_banner_ad的goods_info:${bannerGoodsInfoLength}`)
-                pbPageResIdlObj.data.bannerList.pbBannerAd.goodsInfo = [];
-            }
-            if(pbPageResIdlObj.data.bannerList?.pbBannerAd?.liveAd){
-                console.log(`去除pb_banner_ad的live_ad`)
-                pbPageResIdlObj.data.bannerList.pbBannerAd.liveAd = null;
+            if (pbPageResIdlObj.data.bannerList) {
+                pbPageResIdlObj.data.bannerList = null;
             }
 
             if(pbPageResIdlObj.data.recomAlaInfo?.liveId){
@@ -164,7 +161,9 @@ if (!binaryBody) return $done({});
         }
 
         const personalizedResIdlObj = PersonalizedResIdl.fromBinary(binaryBody,{readUnknownField: true});
-        removeGoodsInfo(personalizedResIdlObj.data.bannerList?.app);
+        if (personalizedResIdlObj.data.bannerList) {
+            personalizedResIdlObj.data.bannerList = null;
+        }
         personalizedResIdlObj.data.threadList = removeThread(personalizedResIdlObj.data.threadList,
             +argOptions.per_filter_video_thread);
         if(personalizedResIdlObj.data.liveAnswer){
@@ -178,7 +177,9 @@ if (!binaryBody) return $done({});
         console.log('贴吧-threadlist');
         const threadListResIdlObj = ThreadListResIdl.fromBinary(binaryBody,{readUnknownField: true});
 
-        removeGoodsInfo(threadListResIdlObj.data.bannerList?.app);
+        if (threadListResIdlObj.data.bannerList) {
+            threadListResIdlObj.data.bannerList = null;
+        }
 
         body = ThreadListResIdl.toBinary(threadListResIdlObj);
     } else if (url.includes("frs/generalTabList")) {
@@ -230,6 +231,8 @@ function removeThread(threadList, filterVideo) {
                 return false;
             } else if(filterVideo && item.videoInfo){
                 videoCount++;
+                return false;
+            } else if(item.isAd || item.adInfo || item.businessInfo?.length){
                 return false;
             }
             return true;

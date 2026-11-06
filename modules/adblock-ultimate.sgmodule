@@ -4,7 +4,7 @@
 #!homepage=https://github.com/alloflights/shadowrocket-rules
 #!category=去广告
 #!system=ios
-# v3.3.16 · 由 scripts/build.js 自动生成，请勿直接修改
+# v3.3.17 · 由 scripts/build.js 自动生成，请勿直接修改
 
 [Rule]
 # Apple 基础服务固定 DIRECT；不受旧「苹果服务」策略选择影响
@@ -1267,10 +1267,12 @@ DOMAIN-KEYWORD,-developer.bytemaimg.com,REJECT
 
 # --- 百度贴吧净化 ---
 ^https?:\/\/tiebac\.baidu\.com\/c\/s\/log - reject-200
-^https?:\/\/tiebac\.baidu\.com\/c\/f\/forum\/getInterestClassList$ - reject-dict
-^https?:\/\/(tiebac|tieba)\.baidu\.com\/c\/f\/search\/discover$ - reject-dict
-^https?:\/\/tieba\.baidu\.com\/c\/f\/forum\/getForumAlbum$ - reject-dict
-^http:\/\/c\.tieba\.baidu\.com\/c\/f\/forum\/hotforum$ - reject-dict
+^https?:\/\/tiebac\.baidu\.com\/c\/f\/forum\/getInterestClassList - reject-dict
+^https?:\/\/(tiebac|tieba)\.baidu\.com\/c\/f\/search\/discover - reject-dict
+^https?:\/\/(tiebac|c\.tieba|tieba)\.baidu\.com\/c\/f\/forum\/getForumAlbum - reject-dict
+^https?:\/\/c\.tieba\.baidu\.com\/c\/f\/forum\/hotforum - reject-dict
+^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/f\/forum\/getAdInfo - reject-dict
+^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/s\/splashSchedule - reject-dict
 
 # --- 航旅纵横净化 ---
 ^https?:\/\/oss\.umetrip\.com\/fs\/advert\/polite - reject-dict
@@ -1396,11 +1398,10 @@ http-response-jq ^https:\/\/open-cms-api\.quark\.cn\/open-cms\? '(. as $o | try 
 
 # --- 百度贴吧净化 ---
 http-response-jq ^https?:\/\/tiebac\.baidu\.com\/c\/u\/user\/profile$ '(. as $o | try (del(.url_map, .user_agent_info, .bubble_info, .duxiaoman_entry, .uc_card, .finance_tab, .vip_banner, .ala_live_info, .recom_naws_list, .duxiaoman, .namoaixud_entry)) catch $o) | (. as $o | try (del(.user.consume_info)) catch $o) | (. as $o | try (if (.user.shake_ad_switch | type) == "object" and (.user.shake_ad_switch | has("is_show")) then .user.shake_ad_switch.is_show = 0 else . end) catch $o) | (. as $o | try (.custom_grid |= map(select(.title != "游戏大厅" and .title != "预约管理" and .title != "领话费" and .title != "短故事"))) catch $o) | (. as $o | try (.zone_info |= map(if (.common_func.common_func_noraml | type) == "array" then .common_func.common_func_noraml |= map(select(.name != "创建智能体")) else . end)) catch $o) | (. as $o | try (.zone_info |= map(select(.type != "commerce" and .type != "banner" and .type != "game"))) catch $o)'
-http-response-jq ^https?:\/\/tieba\.baidu\.com\/c\/f\/forum\/forumGuide$ '(. as $o | try (del(.hot_search)) catch $o)'
-http-response-jq ^https?:\/\/tieba\.baidu\.com\/c\/f\/frs\/frsBottom\? '(. as $o | try (del(.card_activity)) catch $o)'
-http-response-jq ^https?:\/\/tiebac\.baidu\.com\/c\/f\/frs\/frsBottom$ '(. as $o | try (del(.card_activity)) catch $o)'
-http-response-jq ^https?:\/\/tiebac\.baidu\.com\/c\/f\/sidebar\/home$ '(. as $o | try (del(.game_center, .task_list, .vip_banner)) catch $o)'
-http-response-jq ^https?:\/\/tieba\.baidu\.com\/mo\/q\/search\/startPage\? '(. as $o | try ({"no": 0, "error": "success"}) catch $o)'
+http-response-jq ^https?:\/\/tieba\.baidu\.com\/c\/f\/forum\/forumGuide '(. as $o | try (del(.hot_search)) catch $o)'
+http-response-jq ^https?:\/\/(tiebac|tieba)\.baidu\.com\/c\/f\/frs\/frsBottom '(. as $o | try (del(.card_activity, .sidebar_card, .business_promot)) catch $o)'
+http-response-jq ^https?:\/\/tiebac\.baidu\.com\/c\/f\/sidebar\/home '(. as $o | try (del(.game_center, .task_list, .vip_banner)) catch $o)'
+http-response-jq ^https?:\/\/tieba\.baidu\.com\/mo\/q\/search\/startPage '(. as $o | try ({"no": 0, "error": "success"}) catch $o)'
 
 # --- 小黑盒净化 ---
 http-response-jq ^https:\/\/api\.xiaoheihe\.cn\/bbs\/app\/feeds\/news '(. as $o | try (.result.links |= map(if .content_type == 27 then del(.title, .ad_pm, .img_gif, .idea_id, .ad_report, .label, .source, .intranet_only, .ad_cm, .content_type, .PROTOCOL, .img, .ad_ratio) else . end)) catch $o)'
@@ -1458,8 +1459,8 @@ taobao_splash_cache = type=http-request,pattern=(?:(?:^https?:\/\/(?:acs\.m\.tao
 taobao_splash_clean = type=http-response,pattern=(?:(?:^https?:\/\/(?:acs\.m\.taobao\.com|guide-acs\.m\.taobao\.com|(?:g-)?acs\.m\.goofish\.com|h5api\.m\.(?:taobao|goofish)\.com)\/(?:gw|h5)\/mtop\.taobao\.wireless\.home\.splash\.awesome\.get(?:[/?]|$)|^https:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.taobao\.cloudvideo\.video\.query(?:[/?]|$))|^https:\/\/poplayer\.template\.alibaba\.com\/[^/?]+\.json(?:[?]|$)),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/ali-splash-sr.js,requires-body=1,max-size=2097152,timeout=10,script-update-interval=86400
 
 # --- 百度贴吧净化 ---
-tieba_json = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))$|tiebaads\/commonbatch\?),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,requires-body=1,max-size=1048576,timeout=10,script-update-interval=86400
-tieba_proto = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?cmd,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,requires-body=1,max-size=1048576,binary-body-mode=1,timeout=10,script-update-interval=86400
+tieba_json = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/(c\/(s\/sync|f\/(ad\/getSplashAd|frs\/(page|threadlist|generalTabList)|pb\/(pic)?page|excellent\/personalized))(\?|$)|tiebaads\/commonbatch\?),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-json.js,requires-body=1,max-size=1048576,timeout=10,script-update-interval=86400
+tieba_proto = type=http-response,pattern=^https?:\/\/(tiebac|c\.tieba)\.baidu\.com\/c\/(b\/ad\/adBid|f\/(frs\/(page|threadlist|generalTabList)|ad\/getFeedAd|pb\/page|excellent\/personalized))\?.*cmd,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/tieba-proto.js,requires-body=1,max-size=1048576,binary-body-mode=1,timeout=10,script-update-interval=86400
 
 # --- 外链直接跳转 ---
 direct_link = type=http-request,pattern=^https?:\/\/(link\.(zhihu\.com|csdn\.net|juejin\.cn)|www\.jianshu\.com\/go-wild|weibo\.cn\/sinaurl|jump2?\.bdimg\.com\/safecheck|c\.pc\.qq\.com\/middlem|sspai\.com\/link|gitee\.com\/link|www\.yuque\.com\/r\/goto),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/direct-link.js,requires-body=0,timeout=10,script-update-interval=86400

@@ -100,39 +100,41 @@
             if (Array.isArray(body.live_fuse_forum)) {
                 body.live_fuse_forum = [];
             }
-            if (body.activityhead && body.activityhead.is_ad) {
+            if (body.activityhead) {
                 body.activityhead = {};
             }
             body.thread_list = removeLiveAndAds(body.thread_list);
-            if (body.forum && body.forum.banner_list) {
-                removeGoodsInfo(body.forum.banner_list.app);
+            if (body.forum) {
+                if (body.forum.banner_list) body.forum.banner_list = null;
+                if (body.forum.game_banner) body.forum.game_banner = null;
+                if (body.forum.header_ad) body.forum.header_ad = null;
             }
+            if (body.banner_list) body.banner_list = null;
+            if (body.head_banner) body.head_banner = null;
         } else if (url.indexOf("c/f/frs/threadlist") !== -1) {
             body.thread_list = removeLiveAndAds(body.thread_list);
-            if (body.banner_list) {
-                removeGoodsInfo(body.banner_list.app);
-            }
+            if (body.banner_list) body.banner_list = null;
+            if (body.activityhead) body.activityhead = {};
         } else if (url.indexOf("c/f/pb/page") !== -1) {
             if (body.recom_ala_info && body.recom_ala_info.live_id) {
                 body.recom_ala_info = null;
             }
             if (Array.isArray(body.post_list)) {
                 for (var p = 0; p < body.post_list.length; p++) {
-                    if (body.post_list[p] && body.post_list[p].outer_item) {
-                        body.post_list[p].outer_item = null;
+                    var post = body.post_list[p];
+                    if (post) {
+                        if (post.outer_item) post.outer_item = null;
+                        if (post.novelRecomCard) post.novelRecomCard = null;
+                        if (post.game_card) post.game_card = null;
+                        if (post.business_card) post.business_card = null;
                     }
                 }
             }
-            if (body.banner_list) {
-                removeGoodsInfo(body.banner_list.app);
-                if (body.banner_list.pb_banner_ad && Array.isArray(body.banner_list.pb_banner_ad.goods_info)) {
-                    body.banner_list.pb_banner_ad.goods_info = [];
-                }
-            }
+            if (body.banner_list) body.banner_list = null;
+            if (body.head_banner) body.head_banner = null;
         } else if (url.indexOf("c/f/excellent/personalized") !== -1) {
-            if (body.banner_list) {
-                removeGoodsInfo(body.banner_list.app);
-            }
+            if (body.banner_list) body.banner_list = null;
+            if (body.head_banner) body.head_banner = null;
             body.thread_list = removeLiveAndAds(body.thread_list);
             if (body.live_answer) {
                 body.live_answer = null;
@@ -160,6 +162,9 @@
         return threadList.filter(function (item) {
             if (!item || typeof item !== "object") return false;
             if (item.ala_info || item.ad_info || item.is_ad === 1 || item.is_ad === true) {
+                return false;
+            }
+            if (item.business_info || item.game_card || item.smart_app || item.app_code || item.works_info) {
                 return false;
             }
             return true;
