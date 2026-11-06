@@ -3,6 +3,7 @@
 // 只检查 Shadowrocket 引用的公开远程规则，不执行下载的内容。
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const root = path.resolve(__dirname, '..');
 const inputs = ['Shadowrocket_LazyGroup_Merged.conf', 'Shadowrocket_AllInOne_Ultimate.conf', ...fs.readdirSync(path.join(root, 'modules')).filter((n) => n.endsWith('.sgmodule')).map((n) => `modules/${n}`)];
 const urls = new Map();
@@ -33,6 +34,16 @@ async function check(url, type) {
       return;
     } catch (error) { lastError = error; }
   }
+  try {
+    const buf = execFileSync('curl', ['-sSL', '--max-time', '25', url], { maxBuffer: 9 * 1024 * 1024 });
+    const text = buf.toString('utf8').replace(/^\uFEFF/, '');
+    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#') && !l.startsWith('//'));
+    if (!lines.length || /<(?:html|!doctype)/i.test(text.slice(0, 256))) throw new Error('空规则或返回 HTML');
+    if (type === 'RULE-SET' && !/^(DOMAIN(?:-SUFFIX|-KEYWORD|-WILDCARD|-REGEX)?|IP-CIDR6?|IP-ASN|GEOIP|USER-AGENT|URL-REGEX|AND|OR|NOT|PROCESS-NAME|DST-PORT),/.test(lines[0])) throw new Error(`非预期规则格式：${lines[0].slice(0, 80)}`);
+    if (type === 'DOMAIN-SET' && !/^(?:\+\.|\.)?[a-z0-9_*.-]+$/i.test(lines[0])) throw new Error('非预期域名集格式');
+    console.log(`OK ${url} (${lines.length} lines, via curl)`);
+    return;
+  } catch (error) { lastError = error; }
   throw new Error(`${url}: ${lastError.message}`);
 }
 (async () => {

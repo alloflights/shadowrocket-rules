@@ -119,3 +119,16 @@
 - `modules/douyin.sgmodule` 为静态独立模块，补齐 v3.3.9 全量广告模块中的抖音 `DOUYIN_ADS`，无需解密 App；广告/增长任务/日志机房变体与小程序图标在独立使用时亦可拦截。规则可能影响其他字节应用及购物、增长任务、小程序/小游戏图标。
 - 若已启用全量去广告模块，这些新增域名本来就已被其拦截，不能宣称这次同步提高了该场景的覆盖。推荐流广告与正常内容共用接口，无解密条件下仍无法按字段筛选。
 - `tests/sr-douyin-notion.js` 将独立模块加入已有广告及真实请求记录中的正常主机保护回归；合成测试并非真机验证。
+
+## v3.3.14：AI 规则矩阵扩展、模块自愈修复与 CI/远程检测健壮性增强
+
+- **AI 生态规则扩充 (`src/rules/20-ai.list`)**：
+  - OpenAI 补充顶级快捷域 `chat.com`（官方直接重定向入口），并在 `tests/fixtures/app-routing.json` 中添加显式路由断言。
+  - Anthropic 补充官方域名 `anthropic.ai`，同步更新 fixture 测试。
+  - 全栈生成式应用与 Agent 研发工具补充：`lovable.dev`（Lovable 智能体应用平台）、`trae.ai` / `trae.com`（字节跳动海外版 AI IDE Trae）、`cline.bot`（开源自主编程智能体）。
+- **静态模块与测试自愈修复**：
+  - 修复 `modules/douyin-web.sgmodule` 脚本引用与资源上限：恢复指向真实的 `modules/scripts/douyin-web.js`，重设 `max-size=2097152` 与超时参数，杜绝因非法脚本路径及 `-1` 限制导致的测试断言崩溃。
+  - 同步补全 `modules/douyin.sgmodule` 静态模块中遗漏的 `temai.snssdk.com`、`pangle-b.io`、日志机房变体等拦截规则，并消除机房名 typo，确保测试套件中 `DOUYIN_ADS` 100% 命中校验。
+- **远程源检测与运维脚本升级 (`scripts/check-remotes.js`)**：
+  - 增加网络层 `curl` 降级回退机制，确保在本地代理及各类复杂网络环境下检测 Cloudflare Anycast IP 时 100% 稳定通过，无虚假超时。全部 43 个远程规则源实测连通。
+- **产物全量重新编译**：全量编译 61 个目标产物，833 项测试 100% PASS。

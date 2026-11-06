@@ -3,4 +3,6 @@
 *.log
 *.bak
 *_副本/
+*.html
+*.pdf
 

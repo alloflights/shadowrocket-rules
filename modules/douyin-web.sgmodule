@@ -10,7 +10,7 @@
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN,www.douyin.com)),REJECT
 
 [Script]
-抖音_网页原画 = type=http-response,pattern=^https?:\/\/www\.douyin\.com\/(video|note)\/,requires-body=true,max-size=-1,script-path=https://raw.githubusercontent.com/alloflights/shadowrocket-rules/main/src/apps/misc.js
+抖音_网页原画 = type=http-response,pattern=^https?:\/\/www\.douyin\.com\/(video|note)\/,requires-body=true,max-size=2097152,script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/douyin-web.js,script-update-interval=86400,timeout=10
 
 [MITM]
 # 仅解密 www.douyin.com 网页端，绝对不解密 amemv.com 与 snssdk.com，保证 App 零风险

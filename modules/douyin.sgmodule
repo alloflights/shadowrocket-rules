@@ -41,7 +41,9 @@ DOMAIN-SUFFIX,log-lf.snssdk.com,REJECT
 DOMAIN-SUFFIX,log-lq.snssdk.com,REJECT
 DOMAIN-SUFFIX,mon-hl.snssdk.com,REJECT
 DOMAIN-SUFFIX,mon-lf.snssdk.com,REJECT
+DOMAIN-SUFFIX,log0-misc-lf.amemv.com,REJECT
 DOMAIN-SUFFIX,log0-misc-1f.amemv.com,REJECT
+DOMAIN-SUFFIX,mon0-misc-lf.amemv.com,REJECT
 DOMAIN-SUFFIX,mon0-misc-1f.amemv.com,REJECT
 DOMAIN-SUFFIX,logbk.amemv.com,REJECT
 
@@ -57,7 +59,9 @@ DOMAIN-SUFFIX,render.ecombdpage.com,REJECT
 DOMAIN,pitaya.bytedance.com,REJECT
 DOMAIN-SUFFIX,polaris5-normal-zb.zijieapi.com,REJECT
 DOMAIN-SUFFIX,polaris.zijieapi.com,REJECT
+DOMAIN-SUFFIX,abtest3-misc-lf.zijieapi.com,REJECT
 DOMAIN-SUFFIX,abtest3-misc-1f.zijieapi.com,REJECT
+DOMAIN-SUFFIX,mssdk3-normal-lf.zijieapi.com,REJECT
 DOMAIN-SUFFIX,mssdk3-normal-1f.zijieapi.com,REJECT
 DOMAIN-SUFFIX,neptune-api.volces.com,REJECT
 DOMAIN-SUFFIX,wmzfylgdsz.com,REJECT
@@ -80,6 +84,20 @@ DOMAIN-SUFFIX,log3-misc-hl.amemv.com,REJECT
 DOMAIN-SUFFIX,mon0-misc-hl.amemv.com,REJECT
 DOMAIN-SUFFIX,p3-developer.bytemaimg.com,REJECT
 DOMAIN-SUFFIX,p26-developer.bytemaimg.com,REJECT
+DOMAIN-SUFFIX,temai.snssdk.com,REJECT
+DOMAIN-SUFFIX,pangle-b.io,REJECT
+DOMAIN,lf-leads-fe-scm.bytecdn.com,REJECT
+DOMAIN,log0-misc-lf.amemv.com,REJECT
+DOMAIN,log0-misc-hl.amemv.com,REJECT
+DOMAIN,mon0-misc-lf.amemv.com,REJECT
+DOMAIN,logbk.amemv.com,REJECT
+DOMAIN,log-hl.snssdk.com,REJECT
+DOMAIN,xlog.snssdk.com,REJECT
+DOMAIN,mon.zijieapi.com,REJECT
+DOMAIN,os-mon.zijieapi.com,REJECT
+DOMAIN,mcs.zijieapi.com,REJECT
+DOMAIN,apmplus.volces.com,REJECT
+DOMAIN,gator.volces.com,REJECT
 
 DOMAIN-KEYWORD,ads3-normal,REJECT
 DOMAIN-KEYWORD,ads5-normal,REJECT

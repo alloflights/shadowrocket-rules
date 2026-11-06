@@ -63,6 +63,7 @@ RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Sh
 
 # ==================== 3. OpenAI / ChatGPT / Sora 全矩阵生态 ====================
 DOMAIN-SUFFIX,chatgpt.com,OpenAI
+DOMAIN-SUFFIX,chat.com,OpenAI
 DOMAIN-SUFFIX,openai.com,OpenAI
 DOMAIN-SUFFIX,oaistatic.com,OpenAI
 DOMAIN-SUFFIX,oaiusercontent.com,OpenAI
@@ -77,6 +78,7 @@ RULE-SET,https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Sh
 # ==================== 4. Anthropic Claude 深度生态 ====================
 DOMAIN-SUFFIX,claude.ai,Claude
 DOMAIN-SUFFIX,anthropic.com,Claude
+DOMAIN-SUFFIX,anthropic.ai,Claude
 DOMAIN-SUFFIX,claude.usercontent.com,Claude
 DOMAIN-SUFFIX,statsigapi.net,Claude
 DOMAIN-SUFFIX,usefathom.com,Claude
@@ -103,7 +105,7 @@ DOMAIN-SUFFIX,genspark.ai,AI
 DOMAIN-SUFFIX,phind.com,AI
 DOMAIN-SUFFIX,you.com,AI
 
-# ==================== 7. 研发、代码与工程智能体 (Cursor / Bolt / v0 / Copilot) ====================
+# ==================== 7. 研发、代码与工程智能体 (Cursor / Bolt / v0 / Copilot / Lovable / Trae) ====================
 # Cursor IDE 与后台 API
 DOMAIN-SUFFIX,cursor.com,AI
 DOMAIN-SUFFIX,cursor.sh,AI
@@ -111,7 +113,11 @@ DOMAIN-SUFFIX,cursorapi.com,AI
 # 前端与全栈即时生成智能体
 DOMAIN-SUFFIX,v0.dev,AI
 DOMAIN-SUFFIX,bolt.new,AI
+DOMAIN-SUFFIX,lovable.dev,AI
 DOMAIN-SUFFIX,windsurf.ai,AI
+DOMAIN-SUFFIX,trae.ai,AI
+DOMAIN-SUFFIX,trae.com,AI
+DOMAIN-SUFFIX,cline.bot,AI
 DOMAIN-SUFFIX,codeium.com,AI
 DOMAIN-SUFFIX,replit.com,AI
 # 微软 Copilot
