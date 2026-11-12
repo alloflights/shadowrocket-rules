@@ -43,6 +43,8 @@ function adapt(u) {
   if (u.id === 'zhihu') {
     // Known ad-only answer/article bottom endpoints; do not blanket-block commercial_api.
     u.rewrites = [...(u.rewrites || []),
+      // Separate known splash endpoint; the shared launch_v2 rewrite does not match it.
+      r`^https?:\/\/api\.zhihu\.com\/commercial_api\/real_time_launch_v2\/?(?:[?#]|$) - reject-dict`,
       r`^https?:\/\/api\.zhihu\.com\/commercial_api\/(?:answer|article)\/\d+\/bottom-v2\/?(?:[?#]|$) - reject-dict`,
       r`^https?:\/\/api\.zhihu\.com\/distribute\/rhea\/qa_ad_card\/h5\/recommendation\/?(?:[?#]|$) - reject-dict`,
     ];
