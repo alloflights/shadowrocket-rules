@@ -16,10 +16,20 @@
     }
 
     try {
-        // Keep splash behavior from before the feed/pagination precision fix.
-        // The two API endpoints also have independent URL-rewrite protection.
-        if (url.indexOf("/commercial_api/real_time_launch") !== -1 || url.indexOf("/commercial_api/launch_v2") !== -1) {
-            var body = JSON.parse($response.body);
+        var body = JSON.parse($response.body);
+
+        // 1. 新版广告样式、MCN带货卡接口与边缘广告服务直接返回合规空结构
+        if (
+            url.indexOf("/ad-style-service/") !== -1 ||
+            url.indexOf("/mcn/") !== -1 ||
+            url.indexOf("/bazaar/") !== -1 ||
+            url.indexOf("/ecommerce/") !== -1 ||
+            url.indexOf("/fringe/") !== -1
+        ) {
+            body = { code: 0, message: "success", data: [] };
+        }
+        // 2. 开屏广告与商业启动兜底
+        else if (url.indexOf("/commercial_api/real_time_launch") !== -1 || url.indexOf("/commercial_api/launch_v2") !== -1) {
             if (body.launch) {
                 try {
                     var launch = JSON.parse(body.launch);
@@ -33,48 +43,6 @@
             }
             if (Array.isArray(body.ads)) body.ads = [];
             if (body.data && typeof body.data === "object") body.data = {};
-            $done({ body: JSON.stringify(body) });
-            return;
-        }
-        // Preserve JSON numbers that JavaScript cannot represent exactly. Some
-        // IDs/cursors exceed 2^53; rounding them may break navigation/paging.
-        var source = String($response.body);
-        var tokenRe = /"(?:[^"\\]|\\[\s\S])*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
-        var tokens = source.match(tokenRe) || [];
-        var prefix = "__zhihu_exact_number_";
-        var collision = true;
-        while (collision) {
-            collision = false;
-            for (var ti = 0; ti < tokens.length; ti++) {
-                if (tokens[ti].charAt(0) === '"' && JSON.parse(tokens[ti]).indexOf(prefix) !== -1) {
-                    prefix += "x";
-                    collision = true;
-                    break;
-                }
-            }
-        }
-        var exactNumbers = [];
-        var prepared = source.replace(tokenRe, function (token) {
-            if (token.charAt(0) === '"') return token;
-            var number = Number(token);
-            if (!isFinite(number) || (Math.floor(number) === number && Math.abs(number) > 9007199254740991)) {
-                var index = exactNumbers.push(token) - 1;
-                return JSON.stringify(prefix + index + "__");
-            }
-            return token;
-        });
-        var body = JSON.parse(prepared);
-        var originalBody = JSON.stringify(body);
-
-        // 1. 新版广告样式、MCN带货卡接口与边缘广告服务直接返回合规空结构
-        if (
-            url.indexOf("/ad-style-service/") !== -1 ||
-            url.indexOf("/mcn/") !== -1 ||
-            url.indexOf("/bazaar/") !== -1 ||
-            url.indexOf("/ecommerce/") !== -1 ||
-            url.indexOf("/fringe/") !== -1
-        ) {
-            body = { code: 0, message: "success", data: [] };
         }
         // 3. 首页悬浮营销球、活动浮窗、横幅及其他 commercial_api 接口
         else if (/\/commercial_api\/(?:banners_v3|app_float_layer|feed_float_layer)(?:\/|$)/.test(url)) {
@@ -218,15 +186,7 @@
             }
         }
 
-        var result = JSON.stringify(body);
-        if (result === originalBody) {
-            $done({ body: source });
-        } else {
-            // Sentinel strings are guaranteed absent from all input JSON strings.
-            var exactPattern = new RegExp('"' + prefix + '(\\d+)__"', 'g');
-            result = result.replace(exactPattern, function (_, index) { return exactNumbers[Number(index)]; });
-            $done({ body: result });
-        }
+        $done({ body: JSON.stringify(body) });
     } catch (e) {
         $done({});
     }
@@ -245,7 +205,9 @@
         delete root.mcn_info;
         delete root.mcn_link_cards;
         delete root.ecommerce_info;
-        // query_info may carry refresh/pagination context; leave it intact.
+        if (root.query_info && (flag(root.query_info.is_ad) || nonempty(root.query_info.commercial_info) || root.query_info.type === "commercial")) {
+            delete root.query_info;
+        }
     }
 
     function filterAndCleanZhihuList(list) {
@@ -253,7 +215,7 @@
         var res = [];
         for (var i = 0; i < list.length; i++) {
             var item = list[i];
-            if (isZhihuFeedAd(item) || (isRecommendationFeed() && isProductPost(item))) continue;
+            if (isZhihuFeedAd(item)) continue;
             cleanZhihuNormalItem(item);
             res.push(item);
         }
@@ -341,29 +303,6 @@
         ["attachment", "link_cards", "link_card_list"].forEach(function (k) {
             if (Array.isArray(item[k])) item[k] = item[k].filter(function(x) { return !isZhihuFeedAd(x); });
             else if (item[k] && typeof item[k] === "object" && isZhihuFeedAd(item[k])) delete item[k];
-        });
-    }
-    function isRecommendationFeed() {
-        return /\/(?:topstory\/recommend|moments|feed-root\/)/.test(url);
-    }
-    // Drop product-promotion posts only in recommendation/following feeds,
-    // not in answer details, question navigation, comments or the hot list.
-    function isProductPost(item) {
-        if (!item || typeof item !== "object") return false;
-        var candidates = [item, item.target, item.common_card];
-        return candidates.some(function (o) {
-            if (!o || typeof o !== "object") return false;
-            if (nonempty(o.mcn_link_cards) || nonempty(o.goods_card) || nonempty(o.ecommerce_info)) return true;
-            if (/^(?:e_commerce|ecommerce|goods_card|product_card|mcn_link_card)$/i.test(String(o.type || o.card_type || ""))) return true;
-            if (typeof o.content === "string" && /\b(?:MCNLinkCard|ADLinkCard|RichText-MCNLinkCardContainer)\b/i.test(o.content)) return true;
-            return [o.attachment, o.link_cards, o.link_card_list].some(function (cards) {
-                var list = Array.isArray(cards) ? cards : [cards];
-                return list.some(function (card) {
-                    return card && typeof card === "object" &&
-                        (/^(?:mcn_link_card|goods_card|e_commerce|ecommerce|product_card)$/i.test(String(card.type || card.card_type || "")) ||
-                         [card.url, card.jump_url, card.link].some(hasJdOrTanxCommercialLink));
-                });
-            });
         });
     }
     function isZhihuFeedAd(item) {
