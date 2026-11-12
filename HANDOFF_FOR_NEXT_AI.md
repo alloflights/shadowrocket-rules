@@ -6,6 +6,12 @@
 - 仍不解密抖音 App 主接口，不拒绝推荐、评论和视频公共 CDN；不声称这些域名能清除同接口下发的信息流广告。
 - 按用户要求未运行测试或 check，也未在真机验证。
 
+## 知乎刷新与商品推广（Shadowrocket）
+- 针对刷新重复的潜在原因：知乎响应中的不安全整数在解析 / 序列化前后保留原始数字文本，保留 query_info；没有用户真实响应，不能断言已找出或修复所有重复来源。未调整浏览曝光和隐私上报规则。
+- 首页推荐、关注和 feed-root 按明确商品卡、MCN 带货卡及联盟链接识别商品推广帖子；不凭标题或一般商品词删除普通内容，其他详情 / 评论不按此整条过滤。
+- 参考 Havoooc/surge-rules 的大整数原样放行思路 https://raw.githubusercontent.com/Havoooc/surge-rules/main/scripts/zhihu-adblock.js；本实现保留数字并继续过滤。规则仅针对 Shadowrocket 脚本，Loon 不变。
+- 依用户要求未运行测试或 check，未真机验证，商品字段未从用户实机确认。
+
 ## v3.3.13：按 Ai_Commit_Handoff.md 提交
 - 依附件补充抖音无解密拦截规则，独立模块不启用 MITM，并保留原有 DOMAIN-KEYWORD 和源码旧规则。
 - 网页版模块采用附件给出的完整内容；QUIC 通配符边界、SR 默认响应上限 512KiB、节点筛选锚点按附件修改，保留 binary 参数支持。
