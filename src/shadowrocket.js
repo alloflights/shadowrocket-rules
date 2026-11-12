@@ -31,6 +31,15 @@ function xhsSR(u) {
 }
 function adapt(u) {
   u = { ...u, rules: Array.isArray(u.shadowrocketRules) ? u.shadowrocketRules : u.rules };
+  if (u.id === 'pwesports') {
+    // Kelee's PerfectWorldEsport rule identifies the config response's data.ad
+    // as splash advertising; do not block the config or event landing domain.
+    const pattern = r`^https?:\/\/api\.wmpvp\.com\/api\/v1\/config\/promote(?:[?#]|$)`;
+    u.mitm = [...new Set([...(u.mitm || []), 'api.wmpvp.com'])];
+    u.scripts = [...(u.scripts || []),
+      { name: 'pwesports_promote_request', type: 'request', pattern, script: 'pwesports-sr.js' },
+      { name: 'pwesports_promote_response', type: 'response', pattern, script: 'pwesports-sr.js', maxSize: 2097152 }];
+  }
   if (u.id === 'zhihu') {
     // Known ad-only answer/article bottom endpoints; do not blanket-block commercial_api.
     u.rewrites = [...(u.rewrites || []),
