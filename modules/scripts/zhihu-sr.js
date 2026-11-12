@@ -16,6 +16,26 @@
     }
 
     try {
+        // Keep splash behavior from before the feed/pagination precision fix.
+        // The two API endpoints also have independent URL-rewrite protection.
+        if (url.indexOf("/commercial_api/real_time_launch") !== -1 || url.indexOf("/commercial_api/launch_v2") !== -1) {
+            var body = JSON.parse($response.body);
+            if (body.launch) {
+                try {
+                    var launch = JSON.parse(body.launch);
+                    launch.ads = [];
+                    body.launch = JSON.stringify(launch);
+                } catch (err) {
+                    body.launch = "{}";
+                }
+            } else {
+                body = { launch: "{}" };
+            }
+            if (Array.isArray(body.ads)) body.ads = [];
+            if (body.data && typeof body.data === "object") body.data = {};
+            $done({ body: JSON.stringify(body) });
+            return;
+        }
         // Preserve JSON numbers that JavaScript cannot represent exactly. Some
         // IDs/cursors exceed 2^53; rounding them may break navigation/paging.
         var source = String($response.body);
@@ -55,22 +75,6 @@
             url.indexOf("/fringe/") !== -1
         ) {
             body = { code: 0, message: "success", data: [] };
-        }
-        // 2. 开屏广告与商业启动兜底
-        else if (url.indexOf("/commercial_api/real_time_launch") !== -1 || url.indexOf("/commercial_api/launch_v2") !== -1) {
-            if (body.launch) {
-                try {
-                    var launch = JSON.parse(body.launch);
-                    launch.ads = [];
-                    body.launch = JSON.stringify(launch);
-                } catch (err) {
-                    body.launch = "{}";
-                }
-            } else {
-                body = { launch: "{}" };
-            }
-            if (Array.isArray(body.ads)) body.ads = [];
-            if (body.data && typeof body.data === "object") body.data = {};
         }
         // 3. 首页悬浮营销球、活动浮窗、横幅及其他 commercial_api 接口
         else if (/\/commercial_api\/(?:banners_v3|app_float_layer|feed_float_layer)(?:\/|$)/.test(url)) {
