@@ -179,7 +179,21 @@ const DOUYIN_ADS = [
 // China_Domain set / GEOIP and stay DIRECT. Loon keeps its baseline plugin.
 const SR_DROPPED = new Set(['pdd']);
 const PDD = /(?:^|[.,(])(?:pinduoduo\.com|pinduoduo\.net|pddpic\.com|pddugc\.com|yangkeduo\.com)(?:[,)]|$)|com\.xunmeng\.pinduoduo/i;
-const srUnits = apps => apps.filter(u => !SR_DROPPED.has(u.id)).map(adapt);
+// 超级课程表旧版广告接口及直连 IP：参考 fmz200 / jinlvei 的公开规则。
+// 仅处理广告路径，不封整个业务域名或 IP；实际版本是否命中需在设备上确认。
+const SUPER_SCHEDULE = {
+  id: 'super-schedule-sr',
+  name: '超级课程表广告接口',
+  moduleFile: false,
+  rules: [],
+  rewrites: [
+    r`^https?:\/\/ad\.myfriday\.cn\/d\/json\/1\.1(?:[/?]|$) - reject-dict`,
+    r`^https?:\/\/182\.92\.244\.70\/d\/json(?:[/?]|$) - reject-dict`,
+  ],
+  scripts: [],
+  mitm: ['ad.myfriday.cn', '182.92.244.70'],
+};
+const srUnits = apps => [...apps.filter(u => !SR_DROPPED.has(u.id)).map(adapt), SUPER_SCHEDULE];
 const filterAdRules = lines => [...lines.filter(line => !obsolete.has(line.trim()) && !PDD.test(line)), ...DOUYIN_ADS];
 // Notion goes through the proxy on Shadowrocket (user decision); Loon keeps its baseline.
 const NOTION = ['notion.so', 'notion.site', 'notion.com', 'notion-static.com', 'notionusercontent.com'];
