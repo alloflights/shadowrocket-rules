@@ -150,3 +150,9 @@
 - **蜂窝基带防唤醒与省电架构**：
   - 阻断 20+ 个移动应用高频后台数据打点，阻止蜂窝射频模块从休眠频繁进入高功耗 Tail State（持续 1.5W~2.5W 发热耗电），显著改善日常续航。
   - 保持严格的“零媒体流解密”原则，96 个 MITM 主机纯净局限于 API 端点，绝不对高码率视频与图片流进行软解密，彻底免除 CPU 发热。
+
+## 小红书去水印补充（Shadowrocket）
+
+- 原 SR 脚本已匹配 `note/video/save`，但未对该响应做视频地址处理；参考 fmz200，从 videofeed 的同一 note ID 缓存已有的 h265/h264 master_url，仅在保存响应的 note_id 匹配时替换 download_url。补充已有 image_download/video_download 开关；不生成原图，不改签名参数。
+- 增加评论视频下载接口匹配，只在评论列表已有明确 video_id 和 stream 且保存响应 ID 一致时替换地址。缓存上限 80 条、有效期 30 分钟；不打印内容、不上传地址。新增 redtube 接口匹配，原信息流去广告逻辑不变。Loon 未改。
+- 参考 `https://github.com/fmz200/wool_scripts/blob/main/Scripts/xiaohongshu/xiaohongshu.js`；没有真实响应/真机验证，按用户要求未运行测试。无明确 ID、地址、缓存失效或客户端本身带水印时原样放行，不能保证去除烘焙在图片上的水印。

@@ -25,7 +25,7 @@ function xhsSR(u) {
     r`^https?:\/\/www\.` + H + r`\/api\/marketing\/box\/trigger\? - reject-dict`,
     r`^https?:\/\/www\.` + H + r`\/api\/sns\/(v\d+\/ads\/resource|v\d+\/hey\/\w+\/hey_gallery) - reject-dict`,
   ];
-  u.scripts = u.scripts.map(s => ({ ...s, pattern: r`^https?:\/\/(edith|rec|www|so)\.` + H + r`\/api\/sns\/v\d+\/(note\/comment\/(list|sub_comments)|note\/(imagefeed|feed|videofeed|widgets|live_photo\/save|video\/save|detail)|homefeed|system_service\/(splash_config|config)|search\/(banner_list|hot_list|hint|trending|notes)|followfeed)` }));
+  u.scripts = u.scripts.map(s => ({ ...s, pattern: r`^https?:\/\/(edith|rec|www|so)\.` + H + r`\/api\/sns\/v\d+\/(note\/comment\/(list|sub_comments)|note\/(imagefeed|feed|videofeed|redtube|widgets|live_photo\/save|video\/save|detail)|interaction\/comment\/video\/download|homefeed|system_service\/(splash_config|config)|search\/(banner_list|hot_list|hint|trending|notes)|followfeed)` }));
   u.mitm = [...new Set([...(u.mitm || []), ...XHS_MITM])];
   return u;
 }

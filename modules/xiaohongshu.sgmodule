@@ -32,7 +32,7 @@ DOMAIN,t-ads.xiaohongshu.com,REJECT
 ^https?:\/\/www\.(xiaohongshu|rnote)\.com\/api\/sns\/(v\d+\/ads\/resource|v\d+\/hey\/\w+\/hey_gallery) - reject-dict
 
 [Script]
-xiaohongshu_purify = type=http-response,pattern=^https?:\/\/(edith|rec|www|so)\.(xiaohongshu|rnote)\.com\/api\/sns\/v\d+\/(note\/comment\/(list|sub_comments)|note\/(imagefeed|feed|videofeed|widgets|live_photo\/save|video\/save|detail)|homefeed|system_service\/(splash_config|config)|search\/(banner_list|hot_list|hint|trending|notes)|followfeed),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/xiaohongshu-sr.js,requires-body=1,max-size=2097152,timeout=10,script-update-interval=86400
+xiaohongshu_purify = type=http-response,pattern=^https?:\/\/(edith|rec|www|so)\.(xiaohongshu|rnote)\.com\/api\/sns\/v\d+\/(note\/comment\/(list|sub_comments)|note\/(imagefeed|feed|videofeed|redtube|widgets|live_photo\/save|video\/save|detail)|interaction\/comment\/video\/download|homefeed|system_service\/(splash_config|config)|search\/(banner_list|hot_list|hint|trending|notes)|followfeed),script-path=https://cdn.jsdelivr.net/gh/alloflights/shadowrocket-rules@main/modules/scripts/xiaohongshu-sr.js,requires-body=1,max-size=2097152,timeout=10,script-update-interval=86400
 
 [MITM]
 hostname = %APPEND% edith.xiaohongshu.com, www.xiaohongshu.com, ci.xiaohongshu.com, rec.xiaohongshu.com, so.xiaohongshu.com, edith.rnote.com, www.rnote.com, ci.rnote.com, so.rnote.com, rec.rnote.com

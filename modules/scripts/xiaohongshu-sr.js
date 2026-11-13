@@ -16,6 +16,55 @@ try {
 
 if (!obj || typeof obj !== "object") return $done({});
 
+// Cache only URLs already returned in the same media's feed/comment response.
+// Match by note/video ID, retain signed URLs intact, and expire bounded entries.
+const streamKey = "xhs_sr_media_streams_v1";
+const streamTTL = 30 * 60 * 1000;
+function loadStreams() {
+  try {
+    const raw = isQuanX ? $prefs.valueForKey(streamKey) : $persistentStore.read(streamKey);
+    const saved = JSON.parse(raw || "[]");
+    const now = Date.now();
+    return Array.isArray(saved) ? saved.filter(x => x && (x.kind === "note" || x.kind === "comment") && typeof x.id === "string" && x.id && typeof x.url === "string" && /^https?:\/\//i.test(x.url) && typeof x.time === "number" && x.time <= now && now - x.time < streamTTL).slice(-80) : [];
+  } catch (e) { return []; }
+}
+function storeStreams(entries) {
+  if (!entries.length) return;
+  try {
+    let cache = loadStreams();
+    for (const entry of entries) {
+      if (!entry || !entry.id || !entry.url) continue;
+      cache = cache.filter(x => !(x.kind === entry.kind && x.id === entry.id));
+      cache.push({ kind: entry.kind, id: entry.id, url: entry.url, time: Date.now() });
+    }
+    const value = JSON.stringify(cache.slice(-80));
+    if (isQuanX) $prefs.setValueForKey(value, streamKey);
+    else $persistentStore.write(value, streamKey);
+  } catch (e) {}
+}
+function streamURL(media) {
+  const streams = media && media.stream;
+  if (!streams || typeof streams !== "object") return "";
+  for (const codec of ["h265", "h264"]) {
+    const list = streams[codec];
+    if (!Array.isArray(list)) continue;
+    let best = null;
+    for (const item of list) {
+      if (!item || typeof item.master_url !== "string" || !/^https?:\/\//i.test(item.master_url)) continue;
+      const score = (Number(item.width) || 0) * (Number(item.height) || 0);
+      const bestScore = best ? (Number(best.width) || 0) * (Number(best.height) || 0) : -1;
+      if (!best || score > bestScore || (score === bestScore && (Number(item.avg_bitrate) || 0) > (Number(best.avg_bitrate) || 0))) best = item;
+    }
+    if (best) return best.master_url;
+  }
+  return "";
+}
+function cachedStream(kind, id) {
+  if (id === undefined || id === null || String(id) === "") return "";
+  const found = loadStreams().find(x => x.kind === kind && x.id === String(id));
+  return found ? found.url : "";
+}
+
 // 媒体保存标记；不修改图片像素，也不能修复已烘焙水印。
 function patchMedia(item) {
   if (!item || typeof item !== "object") return;
@@ -23,6 +72,15 @@ function patchMedia(item) {
     item.media_save_config.disable_save = false;
     item.media_save_config.disable_watermark = true;
     item.media_save_config.disable_weibo_cover = true;
+  }
+  // Newer clients expose download permission in explicit function switches.
+  if (Array.isArray(item.function_switch)) {
+    item.function_switch.forEach(entry => {
+      if (entry && (entry.type === "image_download" || entry.type === "video_download")) {
+        entry.enable = true;
+        if (entry.reason) delete entry.reason;
+      }
+    });
   }
   if (item.share_info?.function_entries?.length > 0) {
     let entries = item.share_info.function_entries;
@@ -71,15 +129,44 @@ if (/\/note\/(imagefeed|feed|videofeed|detail)/.test(url) || url.includes("/note
   } catch (e) {}
 }
 
+// Feed supplies a playback stream; only reuse it for a matching note_id.
+if (/\/note\/videofeed(?:[?#]|$)/.test(url) && Array.isArray(obj.data)) {
+  const streams = [];
+  obj.data.forEach(item => {
+    if (!item || typeof item !== "object") return;
+    const id = item.id || item.note_id;
+    const master = streamURL(item.video_info_v2?.media);
+    if (id && master) streams.push({ kind: "note", id: String(id), url: master });
+  });
+  storeStreams(streams);
+}
+if (/\/note\/video\/save(?:[?#]|$)/.test(url) && obj.data && typeof obj.data === "object") {
+  const master = cachedStream("note", obj.data.note_id);
+  if (master && typeof obj.data.download_url === "string") obj.data.download_url = master;
+}
+
 // Comment endpoints verified against fmz200/wool_scripts at
 // 5d5f63fcf98bc69d5f8f1b1bae6f86a01ee4bb97 (own implementation).
-// No red-id replacement, logging, external requests or cross-note media cache.
+// No red-id replacement, logging, external requests or cross-media URL substitution.
 if (/\/note\/comment\/(?:list|sub_comments)(?:[?]|$)/.test(url)) {
   let count = 0;
+  const commentStreams = [];
   function comments(node, depth = 0, media = false) {
     if (!node || typeof node !== "object") return;
     if (++count > 12000 || depth > 40) throw new Error("comment budget");
     if (Array.isArray(node)) { node.forEach(n => comments(n, depth + 1, media)); return; }
+    // Reuse only an explicitly identified comment video/live stream.
+    for (const group of [node.pictures, node.videos]) {
+      if (!Array.isArray(group)) continue;
+      group.forEach(video => {
+        if (!video || !video.video_id || !video.video_info) return;
+        try {
+          const info = typeof video.video_info === "string" ? JSON.parse(video.video_info) : video.video_info;
+          const master = streamURL(info);
+          if (master) commentStreams.push({ kind: "comment", id: String(video.video_id), url: master });
+        } catch (e) {}
+      });
+    }
     if (Array.isArray(node.pictures)) {
       // These types control native vs. decorated/exported comment media.
       if (node.comment_type === 3) node.comment_type = 2;
@@ -96,6 +183,12 @@ if (/\/note\/comment\/(?:list|sub_comments)(?:[?]|$)/.test(url)) {
     });
   }
   comments(obj);
+  storeStreams(commentStreams);
+}
+if (/\/interaction\/comment\/video\/download(?:[?#]|$)/.test(url) && obj.data?.video) {
+  const video = obj.data.video;
+  const master = cachedStream("comment", video.video_id);
+  if (master && typeof video.video_url === "string") video.video_url = master;
 }
 
 // 2. 实况照片原视频保存请求
