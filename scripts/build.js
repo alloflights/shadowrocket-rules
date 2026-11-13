@@ -320,7 +320,7 @@ function buildAll() {
   files['Shadowrocket_AllInOne_Ultimate.conf'] = buildConf({
     file: 'Shadowrocket_AllInOne_Ultimate.conf',
     title: 'Shadowrocket 大一统精简分流（仅 PROXY / DIRECT）',
-    desc: ['与懒人版规则完全一致，只是不含策略组：海外走 PROXY、国内与 Apple 走 DIRECT。'],
+    desc: ['与懒人版规则一致，不含策略组：命中代理规则走 PROXY，国内、Apple 与兜底流量走 DIRECT。'],
     groups: false,
     policyMap: profile.AIO_POLICY,
   });

@@ -72,7 +72,7 @@
 - **关键服务下的精确广告域名**（如 `ad.12306.cn`、`ads.95516.com`、`m1.ad.10010.com`）：写在 `10-adblock.list` 即可，`criticalGuard` 会把它们提到关键服务直连段之前。
 
 ## 路由（分流配置）
-`00 保护 → AI → 学术 / 海外 / 开发 / 媒体 / TLD → 金融 / 邮箱直连 → 服务规则集 → 国内 → China/Global 规则集 → GEOIP,CN,DIRECT → FINAL,漏网之鱼(默认 PROXY)`。
+`00 保护 → AI → 学术 / 海外 / 开发 / 媒体 / TLD → 金融 / 邮箱直连 → 服务规则集 → 国内 → China/Global 规则集 → GEOIP,CN,DIRECT → FINAL,漏网之鱼(小火箭默认 DIRECT；Loon 默认 PROXY)`。
 `GEOIP,CN` 不带 `no-resolve`：未命中规则的冷门国内域名解析到大陆 IP 时仍直连。
 - **v3.3.1 直连延迟根因**：①`WeChat` 曾引用 QuantumultX 版规则集（`HOST*` 类型小火箭不认，且 `IP-ASN` 不带 `no-resolve`），导致排在它之后的所有国内请求都要先等一次 DNS；现改用 Shadowrocket 版，测试禁止 SR 配置引用非 Shadowrocket 格式规则集。②blackmatrix7 的 `China.list` 实际只有 IP/UA 等约 60 条，3700+ 国内域名在 `China_Domain.list`（DOMAIN-SET），已紧跟 China.list 加入（Loon 同步）。不要换成 ChinaMax_Domain / Global_Domain（数万条，内存和耗电不划算）。③测速组 interval 600→1800。
 - 用户 App 清单在 `tests/fixtures/app-routing.json`：新增 / 修改分流后跑 `npm test`，每个 App 的代表域名必须命中**显式规则**且策略正确（远程 RULE-SET 不算，防止规则集下载失败时分流跑偏）。没有固定域名的国内小 App 放 `geoipOnly`。

@@ -203,6 +203,6 @@ function notionProxy(lines) {
 // jsDelivr currently returns 403 for this single list; SR uses the verified
 // upstream raw endpoint. Leave Loon's shared list and emitted files unchanged.
 function routing(lines) {
-  return [...guardRules(), ...notionProxy(lines).filter(line => !(/^DOMAIN-SUFFIX,[^,]+,DIRECT$/.test(line.trim()) && PDD.test(line)) && !/^#.*拼多多/.test(line.trim())).map(line => line.replace('https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/DouYin/DouYin.list', 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/DouYin/DouYin.list'))];
+  return [...guardRules(), ...notionProxy(lines).filter(line => !(/^DOMAIN-SUFFIX,[^,]+,DIRECT$/.test(line.trim()) && PDD.test(line)) && !/^#.*拼多多/.test(line.trim())).map(line => line.replace('https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Shadowrocket/DouYin/DouYin.list', 'https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/DouYin/DouYin.list').replace('# 兜底：境外未知流量走代理（懒人版可在「漏网之鱼」组一键切回 DIRECT）', '# 兜底：未命中规则的流量默认直连（懒人版可在「漏网之鱼」组切换）'))];
 }
 module.exports = { routing, filterAdRules, srUnits, SR_DROPPED, PDD, notionProxy, DOUYIN_ADS, NOTION, NOTION_EXTRA, adapt, guardRules, realIP, MEDIA_SUFFIXES, DNS_HOSTS };

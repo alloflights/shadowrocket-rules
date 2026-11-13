@@ -131,8 +131,8 @@ Amazon = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
 微软服务 = select,DIRECT,PROXY,${ALL},policy-select-name=DIRECT
 哔哩哔哩 = select,DIRECT,PROXY,香港节点,台湾节点,policy-select-name=DIRECT
 游戏平台 = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
-# 漏网之鱼：规则与 GEOIP,CN 都没命中的流量（基本都是境外站点）。默认代理，可一键切 DIRECT。
-漏网之鱼 = select,PROXY,DIRECT,${ALL},policy-select-name=PROXY
+# 漏网之鱼：规则与 GEOIP,CN 都没命中的流量默认直连，可手动切换代理。
+漏网之鱼 = select,DIRECT,PROXY,${ALL},policy-select-name=DIRECT
 
 # AI稳定线路：fallback（非最低延迟竞选），排除香港与信息节点；故障 / 恢复可能切换，不能保证固定 IP
 AI稳定线路 = fallback,url=http://www.gstatic.com/generate_204,interval=1800,timeout=5,policy-regex-filter=${filter(NON_HK_AI)}
@@ -145,7 +145,7 @@ const AIO_POLICY = {
   OpenAI: 'PROXY', Claude: 'PROXY', Gemini: 'PROXY', MetaAI: 'PROXY', AI: 'PROXY',
   YouTube: 'PROXY', Netflix: 'PROXY', 'Disney+': 'PROXY', Max: 'PROXY', TikTok: 'PROXY', Spotify: 'PROXY',
   Telegram: 'PROXY', Twitter: 'PROXY', Facebook: 'PROXY', PayPal: 'PROXY', Amazon: 'PROXY',
-  苹果服务: 'DIRECT', 谷歌服务: 'PROXY', 微软服务: 'DIRECT', 哔哩哔哩: 'DIRECT', 游戏平台: 'PROXY', 漏网之鱼: 'PROXY',
+  苹果服务: 'DIRECT', 谷歌服务: 'PROXY', 微软服务: 'DIRECT', 哔哩哔哩: 'DIRECT', 游戏平台: 'PROXY', 漏网之鱼: 'DIRECT',
 };
 
 const host = `[Host]
