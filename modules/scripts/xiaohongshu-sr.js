@@ -260,15 +260,33 @@ if (url.includes("/note/widgets") && obj?.data) {
 }
 
 // 6. 首页信息流去广告 (赞助卡片/带货商品/直播推荐)
-if (url.includes("/homefeed") && Array.isArray(obj?.data)) {
-  obj.data = obj.data.filter(item => {
-    if (!item) return false;
-    if (item.model_type === "live_v2") return false;
-    if (item.ads_info && typeof item.ads_info === "object" && Object.keys(item.ads_info).length > 0) return false;
-    if (item?.note_attributes?.includes("goods")) return false;
-    if (item?.related_ques) delete item.related_ques;
+// 只认明确广告标记：ads_info 只要存在且非 null（对象、字符串均算），或 is_ads/is_ad 为真、
+// model_type 为广告类型，或笔记卡片内嵌 ads_info；普通 card_icon 不作为判断依据。
+function hasAdsField(o) {
+  if (!o || typeof o !== "object" || !Object.prototype.hasOwnProperty.call(o, "ads_info")) return false;
+  const v = o.ads_info;
+  return v !== null && v !== undefined && v !== false && v !== "";
+}
+function isFeedAd(item) {
+  if (!item || typeof item !== "object") return true;
+  if (item.model_type === "live_v2" || item.model_type === "ads" || item.model_type === "ad") return true;
+  if (item.is_ads === true || item.is_ad === true) return true;
+  if (hasAdsField(item) || hasAdsField(item.note_card) || hasAdsField(item.note) || hasAdsField(item.data)) return true;
+  if (Array.isArray(item.note_attributes) && item.note_attributes.includes("goods")) return true;
+  return false;
+}
+function cleanFeed(list) {
+  return list.filter(item => {
+    if (isFeedAd(item)) return false;
+    if (item.related_ques) delete item.related_ques;
     return true;
   });
+}
+if (url.includes("/homefeed") && obj) {
+  if (Array.isArray(obj.data)) obj.data = cleanFeed(obj.data);
+  else if (obj.data && typeof obj.data === "object") {
+    for (const k of ["items", "notes", "list"]) if (Array.isArray(obj.data[k])) obj.data[k] = cleanFeed(obj.data[k]);
+  }
 }
 
 // 7. 搜索结果去广告

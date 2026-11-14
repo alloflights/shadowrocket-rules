@@ -156,3 +156,4 @@
 - 原 SR 脚本已匹配 `note/video/save`，但未对该响应做视频地址处理；参考 fmz200，从 videofeed 的同一 note ID 缓存已有的 h265/h264 master_url，仅在保存响应的 note_id 匹配时替换 download_url。补充已有 image_download/video_download 开关；不生成原图，不改签名参数。
 - 增加评论视频下载接口匹配，只在评论列表已有明确 video_id 和 stream 且保存响应 ID 一致时替换地址。缓存上限 80 条、有效期 30 分钟；不打印内容、不上传地址。新增 redtube 接口匹配，原信息流去广告逻辑不变。Loon 未改。
 - 参考 `https://github.com/fmz200/wool_scripts/blob/main/Scripts/xiaohongshu/xiaohongshu.js`；没有真实响应/真机验证，按用户要求未运行测试。无明确 ID、地址、缓存失效或客户端本身带水印时原样放行，不能保证去除烘焙在图片上的水印。
+- 首页信息流贴片广告（卡片右下角“广告”）漏网：v3.3.5 只删非空对象 `ads_info`，空对象或字符串形式会漏过。现与 fmz200 一致，`ads_info` 存在且非 null 即删除，并兼容 `is_ads`/`is_ad`、广告 model_type、卡片内嵌 ads_info 及 `data.items` 结构；仍不因普通 card_icon 删笔记。只改 `xiaohongshu-sr.js`，Loon 未改，按用户要求未运行测试。
