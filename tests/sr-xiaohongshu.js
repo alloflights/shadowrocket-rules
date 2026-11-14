@@ -8,8 +8,8 @@ module.exports = function ({ test, assert, files, body, sectionOf, run }) {
   test('小红书 SR：脚本覆盖备用域名、搜索填充词与视频保存', () => {
     for (const u of ['https://edith.rnote.com/api/sns/v6/homefeed?x=1', 'https://edith.xiaohongshu.com/api/sns/v1/search/hint?k=1', 'https://edith.xiaohongshu.com/api/sns/v1/search/trending?k=1',
       'https://so.xiaohongshu.com/api/sns/v10/search/notes?k=1', 'https://rec.xiaohongshu.com/api/sns/v4/note/videofeed?a=1', 'https://edith.xiaohongshu.com/api/sns/v10/note/video/save?a=1',
-      'https://edith.xiaohongshu.com/api/sns/v5/note/comment/list?a=1']) assert(re.test(u), `未覆盖 ${u}`);
-    for (const u of ['https://edith.xiaohongshu.com/api/sns/v1/interaction/comment/video/download?a=1', 'https://edith.xiaohongshu.com/api/sns/v2/user/me']) assert(!re.test(u), `误覆盖 ${u}`);
+      'https://edith.xiaohongshu.com/api/sns/v5/note/comment/list?a=1', 'https://edith.xiaohongshu.com/api/sns/v1/interaction/comment/video/download?a=1']) assert(re.test(u), `未覆盖 ${u}`);
+    for (const u of ['https://edith.xiaohongshu.com/api/sns/v2/user/me']) assert(!re.test(u), `误覆盖 ${u}`);
   });
   test('小红书 SR：重写拒绝引导 / 横幅，不拒绝 detailfeed 预加载', () => {
     const hit = (u) => rewrites.some((x) => x.test(u));
@@ -22,6 +22,14 @@ module.exports = function ({ test, assert, files, body, sectionOf, run }) {
     assert(!rules.some((l) => /DOMAIN-SUFFIX,xhscdn\.com|DOMAIN,(sns-img|sns-video)/.test(l)), '误拦正常图片 / 视频 CDN');
     const mitm = body(sectionOf(mod, 'MITM')).join(' ');
     for (const h of ['edith.rnote.com', 'so.xiaohongshu.com', 'rec.xiaohongshu.com']) assert(mitm.includes(h), h);
+  });
+  test('小红书 SR：首页贴片广告各种标记均删除，普通笔记保留', () => {
+    const data = [{ id: 'normal', model_type: 'note', card_icon: 'text', ads_info: null, related_ques: { q: 1 } }, { id: 'empty', ads_info: {} }, { id: 'str', ads_info: '{"id":1}' },
+      { id: 'flag', is_ads: true }, { id: 'nested', note_card: { ads_info: { x: 1 } } }, { id: 'type', model_type: 'ads' }, { id: 'goods', note_attributes: ['goods'] }, { id: 'live', model_type: 'live_v2' }];
+    const a = JSON.parse(run('xiaohongshu-sr.js', { url: 'https://edith.xiaohongshu.com/api/sns/v6/homefeed?a=1', responseBody: JSON.stringify({ data }) }).body);
+    assert(a.data.map((x) => x.id).join(',') === 'normal' && !a.data[0].related_ques, '首页广告未删或普通笔记误删');
+    const b = JSON.parse(run('xiaohongshu-sr.js', { url: 'https://rec.xiaohongshu.com/api/sns/v6/homefeed?a=1', responseBody: JSON.stringify({ data: { items: data, cursor: 'c' } }) }).body);
+    assert(b.data.items.map((x) => x.id).join(',') === 'normal' && b.data.cursor === 'c', 'data.items 结构未处理');
   });
   test('小红书 SR：搜索填充词与趋势词清空', () => {
     const a = JSON.parse(run('xiaohongshu-sr.js', { url: 'https://edith.xiaohongshu.com/api/sns/v1/search/hint?a=1', responseBody: JSON.stringify({ data: { hint_words: [{ title: 'x' }] } }) }).body);
